@@ -121,3 +121,4 @@
 👵 Abuela pide: 22 P (final)
 👵 Abuela pide: 22 P (final)
 🏁 {'buy': {'pack': 'sobre_barrio'}}: deal  pagado 22
+🤖 Nosotros (13 P): ¡Hola, Abuela Carmen! Qué alegría verla, ¿ha comido ya? Vengo por un sobre de barrio: ¿le parece bien 13 primas?

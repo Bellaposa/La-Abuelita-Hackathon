@@ -11,7 +11,8 @@
   "17P: Es usted un sol. Me estiro un poquito más: 17 primas. ¿Le parece justo?",
   "18P: Se lo agradezco de corazón, Carmen. Subo a 18 primas, que es lo que puedo.",
   "19P: Qué bien se está con usted. ¿Qué tal 19 primas, de verdad?",
-  "20P: Muchas gracias por su paciencia, Abuela. ¿Podríamos dejarlo en 20 primas?"
+  "20P: Muchas gracias por su paciencia, Abuela. ¿Podríamos dejarlo en 20 primas?",
+  "13P: ¡Hola, Abuela Carmen! Qué alegría verla, ¿ha comido ya? Vengo por un sobre de barrio: ¿le parece bien 13 primas?"
  ],
  "observed": {
   "negotiations": [
@@ -140,7 +141,15 @@
   "paid_median": null,
   "paid_n": 1
  },
- "active": null,
+ "active": {
+  "thread": 285,
+  "topic": {
+   "buy": {
+    "pack": "sobre_barrio"
+   }
+  },
+  "cash_start": 63
+ },
  "active_chato": {
   "thread": 279,
   "topic": {

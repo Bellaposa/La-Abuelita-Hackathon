@@ -407,11 +407,33 @@ def phase_market(b, me, catalog, can_accept):
     return accepted
 
 
+def pack_private_value(me, catalog, pack_id="sobre_barrio"):
+    """Expected value of a pack TO US: for each slot, the average (over released cards of each rarity) of
+    book * affinity * marginal of the copy we would add (first copy 1.0, second 0.25, ...). Duplicates are worth little."""
+    pack = next(p for p in catalog["packs"] if p["id"] == pack_id)
+    counts, _ = card_counts(me)
+    marg = catalog["values"]["copy_marginals"]
+    by_rarity = {}
+    for s in catalog["sets"]:
+        if not s.get("released") or s["id"] not in me["affinity"]:
+            continue
+        for c in s["cards"]:
+            n = counts.get(c["id"], 0)
+            by_rarity.setdefault(c["rarity"], []).append(c["book"] * me["affinity"][s["id"]] * marg[min(n, len(marg) - 1)])
+    ev = 0.0
+    for slot in pack["slots"]:
+        for rarity, p in slot.items():
+            vals = by_rarity.get(rarity)
+            if vals:
+                ev += p * statistics.mean(vals)
+    return ev
+
+
+PACK_EDGE = 0.9           # we pay at most this share of what the pack is worth to us
+
+
 def pack_cap(me, catalog):
-    pack = next(p for p in catalog["packs"] if p["id"] == "sobre_barrio")
-    released = [s["id"] for s in catalog["sets"] if s.get("released") and s["id"] in me["affinity"]]
-    aff = statistics.mean(me["affinity"][s] for s in released) if released else 1.0
-    return max(0, min(me["cash"] - CASH_RESERVE, int(0.7 * pack["expected_book"] * aff)))
+    return max(0, min(me["cash"] - CASH_RESERVE, int(PACK_EDGE * pack_private_value(me, catalog))))
 
 
 def phase_abuela(b, me, catalog, mem):
@@ -441,8 +463,9 @@ def phase_abuela(b, me, catalog, mem):
                 log("open_pack:", e)
     cap = pack_cap(me, catalog)
     if tid is None:
-        if cap < 8:
-            log(f"Abuela: cap {cap} too low, skipping")
+        best_ever = min(mem.get("abuela_min_price", 999), 20)         # the lowest she ever sold a pack to us (capped at 20)
+        if cap < best_ever:
+            log(f"Abuela: a pack is worth {pack_private_value(me, catalog):.1f} to us (cap {cap}) and she never goes under {best_ever}: no deal")
             return False
         try:
             th = b.open_thread("abuela", topic={"buy": {"pack": "sobre_barrio"}})
@@ -680,6 +703,11 @@ def selftest():
                                                           {"id": 8, "kind": "card", "ref": "LAT-10", "serial": 1, "rarity": "rare"}]}
     cand = chato_candidate(me2, catalog2)
     assert cand and cand[1] == "MAL-07", "only the card that is cheap for us and realistic for him"
+    cat3 = {"sets": [{"id": "LAV", "released": True, "cards": [{"id": f"LAV-{i:02d}", "book": 10, "rarity": "common"} for i in range(1, 6)]}],
+            "packs": [{"id": "sobre_barrio", "slots": [{"common": 1.0}, {"common": 1.0}]}], "values": {"copy_marginals": [1.0, 0.25, 0.1]}}
+    empty = {"affinity": {"LAV": 1.0}, "assets": []}
+    full = {"affinity": {"LAV": 1.0}, "assets": [{"kind": "card", "ref": f"LAV-{i:02d}", "id": i, "serial": 1} for i in range(1, 6)]}
+    assert pack_private_value(empty, cat3) == 20.0 and pack_private_value(full, cat3) == 5.0, "a pack of cards we own is worth little"
     print("selftest OK")
 
 

@@ -194,3 +194,33 @@
 22:40:48   OFFER duel 201: 51 dNone (beta 2.0, frac 0.34)
 22:40:48 duel 226 buyer r3 left 10 | rival 146.0 d0 (move 14.0) stats {'n': 2, 'rate': 7.0, 'firm': False} | U now 25.0 next 84.0 | holding: waiting is expected to pay more
 22:40:49   OFFER duel 226: 87 dNone (beta 2.6, frac 0.03)
+22:41:47 duel 65 seller r10 left 3 | rival 124.0 d0 (move 26.0) stats None | U now 23.0 next 17.0 | rival offer already as good as our next planned offer
+22:41:47   ACCEPT duel 65 at 124.0 d0 (utility 23.0)
+22:41:47 duel 66 buyer r10 left 3 | rival None dNone (move None) stats None | U now None next 24.0 | no rival offer yet
+22:41:47   OFFER duel 66: 123 dNone (beta 2.0, frac 0.69)
+22:41:47 duel 175 buyer r1 left 12 | rival None dNone (move None) stats None | U now None next 64.0 | no rival offer yet
+22:41:48   OFFER duel 175: 64 dNone (beta 2.0, frac 0.01)
+22:41:48 duel 184 buyer r4 left 9 | rival 176.0 d0 (move 9.0) stats {'n': 2, 'rate': 10.0, 'firm': False} | U now -31.0 next 69.0 | rival offer below our margin
+22:41:48   OFFER duel 184: 76 dNone (beta 2.6, frac 0.06)
+22:41:48 duel 201 buyer r8 left 5 | rival None dNone (move None) stats None | U now None next 23.0 | no rival offer yet
+22:41:48   OFFER duel 201: 55 dNone (beta 2.0, frac 0.44)
+22:41:48 duel 226 buyer r4 left 9 | rival 139.0 d0 (move 7.0) stats {'n': 3, 'rate': 7.0, 'firm': False} | U now 32.0 next 81.0 | holding: waiting is expected to pay more
+22:41:48   OFFER duel 226: 90 dNone (beta 2.6, frac 0.06)
+22:42:47 duel 66 buyer r11 left 2 | rival 136.0 d0 (move None) stats None | U now 11.0 next 13.0 | holding: waiting is expected to pay more
+22:42:47   OFFER duel 66: 134 dNone (beta 2.0, frac 0.84)
+22:42:47 duel 175 buyer r2 left 11 | rival 130.0 d0 (move None) stats None | U now -2.0 next 63.0 | rival offer below our margin
+22:42:47   OFFER duel 175: 65 dNone (beta 2.0, frac 0.03)
+22:42:47 duel 184 buyer r5 left 8 | rival 169.0 d0 (move 7.0) stats {'n': 3, 'rate': 9.0, 'firm': False} | U now -24.0 next 66.0 | rival offer below our margin
+22:42:47   OFFER duel 184: 79 dNone (beta 2.6, frac 0.1)
+22:42:47 duel 201 buyer r9 left 4 | rival None dNone (move None) stats None | U now None next 18.0 | no rival offer yet
+22:42:48   OFFER duel 201: 60 dNone (beta 2.0, frac 0.56)
+22:42:48 duel 226 buyer r5 left 8 | rival 129.0 d0 (move 10.0) stats {'n': 4, 'rate': 7.75, 'firm': False} | U now 42.0 next 77.0 | waiting worth 41.6 <= 42.0 now (rate +7.8, firm=False)
+22:42:48   ACCEPT duel 226 at 129.0 d0 (utility 42.0)
+22:43:47 duel 66 buyer r12 left 1 | rival 136.0 d0 (move -0.0) stats None | U now 11.0 next 1.0 | rival offer already as good as our next planned offer
+22:43:48   ACCEPT duel 66 at 136.0 d0 (utility 11.0)
+22:43:48 duel 175 buyer r3 left 10 | rival 127.0 d0 (move 3.0) stats None | U now 1.0 next 61.0 | holding: waiting is expected to pay more
+22:43:48   OFFER duel 175: 67 dNone (beta 2.0, frac 0.06)
+22:43:48 duel 184 buyer r6 left 7 | rival 153.0 d0 (move 16.0) stats {'n': 4, 'rate': 10.75, 'firm': False} | U now -8.0 next 61.0 | rival offer below our margin
+22:43:48   OFFER duel 184: 84 dNone (beta 2.6, frac 0.16)
+22:43:48 duel 201 buyer r10 left 3 | rival None dNone (move None) stats None | U now None next 13.0 | no rival offer yet
+22:43:48   OFFER duel 201: 65 dNone (beta 2.0, frac 0.69)
