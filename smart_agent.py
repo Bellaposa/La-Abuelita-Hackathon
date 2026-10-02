@@ -79,11 +79,20 @@ def infer(mem, dealer="abuela"):
     for n in mem["observed"]["negotiations"]:
         if n.get("dealer", "abuela") != dealer:
             continue
+        # A sale concedes by lowering the ask, so the stored move and gap are negative, and the
+        # cash that changed hands is `received` rather than `paid`. Measure both toward the other side.
+        sale = "received" in n
         for r in n.get("rounds", []):
-            if (r.get("our_move") or 0) > 0 and r.get("her_move") is not None and r.get("gap_before"):
-                resp[bucket(r["our_move"], r["gap_before"])].append(max(0.0, r["her_move"]) / r["our_move"])
-        if n.get("outcome") == "deal" and n.get("paid"):
-            paid.append(n["paid"])
+            our_move = r.get("our_move") or 0
+            her_move = r.get("her_move")
+            gap = r.get("gap_before")
+            if sale and our_move < 0 and her_move is not None and gap and gap < 0:
+                our_move, her_move, gap = -our_move, -her_move, -gap
+            if our_move > 0 and her_move is not None and gap:
+                resp[bucket(our_move, gap)].append(max(0.0, her_move) / our_move)
+        amount = n.get("paid") or n.get("received")
+        if n.get("outcome") == "deal" and amount:
+            paid.append(amount)
     inf = {"response_ratio": {}, "best_k": None, "paid_median": None, "paid_n": len(paid)}
     for name, xs in resp.items():
         if len(xs) >= MIN_SAMPLES:
@@ -542,12 +551,12 @@ def phase_chato(b, me, catalog, mem, can_accept):
         mem["observed"]["negotiations"].append({"dealer": "chato", "thread": act["thread"], "topic": act["topic"], "outcome": t["status"],
                                                 "closed_reason": t.get("closed_reason"), "paid": None, "received": got,
                                                 "rounds": rounds_of(ours, hers)})
-        mem["active_chato"], act = None, None
         reason = t.get("closed_reason")
         log(f"Chato negotiation {t['id']} ended: {t['status']} {reason or ''} received {got}")
         if t["status"] != "deal":
             mem["chato_block_until"] = me["tick"] + 30            # any ending but a deal: do not pester him, he remembers
             mem.setdefault("chato_tried", {})[act["ref"]] = me["tick"]
+        mem["active_chato"], act = None, None
     if tid is None:
         cand = chato_candidate(me, catalog)
         if not cand:
@@ -708,6 +717,38 @@ def selftest():
     empty = {"affinity": {"LAV": 1.0}, "assets": []}
     full = {"affinity": {"LAV": 1.0}, "assets": [{"kind": "card", "ref": f"LAV-{i:02d}", "id": i, "serial": 1} for i in range(1, 6)]}
     assert pack_private_value(empty, cat3) == 20.0 and pack_private_value(full, cat3) == 5.0, "a pack of cards we own is worth little"
+
+    class _EndedChato:
+        def thread(self, tid):
+            return {"id": tid, "with": "chato", "status": "closed", "closed_reason": "no_progress",
+                    "messages": [
+                        {"sender": "t06", "text": "", "offer": {"want": {"cash": 26}, "give": {"cash": 0}}},
+                        {"sender": "chato", "text": "", "offer": {"give": {"cash": 13}, "want": {"cash": 0}}},
+                        {"sender": "t06", "text": "", "offer": {"want": {"cash": 22}, "give": {"cash": 0}}},
+                        {"sender": "chato", "text": "", "offer": {"give": {"cash": 15}, "want": {"cash": 0}}},
+                    ]}
+
+    mem_c = {"observed": {"negotiations": []}, "active_chato": {
+        "thread": 7, "topic": {"sell": {"assets": [9]}}, "cash_start": 100,
+        "ref": "MAL-07", "floor": 16, "lp": 26, "lost": 8}}
+    me_c = {"id": "t06", "tick": 40, "cash": 100, "unlocked": ["chato"], "open_threads": [],
+            "assets": [], "affinity": {}}
+    assert phase_chato(_EndedChato(), me_c, {}, mem_c, True) is False
+    assert mem_c["active_chato"] is None and mem_c["chato_tried"]["MAL-07"] == 40
+    assert mem_c["chato_block_until"] == 70
+    assert mem_c["observed"]["negotiations"][-1]["outcome"] == "closed"
+    # Same shape phase_chato stores: the ask fell, and the cash is `received`, not `paid`.
+    concession = {"her_ask": 15, "final": False, "our": 22, "our_move": -4, "her_move": -2, "gap_before": -16}
+    opening = {"her_ask": 13, "final": False, "our": 26, "our_move": None, "her_move": None, "gap_before": None}
+    learned = {"observed": {"negotiations": [
+        {"dealer": "chato", "outcome": "deal", "paid": None, "received": got, "rounds": [opening, concession, concession]}
+        for got in (18, 20, 22)]}}
+    inf = infer(learned, "chato")
+    assert inf["response_ratio"]["mid"] == {"mean": 0.5, "n": 6}, inf
+    assert inf["paid_median"] == 20 and inf["paid_n"] == 3
+    buy_down = {"observed": {"negotiations": [
+        {"outcome": "deal", "paid": 21, "rounds": [concession] * 5}]}}
+    assert infer(buy_down)["response_ratio"] == {}, "a buy that moved the wrong way is not a concession"
     print("selftest OK")
 
 
