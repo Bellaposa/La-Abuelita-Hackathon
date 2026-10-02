@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="it" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team 6 · The Bazaar</title>
+<style>
+  /* Roles, not hex, below this block. Light/dark are selected steps of the same hues (palette validated with validate_palette.js). */
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface-1: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,.10); --wash: rgba(11,11,11,.05);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;       /* categorical slots 1-4 */
+    --seq-track: #cde2fb; --seq-fill: #2a78d6; --other: #c3c2b7;       /* sequential blue + de-emphasis gray */
+    --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --crit: #d03b3b; --good-text: #006300;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface-1: #1a1a19; --ink: #fff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,.10); --wash: rgba(255,255,255,.06);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --seq-track: #0d366b; --seq-fill: #3987e5; --other: #4a4a46; --good-text: #0ca30c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="auto"] {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface-1: #1a1a19; --ink: #fff; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,.10); --wash: rgba(255,255,255,.06);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+      --seq-track: #0d366b; --seq-fill: #3987e5; --other: #4a4a46; --good-text: #0ca30c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--grid); background: var(--surface-1); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: .1px; }
+  header .sub { color: var(--ink-2); }
+  .spacer { flex: 1; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--ring); font-size: 12px; color: var(--ink-2); background: var(--surface-1); }
+  .pill b { color: var(--ink); font-weight: 600; }
+  button { font: inherit; color: var(--ink-2); background: transparent; border: 1px solid var(--ring); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+  button:hover { background: var(--wash); color: var(--ink); }
+  button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+  main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 60px; }
+  .warnbar { display: none; margin-bottom: 16px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--serious); background: var(--wash); }
+  .warnbar.on { display: block; }
+  .hero { display: grid; grid-template-columns: minmax(260px, 1.1fr) 2fr; gap: 20px; margin-bottom: 20px; }
+  @media (max-width: 880px) { .hero { grid-template-columns: 1fr; } }
+  .card { background: var(--surface-1); border: 1px solid var(--ring); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+  .card h2 { font-size: 13px; margin: 0 0 2px; font-weight: 650; }
+  .card .cap { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .card .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .hero-fig { font-size: 64px; line-height: 1; font-weight: 650; letter-spacing: -1px; margin: 6px 0 4px; }
+  .hero-fig small { font-size: 20px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
+  .delta { font-size: 13px; color: var(--ink-2); }
+  .delta .up { color: var(--good-text); font-weight: 600; } .delta .down { color: var(--crit); font-weight: 600; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .tile { border: 1px solid var(--ring); border-radius: 12px; padding: 12px 14px; background: var(--surface-1); min-width: 0; }
+  .tile .l { color: var(--ink-2); font-size: 12px; }
+  .tile .v { font-size: 26px; font-weight: 600; margin: 2px 0; }
+  .tile .d { color: var(--muted); font-size: 12px; min-height: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+  .c4 { grid-column: span 4; } .c5 { grid-column: span 5; } .c6 { grid-column: span 6; } .c7 { grid-column: span 7; } .c8 { grid-column: span 8; } .c12 { grid-column: span 12; }
+  @media (max-width: 1000px) { .c4, .c5, .c6, .c7, .c8 { grid-column: span 12; } }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  svg text { font: 11px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
+  svg text.ink { fill: var(--ink-2); } svg text.strong { fill: var(--ink); font-weight: 650; }
+  .hit { fill: transparent; }
+  .bar:hover, .bar:focus { opacity: .85; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 4px 8px 6px 0; border-bottom: 1px solid var(--grid); }
+  td { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; padding-right: 0; }
+  .scroll { max-height: 320px; overflow: auto; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--ink-2); font-size: 12px; margin: 4px 0 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; border-radius: 1px; }
+  .meter { margin: 8px 0 14px; }
+  .meter .row { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+  .meter .row b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .track { height: 10px; border-radius: 5px; background: var(--seq-track); overflow: hidden; }
+  .fill { height: 100%; background: var(--seq-fill); border-radius: 5px; }
+  .setrow { margin: 10px 0 14px; }
+  .setrow .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--ring); font-size: 11px; color: var(--ink-2); margin: 3px 4px 0 0; }
+  .chip.near { border-color: var(--s4); color: var(--ink); }
+  .seq { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+  .seq .chip { margin: 0; }
+  .feed .row { display: grid; grid-template-columns: 62px 74px 1fr; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--grid); font-size: 12.5px; }
+  .feed .t { color: var(--muted); font-variant-numeric: tabular-nums; } .feed .s { color: var(--ink-2); }
+  .tip { position: fixed; pointer-events: none; z-index: 20; background: var(--surface-1); border: 1px solid var(--ring); border-radius: 10px; padding: 8px 10px; box-shadow: 0 6px 20px rgba(0,0,0,.18); font-size: 12px; opacity: 0; transition: opacity .08s; min-width: 120px; }
+  .tip.on { opacity: 1; } .tip .row { display: flex; justify-content: space-between; gap: 14px; } .tip b { font-size: 13px; color: var(--ink); }
+  .tip .k { display: inline-block; width: 12px; height: 2px; margin-right: 6px; vertical-align: middle; }
+  .muted { color: var(--muted); } .empty { color: var(--muted); padding: 10px 0; }
+  .refreshing { opacity: .6; transition: opacity .2s; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Team 6 · The Bazaar</h1>
+  <span class="sub" id="roundname"></span>
+  <span class="spacer"></span>
+  <span class="pill" id="pill-live"></span>
+  <span class="pill">tick <b id="pill-tick">–</b></span>
+  <span class="pill">prossimo tick <b id="pill-next">–</b></span>
+  <button id="theme" title="Cambia tema">Tema</button>
+</header>
+<main id="main">
+  <div class="warnbar" id="warn"></div>
+  <section class="hero">
+    <div class="card">
+      <h2>Punteggio</h2>
+      <div class="hero-fig" id="hero-score">–</div>
+      <div class="delta" id="hero-rank"></div>
+      <div class="delta" id="hero-gap"></div>
+      <div class="delta" id="hero-split" style="margin-top:6px"></div>
+    </div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+  <section class="grid">
+    <div class="card c5"><div class="head"><div><h2>Classifica</h2><div class="cap" id="board-cap"></div></div><button data-toggle="board">Tabella</button></div><div id="board"></div></div>
+    <div class="card c7"><div class="head"><div><h2>Punteggio nel tempo</h2><div class="cap">Noi e il primo in classifica, un punto ogni ~15 s</div></div><button data-toggle="hist">Tabella</button></div><div id="hist"></div></div>
+    <div class="card c4"><h2>Da dove vengono i punti</h2><div class="cap">Su 30 + 30 (i giudici valgono altri 40)</div><div id="parts"></div></div>
+    <div class="card c4"><h2>Album</h2><div class="cap">Pagina = comuni, non comuni e rare di un set</div><div id="album"></div></div>
+    <div class="card c4"><h2>Prossimi eventi</h2><div class="cap">Tempo reale stimato dal ritmo del tick attuale</div><div id="sched"></div></div>
+    <div class="card c6"><h2>Dealer</h2><div class="cap">Le nostre conversazioni con Abuela e El Chato</div><div id="dealers"></div></div>
+    <div class="card c6"><h2>Il nostro mercato</h2><div class="cap">Venue dove commerciano gli altri team</div><div id="venue"></div></div>
+    <div class="card c12" id="duelcard" style="display:none"><h2>Duelli</h2><div class="cap">Il limite è privato: non vendere mai sotto il costo, non pagare mai sopra il valore. Il valore dell'affare cala del 6 % a ogni round</div><div id="duels"></div></div>
+    <div class="card c7"><h2>Attività degli agenti</h2><div class="cap">Ultimi eventi dai log, i più recenti in alto</div><div class="feed scroll" id="feed"></div></div>
+    <div class="card c5"><h2>Agenti in esecuzione</h2><div class="cap">Una sola copia per agente: due si pestano i piedi</div><div id="procs"></div></div>
+    <div class="card c12"><h2>Carte in mano</h2><div class="cap">Valore = quanto valgono per noi (privato). “Doppia” = copia in più</div><div class="scroll" id="cards"></div></div>
+  </section>
+</main>
+<div class="tip" id="tip" role="status"></div>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) { if (k === "text") e.textContent = v; else e.setAttribute(k, v); }
+  for (const c of kids || []) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  return e;
+}
+function sv(tag, attrs, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  return e;
+}
+const fmt = (n, d = 1) => n == null ? "–" : Number(n).toLocaleString("it-IT", { minimumFractionDigits: 0, maximumFractionDigits: d });
+const clock = (s) => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  return h ? `${h} h ${String(m).padStart(2, "0")} min` : `${m}:${String(x).padStart(2, "0")}`; };
+const hhmm = (ts) => new Date(ts * 1000).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+const cssv = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const replace = (id, ...nodes) => { const n = $(id); n.replaceChildren(...nodes); return n; };
+
+/* ---------- tooltip: one element, textContent only ---------- */
+const tip = $("tip");
+function showTip(evt, rows, title) {
+  tip.replaceChildren();
+  if (title) tip.appendChild(el("div", { class: "muted", text: title }));
+  for (const r of rows) {
+    const row = el("div", { class: "row" });
+    const left = el("span");
+    if (r.color) { const k = el("i", { class: "k" }); k.style.background = r.color; left.appendChild(k); }
+    left.appendChild(document.createTextNode(r.label));
+    row.append(left, el("b", { text: r.value }));
+    tip.appendChild(row);
+  }
+  const box = tip.getBoundingClientRect(), pad = 14;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + box.width > innerWidth - 8) x = evt.clientX - box.width - pad;
+  if (y + box.height > innerHeight - 8) y = evt.clientY - box.height - pad;
+  tip.style.left = x + "px"; tip.style.top = y + "px"; tip.classList.add("on");
+}
+const hideTip = () => tip.classList.remove("on");
+function focusPoint(target, rows, title) {
+  const r = target.getBoundingClientRect(); showTip({ clientX: r.right, clientY: r.top }, rows, title);
+}
+
+/* ---------- state ---------- */
+let S = null, fetchedAt = 0;
+const view = { board: false, hist: false };
+const prefs = new URLSearchParams(location.search).get("theme") || localStorage.getItem("theme");
+if (prefs) document.documentElement.dataset.theme = prefs;
+$("theme").onclick = () => {
+  const cur = document.documentElement.dataset.theme;
+  const dark = cur === "dark" || (cur === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  const next = dark ? "light" : "dark"; document.documentElement.dataset.theme = next; localStorage.setItem("theme", next); render();
+};
+document.querySelectorAll("[data-toggle]").forEach((b) => b.onclick = () => {
+  const k = b.dataset.toggle; view[k] = !view[k]; b.textContent = view[k] ? "Grafico" : "Tabella"; render();
+});
+
+/* ---------- charts ---------- */
+function roundedRight(x, y, w, h, r) {
+  r = Math.min(r, w, h / 2);
+  return `M${x},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} H${x},${y} Z`.replace(/ H(\S+),\S+ Z$/, " H$1 Z");
+}
+function table(head, rows) {
+  const t = el("table"), tr = el("tr");
+  head.forEach((h, i) => tr.appendChild(el("th", { class: i ? "n" : "", text: h })));
+  t.appendChild(el("thead", {}, [tr]));
+  const tb = el("tbody");
+  rows.forEach((r) => tb.appendChild(el("tr", {}, r.map((c, i) => el("td", { class: i ? "n" : "", text: String(c) })))));
+  t.appendChild(tb); return t;
+}
+
+function drawBoard(s) {
+  const rows = s.board.slice();
+  const top = rows.slice(0, 10), us = rows.find((r) => r.us);
+  const shown = us && !top.includes(us) ? [...top, null, us] : top;
+  $("board-cap").textContent = `${rows.length} team · aggiornata al tick ${s.snapshot_tick ?? "–"}, prossima al ${s.next_refresh_tick ?? "–"}`;
+  if (view.board) return replace("board", table(["#", "Team", "Punti"], rows.map((r) => [r.rank, r.name + (r.us ? " (noi)" : ""), fmt(r.score, 2)])));
+  const W = 460, rowH = 26, left = 112, right = 52, H = shown.length * rowH + 6;
+  const max = Math.max(...rows.map((r) => r.score), 1), svg = sv("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Classifica" });
+  svg.appendChild(sv("line", { x1: left, x2: left, y1: 0, y2: H, stroke: cssv("--axis"), "stroke-width": 1 }));
+  shown.forEach((r, i) => {
+    const y = i * rowH + 4;
+    if (!r) { svg.appendChild(sv("text", { x: left - 8, y: y + 14, "text-anchor": "end" }, "⋯")); return; }
+    const w = Math.max(3, (W - left - right) * r.score / max), g = sv("g", { class: "bar", tabindex: 0, role: "img", "aria-label": `${r.rank}° ${r.name}, ${r.score} punti` });
+    svg.appendChild(sv("text", { x: left - 8, y: y + 13, "text-anchor": "end", class: r.us ? "strong" : "ink" }, `${r.rank}. ${r.name}`));
+    g.appendChild(sv("path", { d: roundedRight(left, y + 2, w, 14, 4), fill: r.us ? cssv("--s1") : cssv("--other") }));
+    g.appendChild(sv("text", { x: left + w + 6, y: y + 13, class: r.us ? "strong" : "" }, fmt(r.score, 1)));
+    g.appendChild(sv("rect", { class: "hit", x: 0, y: y - 3, width: W, height: rowH }));
+    const info = [{ label: "Punti", value: fmt(r.score, 2) }, { label: "Dal primo", value: r.rank === 1 ? "—" : "−" + fmt(rows[0].score - r.score, 2) }];
+    g.addEventListener("pointermove", (e) => showTip(e, info, `${r.rank}° · ${r.name}`)); g.addEventListener("pointerleave", hideTip);
+    g.addEventListener("focus", () => focusPoint(g, info, `${r.rank}° · ${r.name}`)); g.addEventListener("blur", hideTip);
+    svg.appendChild(g);
+  });
+  replace("board", svg);
+}
+
+function drawHist(s) {
+  let H = s.history.filter((p) => p.score != null);
+  if (H.length < 2) return replace("hist", el("div", { class: "empty", text: "Servono almeno due campioni: aspetta qualche secondo." }));
+  if (H.length > 360) { const k = Math.ceil(H.length / 360); H = H.filter((_, i) => i % k === 0 || i === H.length - 1); }
+  if (view.hist) return replace("hist", el("div", { class: "scroll" }, [table(["Ora", "Noi", "Primo", "Pos."], H.slice().reverse().map((p) => [hhmm(p.ts), fmt(p.score, 2), fmt(p.leader, 2), p.rank ?? "–"]))]));
+  const W = 640, Hh = 230, L = 38, R = 70, T = 12, B = 26;
+  const t0 = H[0].ts, t1 = H[H.length - 1].ts || t0 + 1, ys = H.flatMap((p) => [p.score, p.leader]).filter((v) => v != null);
+  const lo = Math.max(0, Math.floor(Math.min(...ys) / 5) * 5 - 0), hi = Math.ceil(Math.max(...ys, 1) / 5) * 5 || 5;
+  const X = (t) => L + (W - L - R) * (t - t0) / Math.max(1, t1 - t0), Y = (v) => T + (Hh - T - B) * (1 - (v - lo) / Math.max(1, hi - lo));
+  const svg = sv("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": "Punteggio nel tempo" });
+  const step = Math.max(1, Math.ceil((hi - lo) / 4 / 5) * 5);
+  for (let v = lo; v <= hi; v += step) {
+    svg.appendChild(sv("line", { x1: L, x2: W - R, y1: Y(v), y2: Y(v), stroke: cssv("--grid"), "stroke-width": 1 }));
+    svg.appendChild(sv("text", { x: L - 6, y: Y(v) + 4, "text-anchor": "end" }, String(v)));
+  }
+  svg.appendChild(sv("line", { x1: L, x2: W - R, y1: Hh - B, y2: Hh - B, stroke: cssv("--axis"), "stroke-width": 1 }));
+  for (let i = 0; i <= 4; i++) { const t = t0 + (t1 - t0) * i / 4; svg.appendChild(sv("text", { x: X(t), y: Hh - 8, "text-anchor": i === 0 ? "start" : i === 4 ? "end" : "middle" }, hhmm(t))); }
+  const line = (key, color) => {
+    const pts = H.filter((p) => p[key] != null).map((p) => `${X(p.ts).toFixed(1)},${Y(p[key]).toFixed(1)}`).join(" ");
+    svg.appendChild(sv("polyline", { points: pts, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+  };
+  line("leader", cssv("--other")); line("score", cssv("--s1"));
+  const last = H[H.length - 1];
+  [["score", cssv("--s1"), "noi", "strong"], ["leader", cssv("--other"), "primo", "ink"]].forEach(([k, c, lab, cls], i) => {
+    if (last[k] == null) return;
+    svg.appendChild(sv("circle", { cx: X(last.ts), cy: Y(last[k]), r: 4, fill: c, stroke: cssv("--surface-1"), "stroke-width": 2 }));
+    svg.appendChild(sv("text", { x: X(last.ts) + 9, y: Y(last[k]) + 4 + (k === "leader" && Math.abs(Y(last.leader) - Y(last.score)) < 14 ? -8 : 0), class: cls }, `${lab} ${fmt(last[k], 1)}`));
+  });
+  const cross = sv("line", { y1: T, y2: Hh - B, stroke: cssv("--axis"), "stroke-width": 1, visibility: "hidden" });
+  svg.appendChild(cross);
+  const hit = sv("rect", { class: "hit", x: L, y: T, width: W - L - R, height: Hh - T - B, tabindex: 0 });
+  const at = (e) => { const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W, t = t0 + (px - L) / (W - L - R) * (t1 - t0);
+    return H.reduce((a, b) => Math.abs(b.ts - t) < Math.abs(a.ts - t) ? b : a); };
+  const show = (e, p) => { cross.setAttribute("x1", X(p.ts)); cross.setAttribute("x2", X(p.ts)); cross.setAttribute("visibility", "visible");
+    showTip(e, [{ label: "Noi", value: fmt(p.score, 2), color: cssv("--s1") }, { label: "Primo", value: fmt(p.leader, 2), color: cssv("--other") },
+                { label: "Posizione", value: p.rank != null ? p.rank + "°" : "–" }], hhmm(p.ts)); };
+  hit.addEventListener("pointermove", (e) => show(e, at(e)));
+  hit.addEventListener("pointerleave", () => { hideTip(); cross.setAttribute("visibility", "hidden"); });
+  svg.appendChild(hit);
+  const legend = el("div", { class: "legend" }, [
+    el("span", {}, [Object.assign(el("i"), { style: `background:${cssv("--s1")}` }), "Team 6"]),
+    el("span", {}, [Object.assign(el("i"), { style: `background:${cssv("--other")}` }), "Primo in classifica"])]);
+  replace("hist", legend, svg);
+}
+
+function spark(values, color, w = 110, h = 26) {
+  const v = values.filter((x) => x != null); if (v.length < 2) return el("span");
+  const lo = Math.min(...v), hi = Math.max(...v), svg = sv("svg", { viewBox: `0 0 ${w} ${h}`, style: `width:${w}px;height:${h}px` });
+  const pts = v.map((x, i) => `${(i / (v.length - 1) * (w - 6) + 3).toFixed(1)},${(h - 4 - (hi === lo ? 0.5 : (x - lo) / (hi - lo)) * (h - 8)).toFixed(1)}`);
+  svg.appendChild(sv("polyline", { points: pts.join(" "), fill: "none", stroke: cssv("--other"), "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+  const [cx, cy] = pts[pts.length - 1].split(","); svg.appendChild(sv("circle", { cx, cy, r: 3.5, fill: color, stroke: cssv("--surface-1"), "stroke-width": 2 }));
+  return svg;
+}
+
+/* ---------- panels ---------- */
+const RARITY = { common: "comune", uncommon: "non comune", rare: "rara", epic: "epica", legendary: "leggendaria" };
+const ACTION = { duels: "Duelli", bench: "Market Test", persona_opens: "Si apre un dealer", round: "Nuovo round", set_release: "Esce un set", persona_announce: "Annuncio dealer" };
+
+function render() {
+  if (!S) return;
+  const s = S;
+  $("title").textContent = `${s.team?.name ?? "Team"} · The Bazaar`;
+  $("roundname").textContent = s.clock?.round_name ?? "";
+  const live = !s.clock?.paused;
+  const pill = $("pill-live"); pill.replaceChildren(el("span", { text: live ? "▶" : "⏸" }), el("b", { text: live ? "LIVE" : "IN PAUSA" }));
+  pill.style.borderColor = live ? cssv("--good") : cssv("--warn");
+  $("pill-tick").textContent = s.clock?.tick ?? "–";
+
+  const hist = s.history || [], rank = s.score.rank, now = hist[hist.length - 1], past = hist.find((p) => p.ts >= (now?.ts ?? 0) - 600) || hist[0];
+  $("hero-score").replaceChildren(document.createTextNode(fmt(s.score.score, 1)), el("small", { text: " / 60" }));
+  const dscore = past && now ? s.score.score - past.score : 0, drank = past && now && past.rank != null && rank != null ? past.rank - rank : 0;
+  const rk = $("hero-rank"); rk.replaceChildren(document.createTextNode(`Posizione ${rank ?? "–"}° su ${s.rank_of} `));
+  if (drank) rk.appendChild(el("span", { class: drank > 0 ? "up" : "down", text: `${drank > 0 ? "▲" : "▼"} ${Math.abs(drank)} in 10 min` }));
+  $("hero-gap").textContent = `Dal primo (${s.leader.name ?? "–"}): −${fmt((s.leader.score ?? 0) - s.score.score, 1)} punti` + (dscore ? ` · noi ${dscore > 0 ? "+" : ""}${fmt(dscore, 1)} in 10 min` : "");
+  $("hero-split").textContent = `Negoziazione ${fmt(s.score.negotiating, 1)} · Mercato ${fmt(s.score.market, 1)}`;
+
+  const series = (k) => hist.slice(-40).map((p) => p[k]);
+  const tile = (l, v, d, extra) => el("div", { class: "tile" }, [el("div", { class: "l", text: l }), el("div", { class: "v", text: v }), el("div", { class: "d" }, [d ? document.createTextNode(d) : "", extra || ""])]);
+  replace("kpis",
+    tile("Cassa", `${fmt(s.team.cash, 0)} P`, "", spark(series("cash"), cssv("--s1"))),
+    tile("Valore collezione", fmt(s.team.collection_value, 0), "per noi, privato", spark(series("cv"), cssv("--s1"))),
+    tile("Album", `${s.score.album_filled}/${s.score.album_slots}`, `${s.score.pages_complete} pagine complete`),
+    tile("Affari", String(s.score.deals ?? 0), `fortuna dei sobres ${fmt(s.score.luck, 0)} (non conta)`),
+    tile("Livello", String(s.team.level), s.team.unlocked.join(", ")),
+    tile("Offerte aperte", String(s.offers_open), "su El Rastro"));
+
+  drawBoard(s); drawHist(s);
+
+  /* parts */
+  const meter = (label, v, max) => el("div", { class: "meter" }, [el("div", { class: "row" }, [el("span", { text: label }), el("b", { text: `${fmt(v, 1)} / ${max}` })]),
+    el("div", { class: "track" }, [Object.assign(el("div", { class: "fill" }), { style: `width:${Math.min(100, (v || 0) / max * 100)}%` })])]);
+  const raw = [["Duelli", s.score.duel_points], ["Scala dealer", s.score.ladder_points], ["Scambi tra team", s.score.neg_points], ["Market Test", s.score.bench_points], ["Mercato (punti)", s.score.mm_points]];
+  replace("parts", meter("Negoziazione", s.score.negotiating, 30), meter("Mercato", s.score.market, 30),
+    el("div", { class: "cap", text: "Punti grezzi, prima di pesarli" }), table(["Voce", "Punti"], raw.map(([a, b]) => [a, b == null ? "—" : fmt(b, 2)])),
+    s.score.bench_efficiency != null ? el("div", { class: "cap", text: `Efficienza del Market Test: ${fmt(s.score.bench_efficiency * 100, 0)} %` }) : "");
+
+  /* album */
+  replace("album", ...s.album.map((a) => {
+    const near = a.missing.length > 0 && a.missing.length <= 3;
+    const row = el("div", { class: "setrow" }, [
+      el("div", { class: "top" }, [el("span", {}, [el("b", { text: a.name }), el("span", { class: "muted", text: `  ×${a.affinity}` })]), el("span", { class: "muted", text: `${a.have}/${a.of}` })]),
+      el("div", { class: "track" }, [Object.assign(el("div", { class: "fill" }), { style: `width:${a.have / a.of * 100}%` })])]);
+    if (near) { row.appendChild(el("div", { class: "cap", style: "margin:6px 0 0", text: `◆ Quasi completa: bonus pagina ≈ ${fmt(a.bonus, 0)}` }));
+      a.missing.forEach((m) => row.appendChild(el("span", { class: "chip near", text: `${m.ref} · ${RARITY[m.rarity]} · vale ${fmt(m.value, 0)}` }))); }
+    else if (a.missing.length) row.appendChild(el("div", { class: "cap", style: "margin:6px 0 0", text: `Mancano ${a.missing.length} carte della pagina` }));
+    return row;
+  }));
+
+  /* schedule */
+  const el0 = (Date.now() - fetchedAt) / 1000;
+  replace("sched", s.schedule.length ? table(["Evento", "Tra"], s.schedule.map((e) => [ACTION[e.action] || e.action, clock(e.eta_s - el0)])) : el("div", { class: "empty", text: "Nessun evento in calendario." }));
+
+  /* dealers */
+  const dcard = (id, name) => {
+    const d = s.dealers[id], open = s.team.unlocked.includes(id);
+    const box = el("div", { style: "margin-bottom:14px" }, [el("div", { class: "top", style: "display:flex;justify-content:space-between" }, [el("b", { text: name }),
+      el("span", { class: "chip", text: open ? "✓ sbloccato" : "✗ bloccato" })])]);
+    if (!d) { box.appendChild(el("div", { class: "empty", text: "Nessuna conversazione ancora." })); return box; }
+    box.appendChild(el("div", { class: "muted", text: `${d.total} conversazioni · ${d.deals} affari chiusi · ${d.cooloffs} “cooloff”` }));
+    const t = d.open || d.last;
+    if (t) { box.appendChild(el("div", { class: "cap", style: "margin:8px 0 0", text: `${d.open ? "Aperta" : "Ultima"} #${t.id} · ${JSON.stringify(t.topic)} · ${t.status}${t.reason ? " (" + t.reason + ")" : ""}` }));
+      const q = el("div", { class: "seq" }); t.seq.forEach((m) => q.appendChild(el("span", { class: "chip", text: `${m.who === "noi" ? "noi" : "lei"} ${m.price}${m.final ? " F" : ""}` }))); box.appendChild(q); }
+    return box;
+  };
+  replace("dealers", dcard("abuela", "Abuela Carmen"), dcard("chato", "El Chato"));
+
+  /* venue */
+  const v = s.venue;
+  replace("venue", v ? el("div", {}, [el("div", { class: "kpis" }, [tile("Operazioni", String(v.trades ?? 0), `${v.traders ?? 0} trader`), tile("Volume", fmt(v.volume, 0), `commissioni ${fmt(v.fees, 0)}`),
+    tile("Valore creato", fmt(v.value_created, 1), "tra altri team")]),
+    el("div", { class: "cap", style: "margin-top:10px", text: `${v.name} · commissione ${v.fee_bps / 100} % · ${v.rules?.mechanism ?? ""} · ${v.status}` })]) : el("div", { class: "empty", text: "Non abbiamo un mercato aperto." }));
+
+  /* processes */
+  const dups = s.processes.duplicates, w = $("warn");
+  w.classList.toggle("on", dups.length > 0);
+  w.textContent = dups.length ? `⚠ Copie doppie in esecuzione: ${dups.join(", ")}. Due copie con la stessa chiave si pestano i piedi: tieni solo la più recente.` : "";
+  replace("procs", s.processes.list.length ? table(["Agente", "PID", "Attivo da"], s.processes.list.map((p) => [(dups.includes(p.script) ? "⚠ " : "✓ ") + p.script, p.pid, p.uptime])) : el("div", { class: "empty", text: "Nessun agente trovato." }));
+
+  /* duels */
+  const du = s.duels || [];
+  $("duelcard").style.display = du.length ? "" : "none";
+  if (du.length) replace("duels", table(["Duello", "Ruolo", "Rivale", "Limite", "Noi", "Rivale offre", "Round", "Restano", "Stato"],
+    du.map((d) => [`#${d.id} · ${d.item}`, d.role === "seller" ? "venditore" : "compratore", d.rival, d.limit, d.mine ?? "–", d.his ?? "–", d.rounds, d.status === "live" ? d.left + " tick" : "–",
+      d.status === "live" ? "in corso" : (d.price != null ? `chiuso a ${d.price}` : d.status)])));
+
+  /* feed */
+  replace("feed", ...(s.activity.length ? s.activity.slice().reverse().map((r) => el("div", { class: "row" }, [el("span", { class: "t", text: r.t }), el("span", { class: "s", text: r.src }), el("span", { text: r.text })])) : [el("div", { class: "empty", text: "Ancora nessun evento nei log." })]));
+
+  /* cards */
+  replace("cards", table(["Carta", "Rarità", "Serie", "Copie", "Valore"], s.holdings.map((c) => [`${c.ref} · ${c.name}`, RARITY[c.rarity] || c.rarity, `#${c.serial}/${c.print_run}`, c.copies > 1 ? `${c.copies} · doppia` : "1", fmt(c.value, 1)])));
+}
+
+async function load() {
+  try {
+    document.getElementById("main").classList.add("refreshing");
+    const r = await fetch("/api/state"); const j = await r.json();
+    if (j.ok) { S = j; fetchedAt = Date.now(); render(); }
+    else if (!S) replace("main", el("div", { class: "card" }, [el("h2", { text: "In attesa dei dati" }), el("div", { class: "empty", text: j.error || "…" })]));
+  } catch (e) { /* keep the previous render */ }
+  document.getElementById("main")?.classList.remove("refreshing");
+}
+setInterval(() => { if (S) { const n = Math.max(0, (S.clock.next_tick_in ?? 0) - (Date.now() - fetchedAt) / 1000); $("pill-next").textContent = S.clock.paused ? "–" : clock(n); } }, 500);
+setInterval(load, 4000); load();
+</script>
+</body>
+</html>

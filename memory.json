@@ -6,7 +6,8 @@
   "Tú ofreciste 16P diciendo: ¡Hola Abuela! ¿Aceptas 16 P y somos amigos?",
   "Tú ofreciste 18P diciendo: ¡Hola Abuela! ¿Aceptas 18 P y somos amigos?",
   "Tú ofreciste 20P diciendo: ¡Hola Abuela! ¿Aceptas 20 P y somos amigos?",
-  "Tú ofreciste 22P diciendo: ¡Hola Abuela! ¿Aceptas 22 P y somos amigos?"
+  "Tú ofreciste 22P diciendo: ¡Hola Abuela! ¿Aceptas 22 P y somos amigos?",
+  "13P: ¡Hola, Abuela Carmen! Qué alegría verla, ¿ha comido ya? Vengo por un sobre de barrio: ¿le parece bien 13 primas?"
  ],
  "observed": {
   "negotiations": [
@@ -50,6 +51,28 @@
       "gap_before": -8
      }
     ]
+   },
+   {
+    "dealer": "abuela",
+    "thread": 181,
+    "topic": {
+     "buy": {
+      "pack": "sobre_barrio"
+     }
+    },
+    "outcome": "closed",
+    "closed_reason": null,
+    "paid": null,
+    "rounds": [
+     {
+      "her_ask": 30,
+      "final": false,
+      "our": 25,
+      "our_move": null,
+      "her_move": null,
+      "gap_before": null
+     }
+    ]
    }
   ]
  },
@@ -60,13 +83,13 @@
   "paid_n": 0
  },
  "active": {
-  "thread": 181,
+  "thread": 254,
   "topic": {
    "buy": {
     "pack": "sobre_barrio"
    }
   },
-  "cash_start": 283
+  "cash_start": 29
  },
  "active_chato": null,
  "chato_block_until": 139,

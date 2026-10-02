@@ -1,0 +1,225 @@
+"""Page hunter: complete the album pages we value most, financed by cards that are worth little to us.
+
+    BAZAAR_KEY=tk-... python3 page_hunter.py          # El Rastro only; never talks to a dealer
+    python3 page_hunter.py --selftest                 # offline checks
+
+Why: a complete page earns a bonus (catalog values.page_bonus x the page's value to us). With 8 of 10 Lavapies page cards
+the two missing rares are worth far more to us than their market price, but cash is the limit. So:
+
+  sell   single cards of sets we do not build (affinity < FOCUS_AFF) at a price over what they are worth to us
+         (smart_agent.py sells duplicates; this agent only touches single copies, so they never overlap)
+  buy    missing page cards of the sets we build, when cost (price + fee) <= buy cap, where
+         cap = our value of the card + bonus / (2 * missing cards)   (half the bonus, shared: we may not finish the page)
+  bid    a standing bid at BID_FRAC of the cap for each missing card, once we have the cash
+
+It leaves dealers alone (one agent per dealer) and never accepts more than the one accept a tick the team has;
+a refused accept costs nothing.
+"""
+import json
+import math
+import os
+import sys
+import time
+
+from bazaar_sdk import Bazaar, BazaarError
+
+URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
+FOCUS_AFF = float(os.environ.get("FOCUS_AFF", "1.0"))   # sets with affinity >= this are the ones we build
+BID_FRAC = 0.6
+SELL_MARGIN = 1.4          # we ask at least 1.4x what the card is worth to us, plus 2 primas
+MAX_POSTS = 3
+MAX_MISSING = 3            # count the page bonus only when this few page cards are missing
+MAX_OPEN = 28
+
+
+def log(*a):
+    print(time.strftime("%H:%M:%S"), *a, flush=True)
+
+
+def fee_of(venue, price):
+    return math.ceil(venue.get("fee_bps", 0) * price / 10000) + venue.get("fee_per_card", 0)
+
+
+def cards_of(catalog, set_id):
+    return next(s for s in catalog["sets"] if s["id"] == set_id)["cards"]
+
+
+def value_of_card(card, set_id, affinity):
+    return card["book"] * affinity.get(set_id, 1.0)          # first copy of the card
+
+
+def focus_sets(catalog, affinity):
+    return [s["id"] for s in catalog["sets"] if s.get("released") and affinity.get(s["id"], 0) >= FOCUS_AFF]
+
+
+def page_targets(catalog, affinity, have):
+    """[(ref, our value, cap)] for missing page cards of the sets we build. Cap = value + half the shared bonus."""
+    out = []
+    for sid in focus_sets(catalog, affinity):
+        page = [c for c in cards_of(catalog, sid) if c["page"]]
+        page_value = sum(value_of_card(c, sid, affinity) for c in page)
+        bonus = catalog["values"]["page_bonus"] * page_value
+        missing = [c for c in page if c["id"] not in have]
+        share = bonus / (2 * len(missing)) if 0 < len(missing) <= MAX_MISSING else 0.0   # far from done: no bonus credit
+        for c in missing:
+            v = value_of_card(c, sid, affinity)
+            out.append((c["id"], round(v, 1), v + share, sid))
+    return out
+
+
+def sell_stock(catalog, affinity, assets, competitors, listed):
+    """[(asset id, ask, ref, our value)]: single copies in sets we do not build, asked above our value."""
+    counts = {}
+    for a in assets:
+        if a["kind"] == "card":
+            counts[a["ref"]] = counts.get(a["ref"], 0) + 1
+    plan = []
+    for a in assets:
+        if a["kind"] != "card" or counts[a["ref"]] != 1 or a["id"] in listed:
+            continue
+        sid = a["ref"].split("-")[0]
+        if affinity.get(sid, 1.0) >= FOCUS_AFF:
+            continue
+        card = next(c for c in cards_of(catalog, sid) if c["id"] == a["ref"])
+        v = value_of_card(card, sid, affinity)
+        floor = math.ceil(v * SELL_MARGIN + 2)
+        comp = competitors.get(a["ref"])
+        target = (min(comp) - 1) if comp else math.ceil(card["book"] * 1.2)
+        ask = max(floor, min(target, math.ceil(card["book"] * 1.2)))
+        if ask >= floor:
+            plan.append((a["id"], ask, a["ref"], round(v, 1)))
+    return sorted(plan, key=lambda p: -(p[1] - p[3]))      # biggest gain first
+
+
+def buy_choice(targets, offers, venue, cash, me_id):
+    """Best acceptable ask for a missing page card: cost within cap and within cash. None if nothing qualifies."""
+    cap = {t[0]: t[2] for t in targets}
+    best = None
+    for o in offers:
+        g, w = o["give"], o["want"]
+        if o["maker"] == me_id or o["status"] != "open" or o.get("to") not in (None, me_id):
+            continue
+        if len(g["assets"]) != 1 or g["cash"] or not w["cash"] or w["types"]:
+            continue
+        ref = g["assets"][0]["ref"]
+        if ref not in cap:
+            continue
+        cost = w["cash"] + fee_of(venue, w["cash"])
+        if cost <= cap[ref] and cost <= cash and cap[ref] - cost >= max(2.0, 0.1 * cost):   # a buy at zero gain is noise
+            gain = cap[ref] - cost
+            if best is None or gain > best["gain"]:
+                best = {"offer": o["id"], "ref": ref, "cost": cost, "cap": round(cap[ref], 1), "gain": round(gain, 1)}
+    return best
+
+
+def bid_plan(targets, cash, my_bids):
+    """[(ref, price)] standing bids for missing page cards we have no bid on yet and can afford."""
+    plan = []
+    for ref, v, cap, sid in targets:
+        price = int(cap * BID_FRAC)
+        if ref not in my_bids and price >= 1 and price <= cash:
+            plan.append((ref, price))
+    return plan
+
+
+def step(b, me, catalog, venue):
+    offers = b.board("rastro").get("offers", [])
+    mine = [o for o in b.my_offers().get("offers", []) if o["maker"] == me["id"]]
+    directed = [o for o in b.my_offers().get("offers", []) if o.get("to") == me["id"]]
+    listed = {a["id"] for o in mine for a in o["give"]["assets"]}
+    my_bids = {t.split(":", 1)[1] for o in mine for t in o["want"]["types"] if t.startswith("card:")}
+    have = {a["ref"] for a in me["assets"] if a["kind"] == "card"}
+    targets = page_targets(catalog, me["affinity"], have)
+    comp = {}
+    for o in offers:
+        if o["maker"] != me["id"] and len(o["give"]["assets"]) == 1 and o["want"]["cash"]:
+            comp.setdefault(o["give"]["assets"][0]["ref"], []).append(o["want"]["cash"])
+    log(f"cash {me['cash']} | missing page cards {[(t[0], t[1], round(t[2])) for t in targets]} | open offers {len(mine)}")
+    best = buy_choice(targets, offers + directed, venue, me["cash"], me["id"])
+    if best:
+        try:
+            b.accept(best["offer"])
+            log(f"BUY {best['ref']}: cost {best['cost']} cap {best['cap']} gain {best['gain']}")
+        except BazaarError as e:
+            log("buy refused:", e.code, e.message)
+    posted = 0
+    for aid, ask, ref, v in sell_stock(catalog, me["affinity"], me["assets"], comp, listed):
+        if posted >= MAX_POSTS or len(mine) + posted >= MAX_OPEN:
+            break
+        try:
+            b.list_offer({"assets": [aid]}, {"cash": ask}, venue="rastro")
+            posted += 1
+            log(f"SELL single {ref} (asset {aid}) at {ask}; worth {v} to us (not in a set we build)")
+        except BazaarError as e:
+            log("sell refused:", e.code, e.message)
+            break
+    for ref, price in bid_plan(targets, me["cash"], my_bids):
+        if posted >= MAX_POSTS or len(mine) + posted >= MAX_OPEN:
+            break
+        try:
+            b.list_offer({"cash": price}, {"cards": [ref]}, venue="rastro")
+            posted += 1
+            log(f"BID for {ref} at {price}")
+        except BazaarError as e:
+            log("bid refused:", e.code, e.message)
+            break
+
+
+def main():
+    b = Bazaar(URL, os.environ["BAZAAR_KEY"], wait_on_tick=False)
+    log("page_hunter started (Rastro only, no dealers)")
+    while True:
+        try:
+            if b.clock().get("paused"):
+                time.sleep(10)
+                continue
+            venue = next((v for v in b.venues()["venues"] if v["venue"] == "rastro"), {"fee_bps": 500, "fee_per_card": 1})
+            step(b, b.me(), b.catalog(), venue)
+            b.wait_tick()
+        except KeyboardInterrupt:
+            break
+        except BazaarError as e:
+            log("api error:", e.code, e.message)
+            time.sleep(3)
+        except Exception as e:
+            log(f"error {type(e).__name__}: {e}")
+            time.sleep(5)
+
+
+def selftest():
+    mk = lambda sid, rar_book: [{"id": f"{sid}-{i + 1:02d}", "book": bk, "page": i < 10, "rarity": r}
+                                for i, (bk, r) in enumerate(rar_book)]
+    layout = [(10, "c")] * 5 + [(25, "u")] * 3 + [(70, "r")] * 2 + [(180, "e"), (450, "l")]
+    catalog = {"sets": [{"id": "LAV", "released": True, "cards": mk("LAV", layout)},
+                        {"id": "LAT", "released": True, "cards": mk("LAT", layout)}],
+               "values": {"page_bonus": 0.25, "copy_marginals": [1, .25, .1]}}
+    aff = {"LAV": 1.6, "LAT": 0.7}
+    have = {f"LAV-{i:02d}" for i in range(1, 9)}
+    t = page_targets(catalog, aff, have)
+    assert [x[0] for x in t] == ["LAV-09", "LAV-10"] and t[0][1] == 112.0
+    bonus = 0.25 * (5 * 16 + 3 * 40 + 2 * 112)
+    assert abs(t[0][2] - (112 + bonus / 4)) < 1e-6, t
+    venue = {"fee_bps": 500, "fee_per_card": 1}
+    mkoff = lambda i, ref, cash, maker="tx": {"id": i, "maker": maker, "status": "open", "to": None,
+                                               "give": {"cash": 0, "types": [], "assets": [{"ref": ref, "id": i}]},
+                                               "want": {"cash": cash, "assets": [], "types": []}}
+    offers = [mkoff(1, "LAV-09", 110), mkoff(2, "LAV-10", 200), mkoff(3, "LAT-02", 5)]
+    assert buy_choice(t, offers, venue, 40, "t06") is None, "no cash: no buy"
+    far = page_targets(catalog, aff, {"LAV-01"})            # 9 missing: no bonus credit, cap = plain value
+    assert abs(far[1][2] - far[1][1]) < 1e-9
+    ch = buy_choice(t, offers, venue, 500, "t06")
+    assert ch and ch["ref"] == "LAV-09" and ch["cost"] == 117, ch      # 110 + 5% + 1; LAV-10 at 200 is over the cap
+    assets = [{"id": 90, "kind": "card", "ref": "LAT-10", "serial": 2}, {"id": 91, "kind": "card", "ref": "LAV-01", "serial": 1},
+              {"id": 92, "kind": "card", "ref": "LAT-04", "serial": 1}, {"id": 93, "kind": "card", "ref": "LAT-04", "serial": 2}]
+    plan = sell_stock(catalog, aff, assets, {}, set())
+    refs = [p[2] for p in plan]
+    assert refs == ["LAT-10"], f"only single copies of sets we do not build: {refs}"      # LAT-04 is a duplicate; LAV is a focus set
+    assert plan[0][1] >= math.ceil(49 * 1.4 + 2)
+    plan2 = sell_stock(catalog, aff, assets, {"LAT-10": [60]}, set())
+    assert plan2[0][1] >= math.ceil(49 * 1.4 + 2), "undercutting never goes under our floor"
+    assert bid_plan(t, 40, set()) == [] and len(bid_plan(t, 500, set())) == 2 and bid_plan(t, 500, {"LAV-09"})[0][0] == "LAV-10"
+    print("selftest OK")
+
+
+if __name__ == "__main__":
+    selftest() if "--selftest" in sys.argv else main()

@@ -85,3 +85,17 @@
 👵 Abuela pide: 30 P
 👵 Abuela pide: 30 P
 👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+🚶 nos vamos: our standing offer 25 is above our cap 23 (inherited): start clean
+🏁 {'buy': {'pack': 'sobre_barrio'}}: closed  pagado None
+🤖 Nosotros (13 P): ¡Hola, Abuela Carmen! Qué alegría verla, ¿ha comido ya? Vengo por un sobre de barrio: ¿le parece bien 13 primas?

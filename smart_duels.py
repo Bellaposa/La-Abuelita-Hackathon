@@ -78,6 +78,11 @@ def parse_offer(o):
     return (None if p is None else float(p)), (None if d is None else int(d))
 
 
+def duel_id(duel):
+    """The live API calls it `duel`; keep `id` as a fallback."""
+    return duel["duel"] if "duel" in duel else duel["id"]
+
+
 def side_of(role):
     """+1 if higher prices are better for us (seller), -1 for a buyer."""
     return 1 if role == "seller" else -1
@@ -92,16 +97,15 @@ def utility(side, limit, w, price, days, use_days):
 
 
 def time_left(duel, tick, st):
-    """(remaining ticks, total ticks). Deadline is taken as an absolute tick when it is a number >= now,
-    otherwise we count our own rounds against the duel length."""
-    total = int(duel.get("duel_ticks") or st.get("total") or DEFAULT_TICKS)
-    dl = duel.get("deadline")
+    """(remaining ticks, total ticks). The live payload carries `deadline_tick` (absolute); total is what was left when we first
+    saw the duel. Without a deadline we count our own rounds against the default length."""
+    dl = duel.get("deadline_tick", duel.get("deadline"))
     if isinstance(dl, (int, float)) and dl >= tick:
         remaining = int(dl - tick)
-        total = max(total, remaining)
-    else:
-        remaining = max(0, total - st["rounds"])
-    return remaining, total
+        st["total"] = max(st.get("total") or 0, remaining)
+        return remaining, st["total"]
+    total = int(duel.get("duel_ticks") or st.get("total") or DEFAULT_TICKS)
+    return max(0, total - st["rounds"]), total
 
 
 def rival_stats(history, limit):
@@ -183,12 +187,13 @@ def message(role, price, days, accept_hint=False):
 # ---------------------------------------------------------------- one duel, one tick
 
 def act(b, duel, tick, mem):
-    did = str(duel["id"])
+    rid = duel_id(duel)
+    did = str(rid)
     role, limit = duel["role"], float(duel["your_limit"])
     side = side_of(role)
     use_days = "days" in (duel.get("issues") or ["price"])
     w = duel.get("your_days_weight") or 0
-    decay = duel.get("decay") or DEFAULT_DECAY
+    decay = duel.get("decay_per_round") or duel.get("decay") or DEFAULT_DECAY
 
     rec = mem["duels"].setdefault(did, {"observed": {"role": role, "limit": limit, "issues": duel.get("issues"),
                                                      "history": []},
@@ -243,7 +248,7 @@ def act(b, duel, tick, mem):
         f"| U now {u_now} next {u_next} | {why}")
     if ok:
         try:
-            b.duel_accept(duel["id"])
+            b.duel_accept(rid)
             st["done"] = True
             log(f"  ACCEPT duel {did} at {rival_price} d{rival_days} (utility {u_now})")
         except BazaarError as e:
@@ -255,7 +260,7 @@ def act(b, duel, tick, mem):
         entry["our_move"] = None if st["our_last"] is None else side * (st["our_last"] - next_price)
         entry.update(our_price=next_price, our_days=next_days)
         try:
-            b.duel_say(duel["id"], message(role, next_price, next_days), price=next_price, days=next_days)
+            b.duel_say(rid, message(role, next_price, next_days), price=next_price, days=next_days)
             st["our_last"] = next_price
             log(f"  OFFER duel {did}: {next_price} d{next_days} (beta {info['beta']}, frac {info['frac']})")
         except BazaarError as e:
@@ -279,7 +284,7 @@ def step(b, mem, tick, strict=False):
         except Exception as e:                      # one broken duel must not stop the others
             if strict:
                 raise
-            log(f"duel {duel.get('id')}: error {type(e).__name__}: {e}")
+            log(f"duel {duel.get('duel', duel.get('id'))}: error {type(e).__name__}: {e}")
     save_mem(mem)
 
 
@@ -330,8 +335,8 @@ class _Fake:
     def duels(self, done=False):
         if self.deal or done:
             return {"duels": []}
-        return {"duels": [{"id": 1, "role": self.role, "your_limit": self.limit, "duel_ticks": self.ticks,
-                           "deadline": self.ticks, "decay": self.decay, "issues": ["price"],
+        return {"duels": [{"duel": 1, "role": self.role, "your_limit": self.limit,
+                           "deadline_tick": self.ticks, "decay_per_round": self.decay, "issues": ["price"],
                            "rival_offer": {"price": self.rp}}]}
 
     def duel_say(self, did, text="", price=None, days=None):
