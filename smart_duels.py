@@ -1,95 +1,388 @@
+"""Adaptive duel negotiator.
+
+    BAZAAR_KEY=tk-... python3 smart_duels.py          # run during duel sessions
+    python3 smart_duels.py --selftest                 # offline simulation, no network
+
+Each tick, for every live duel, we answer one question: "what did the rival's last move teach me, and how does
+that change my next offer?"
+
+  price   Boulware-style curve from an opening anchor to our reservation (limit -/+ MIN_MARGIN). The exponent BETA
+          adapts: rival firm -> concede sooner; rival yielding fast -> hold longer. Never crosses our private limit,
+          never retracts an offer.
+  accept  when the rival's offer is at least as good for us as the offer we would send next, OR when waiting is
+          expected to be worth less (rival's measured concession rate, the per-round decay of the pie, the risk of
+          ending with no deal near the deadline). Rate-based reasoning needs >= 2 observed rival moves; with fewer
+          samples we do not pretend to know it.
+  days    a second currency. If a day-swing costs us little and the rival seems to care (stubborn at an extreme),
+          we give the days and hold price; otherwise days follow the same concession curve as price.
+
+Observed facts and inferences are stored separately in duels_memory.json. The raw payload of the first duel seen is
+logged there too: field formats (deadline, rival_offer, sign of your_days_weight) were not verifiable before the
+practice session, so the assumptions below are named constants.
+"""
+import json
+import math
 import os
+import sys
 import time
+
 from bazaar_sdk import Bazaar, BazaarError
 
-BAZAAR_URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
-BAZAAR_KEY = os.environ.get("BAZAAR_KEY")
+URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
+MEM_FILE = os.environ.get("DUELS_MEMORY", "duels_memory.json")
 
-def evaluate_duel(b, duel):
-    d_id = duel["id"]
-    role = duel["role"]
-    my_limit = duel["your_limit"]
-    rival_offer = duel.get("rival_offer")
-    deadline = duel["deadline"]
-    issues = duel.get("issues", ["price"])
-    days_weight = duel.get("your_days_weight", 0)
-    
-    # 1. Determina il giorno ideale se applicabile
-    best_day = 10 if days_weight > 0 else 0
-    days_args = {"days": best_day} if "days" in issues else {}
+OPEN_ANCHOR = 0.5      # opening claim beyond our limit, as a fraction of it (the only unlearned anchor; calibrate on practice)
+MIN_MARGIN = 1         # whole primas of surplus we always keep: we never offer or accept at our limit
+BETA = 2.0             # concession exponent: >1 holds early, concedes late
+DEFAULT_TICKS = 16     # duel length when the payload does not say (schedule: duel_ticks 16)
+DEFAULT_DECAY = 0.06   # pie shrink per round of talk (schedule: decay 0.06 / 0.08)
+DAYS_SIGN = 1          # ASSUMPTION: utility from days = DAYS_SIGN * your_days_weight * (days - 5). Flip after the first days duel
+DAYS_CARE = 0.15       # a full 0-10 day swing worth more than this share of our limit = days matter to us
 
-    # 2. Calcola l'offerta di prezzo ideale
-    # Se compriamo, vogliamo pagare poco (es. metà del nostro limite)
-    # Se vendiamo, vogliamo incassare tanto (es. il doppio del nostro limite)
-    if role == "buyer":
-        target_price = int(my_limit * 0.5)
-        worst_acceptable = int(my_limit * 0.9) # Accettiamo fino al 90% del nostro valore
-    else: # seller
-        target_price = int(my_limit * 1.5)
-        worst_acceptable = int(my_limit * 1.1) # Accettiamo se ci pagano almeno il 10% in più
 
-    print(f"⚔️ Duello {d_id} | Ruolo: {role} | Limite: {my_limit} P | Target: {target_price} P")
+def log(*a):
+    print(time.strftime("%H:%M:%S"), *a, flush=True)
 
-    if rival_offer:
-        rival_price = rival_offer.get("price")
-        rival_days = rival_offer.get("days")
-        print(f"   Rival offre: {rival_price} P (Giorni: {rival_days})")
-        
-        # Calcoliamo il nostro valore effettivo dell'offerta rivale
-        actual_rival_value = rival_price
-        if rival_days is not None and days_weight != 0:
-            if role == "buyer":
-                # Se compriamo, i giorni in più potrebbero svalutare l'offerta o valorizzarla
-                actual_rival_value -= (rival_days * days_weight)
-            else:
-                actual_rival_value += (rival_days * days_weight)
 
-        is_profitable = False
-        if role == "buyer" and actual_rival_value <= worst_acceptable:
-            is_profitable = True
-        elif role == "seller" and actual_rival_value >= worst_acceptable:
-            is_profitable = True
-            
-        if is_profitable:
-            print(f"   ✅ L'offerta del rivale è vantaggiosa. ACCETTIAMO!")
-            b.duel_accept(d_id)
-            return
+# ---------------------------------------------------------------- memory
 
-    # Se non c'è offerta o non è conveniente, facciamo la nostra
-    msg = "Soy el mejor negociador de Madrid. Toma o déjalo." if role == "seller" else "Mi presupuesto es limitado, hazme un favor."
-    
-    print(f"   ➡️ Controbattiamo con {target_price} P")
+def load_mem():
     try:
-        b.duel_say(d_id, text=msg, price=target_price, **days_args)
-    except BazaarError as e:
-        print(f"   ⚠️ Errore nell'inviare offerta al duello: {e}")
+        with open(MEM_FILE) as f:
+            m = json.load(f)
+    except (OSError, ValueError):
+        m = {}
+    m.setdefault("duels", {})       # id -> {"observed": {...}, "inferred": {...}}
+    m.setdefault("finished", {})    # id -> raw payload of a finished duel (for calibration)
+    m.setdefault("raw_samples", []) # first live payloads, to learn the real field formats
+    return m
+
+
+def save_mem(m):
+    tmp = MEM_FILE + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(m, f, indent=1, default=str)
+    os.replace(tmp, MEM_FILE)
+
+
+# ---------------------------------------------------------------- pure helpers (all unit-testable)
+
+def parse_offer(o):
+    """(price, days) from whatever shape the rival offer has; (None, None) if there is none."""
+    if not o:
+        return None, None
+    if isinstance(o, (int, float)):
+        return float(o), None
+    inner = o["offer"] if isinstance(o.get("offer"), dict) else o
+    p, d = inner.get("price"), inner.get("days")
+    return (None if p is None else float(p)), (None if d is None else int(d))
+
+
+def side_of(role):
+    """+1 if higher prices are better for us (seller), -1 for a buyer."""
+    return 1 if role == "seller" else -1
+
+
+def utility(side, limit, w, price, days, use_days):
+    """Our gain from (price, days). Price part is surplus over our private limit; days part per DAYS_SIGN."""
+    u = side * (price - limit)
+    if use_days and days is not None:
+        u += DAYS_SIGN * w * (days - 5)
+    return u
+
+
+def time_left(duel, tick, st):
+    """(remaining ticks, total ticks). Deadline is taken as an absolute tick when it is a number >= now,
+    otherwise we count our own rounds against the duel length."""
+    total = int(duel.get("duel_ticks") or st.get("total") or DEFAULT_TICKS)
+    dl = duel.get("deadline")
+    if isinstance(dl, (int, float)) and dl >= tick:
+        remaining = int(dl - tick)
+        total = max(total, remaining)
+    else:
+        remaining = max(0, total - st["rounds"])
+    return remaining, total
+
+
+def rival_stats(history, limit):
+    """Rival behaviour from observed moves (positive move = rival conceded toward us). None until 2 samples."""
+    moves = [h["rival_move"] for h in history if h.get("rival_move") is not None]
+    if len(moves) < 2:
+        return None
+    recent = moves[-4:]
+    eps = max(0.5, 0.005 * limit)
+    return {"n": len(moves), "rate": sum(recent) / len(recent), "firm": all(m <= eps for m in moves[-2:])}
+
+
+def reservation(side, limit):
+    """Worst price we will ever offer: MIN_MARGIN of surplus on the right side of our private limit."""
+    return limit + side * MIN_MARGIN
+
+
+def plan_price(side, limit, st, stats, rival_price, elapsed, total):
+    """Our next price: the curve anchor -> reservation, never retracting, never past our limit. Returns (price, info)."""
+    resv = reservation(side, limit)
+    anchor = st["anchor"]
+    beta = BETA
+    if stats:
+        gap = abs(rival_price - st["our_last"]) if (rival_price is not None and st["our_last"] is not None) else None
+        if stats["firm"]:
+            beta = BETA * 0.6                      # rival stopped moving: waiting is not buying us anything
+        elif gap and stats["rate"] >= 0.03 * gap:
+            beta = BETA * 1.3                      # rival is giving real ground: hold longer
+    frac = min(1.0, max(0.0, (elapsed / max(1, total)) ** beta))
+    price = anchor + (resv - anchor) * frac
+    price = math.ceil(price) if side > 0 else math.floor(price)
+    if st["our_last"] is not None:                 # never retract
+        price = min(price, st["our_last"]) if side > 0 else max(price, st["our_last"])
+    price = max(price, math.ceil(resv)) if side > 0 else min(price, math.floor(resv))
+    price = max(1, int(price))
+    return price, {"beta": round(beta, 2), "frac": round(frac, 2)}
+
+
+def plan_days(duel, limit, frac, rival_days_hist, last_rival_days):
+    """Our days offer, using days as currency. Returns (days or None, price_frac_multiplier)."""
+    if "days" not in (duel.get("issues") or ["price"]):
+        return None, 1.0
+    w = duel.get("your_days_weight") or 0
+    ours = 10 if DAYS_SIGN * w > 0 else 0          # the extreme that favours us
+    if last_rival_days is None:
+        return ours, 1.0
+    cheap_for_us = abs(w) * 10 / max(limit, 1) < DAYS_CARE
+    seen = rival_days_hist[-2:]
+    rival_cares = len(seen) == 2 and seen[0] == seen[1] and seen[1] in (0, 10)   # stubborn at an extreme
+    if cheap_for_us and rival_cares:
+        return last_rival_days, 0.8                # hand over the days, hold price: that is where joint surplus is
+    day_frac = frac
+    return int(round(min(10, max(0, ours + (last_rival_days - ours) * day_frac)))), 1.0
+
+
+def should_accept(u_now, u_next, remaining, stats, decay):
+    """(accept?, reason). u_* are our utilities of the rival's offer and of our own planned next offer."""
+    if u_now < MIN_MARGIN:
+        return False, "rival offer below our margin"
+    if u_now >= u_next:
+        return True, "rival offer already as good as our next planned offer"
+    if remaining <= 1:
+        return True, "last round: a positive deal beats zero"
+    if stats:
+        risk = (1.0 / (remaining + 1)) * (1.5 if stats["firm"] else 1.0)
+        wait_value = (u_now + max(stats["rate"], 0.0)) * (1 - decay) * max(0.0, 1 - risk)
+        if u_now >= wait_value:
+            return True, f"waiting worth {wait_value:.1f} <= {u_now:.1f} now (rate {stats['rate']:+.1f}, firm={stats['firm']})"
+    return False, "holding: waiting is expected to pay more"
+
+
+def message(role, price, days, accept_hint=False):
+    d = f" y entrega en {days} días" if days is not None else ""
+    if role == "seller":
+        return f"Es una pieza que merece su precio: {price} primas{d}. Pienso que es justo."
+    return f"Puedo llegar a {price} primas{d}. Dime si cerramos."
+
+
+# ---------------------------------------------------------------- one duel, one tick
+
+def act(b, duel, tick, mem):
+    did = str(duel["id"])
+    role, limit = duel["role"], float(duel["your_limit"])
+    side = side_of(role)
+    use_days = "days" in (duel.get("issues") or ["price"])
+    w = duel.get("your_days_weight") or 0
+    decay = duel.get("decay") or DEFAULT_DECAY
+
+    rec = mem["duels"].setdefault(did, {"observed": {"role": role, "limit": limit, "issues": duel.get("issues"),
+                                                     "history": []},
+                                        "inferred": {}})
+    obs = rec["observed"]
+    st = rec.setdefault("state", {"rounds": 0, "our_last": None, "anchor": None, "rival_last": None,
+                                  "last_tick": None, "done": False, "total": None})
+    if st["done"] or st["last_tick"] == tick:
+        return
+    if len(mem["raw_samples"]) < 3 and did not in {s.get("id") for s in mem["raw_samples"]}:
+        mem["raw_samples"].append(duel)            # learn the real payload shape
+
+    rival_price, rival_days = parse_offer(duel.get("rival_offer"))
+    hist = obs["history"]
+    rival_move = None
+    if rival_price is not None and st["rival_last"] is not None:
+        rival_move = side * (rival_price - st["rival_last"])      # >0: rival conceded toward us
+    stats = rival_stats(hist + [{"rival_move": rival_move}], limit)
+
+    remaining, total = time_left(duel, tick, st)
+    elapsed = min(total, total - remaining + 1)
+    if st["anchor"] is None:
+        st["anchor"] = limit * (1 + side * OPEN_ANCHOR)
+
+    rival_days_hist = [h["rival_days"] for h in hist if h.get("rival_days") is not None]
+    if rival_days is not None:
+        rival_days_hist.append(rival_days)
+    next_price, info = plan_price(side, limit, st, stats, rival_price, elapsed, total)
+    next_days, price_mult = plan_days(duel, limit, info["frac"], rival_days_hist, rival_days)
+    if price_mult != 1.0:                                           # days given away: hold price a bit longer
+        next_price, _ = plan_price(side, limit, st, stats, rival_price, elapsed * price_mult, total)
+    # the last round is our last shot: go to the reservation so a deal inside the margin remains possible
+    if remaining <= 1 and rival_price is not None:
+        next_price = int(reservation(side, limit))
+
+    u_next = utility(side, limit, w, next_price, next_days, use_days)
+    if rival_price is not None:
+        u_now = utility(side, limit, w, rival_price, rival_days, use_days)
+        ok, why = should_accept(u_now, u_next, remaining, stats, decay)
+    else:
+        u_now, ok, why = None, False, "no rival offer yet"
+
+    entry = {"tick": tick, "round": st["rounds"] + 1, "remaining": remaining, "rival_price": rival_price,
+             "rival_days": rival_days, "rival_move": rival_move,
+             "our_prev": st["our_last"], "decision": "accept" if ok else "offer"}
+    st["last_tick"] = tick
+    st["rounds"] += 1
+    st["rival_last"] = rival_price if rival_price is not None else st["rival_last"]
+
+    log(f"duel {did} {role} r{entry['round']} left {remaining} | rival {rival_price} d{rival_days} "
+        f"(move {rival_move}) stats {stats and {k: round(v, 2) if isinstance(v, float) else v for k, v in stats.items()}} "
+        f"| U now {u_now} next {u_next} | {why}")
+    if ok:
+        try:
+            b.duel_accept(duel["id"])
+            st["done"] = True
+            log(f"  ACCEPT duel {did} at {rival_price} d{rival_days} (utility {u_now})")
+        except BazaarError as e:
+            log(f"  accept refused: {e.code} {e.message}")
+            st["last_tick"] = None if e.code == "wait_for_tick" else tick
+    else:
+        # never send an offer worse than our limit (belt and braces on top of plan_price)
+        assert side * (next_price - limit) >= 0, "offer would cross our limit"
+        entry["our_move"] = None if st["our_last"] is None else side * (st["our_last"] - next_price)
+        entry.update(our_price=next_price, our_days=next_days)
+        try:
+            b.duel_say(duel["id"], message(role, next_price, next_days), price=next_price, days=next_days)
+            st["our_last"] = next_price
+            log(f"  OFFER duel {did}: {next_price} d{next_days} (beta {info['beta']}, frac {info['frac']})")
+        except BazaarError as e:
+            log(f"  say refused: {e.code} {e.message}")
+            st["last_tick"] = None if e.code == "wait_for_tick" else tick
+    hist.append(entry)
+    rec["inferred"] = {"rival_rate": stats and round(stats["rate"], 2), "rival_firm": stats and stats["firm"],
+                       "note": "inferred from >=2 observed rival moves; None = not enough samples"}
+
+
+def duel_list(resp):
+    return resp.get("duels", []) if isinstance(resp, dict) else (resp or [])
+
+
+def step(b, mem, tick, strict=False):
+    for duel in duel_list(b.duels()):
+        if duel.get("status") not in (None, "open", "live", "active"):
+            continue
+        try:
+            act(b, duel, tick, mem)
+        except Exception as e:                      # one broken duel must not stop the others
+            if strict:
+                raise
+            log(f"duel {duel.get('id')}: error {type(e).__name__}: {e}")
+    save_mem(mem)
+
+
+def record_finished(b, mem):
+    for d in duel_list(b.duels(done=True)):
+        mem["finished"].setdefault(str(d.get("id")), d)
+
 
 def main():
-    if not BAZAAR_KEY:
-        print("Errore: BAZAAR_KEY non impostata.")
-        return
-        
-    b = Bazaar(BAZAAR_URL, BAZAAR_KEY)
-    print("⚔️ Smart Duels Agent AVVIATO! In attesa dei duelli...")
-
+    key = os.environ.get("BAZAAR_KEY")
+    if not key:
+        raise SystemExit("BAZAAR_KEY not set")
+    b = Bazaar(URL, key, wait_on_tick=False)
+    mem = load_mem()
+    log("smart_duels started")
+    n = 0
     while True:
         try:
-            active_duels = b.duels(done=False)
-            
-            if active_duels:
-                print(f"\n--- Trovati {len(active_duels)} duelli attivi! ---")
-                for duel in active_duels:
-                    evaluate_duel(b, duel)
-            
-            # Aspetta il prossimo tick
+            c = b.clock()
+            if not c.get("paused"):
+                step(b, mem, c["tick"])
+                n += 1
+                if n % 10 == 0:
+                    record_finished(b, mem)
+                    save_mem(mem)
             b.wait_tick()
-            
         except KeyboardInterrupt:
-            print("\nSpegnimento Smart Duels...")
             break
+        except BazaarError as e:
+            log("api error", e.code, e.message)
+            time.sleep(3)
         except Exception as e:
-            print(f"Errore critico: {e}")
+            log("error", type(e).__name__, e)
             time.sleep(5)
 
+
+# ---------------------------------------------------------------- offline simulation
+
+class _Fake:
+    """A rival that concedes linearly toward its own limit at `rate` per tick, and accepts any of our offers it can afford."""
+
+    def __init__(self, role, limit, rival_limit, rival_open, rate, ticks=16, decay=0.06):
+        self.role, self.limit, self.rl, self.rate = role, limit, rival_limit, rate
+        self.rp, self.tick, self.ticks, self.decay = rival_open, 0, ticks, decay
+        self.deal = None
+        self.sent = []
+
+    def duels(self, done=False):
+        if self.deal or done:
+            return {"duels": []}
+        return {"duels": [{"id": 1, "role": self.role, "your_limit": self.limit, "duel_ticks": self.ticks,
+                           "deadline": self.ticks, "decay": self.decay, "issues": ["price"],
+                           "rival_offer": {"price": self.rp}}]}
+
+    def duel_say(self, did, text="", price=None, days=None):
+        self.sent.append(price)
+        buyer_rival = self.role == "seller"
+        if (buyer_rival and price <= self.rl) or (not buyer_rival and price >= self.rl):
+            self.deal = price
+            return
+        self.rp = self.rp + self.rate if buyer_rival else self.rp - self.rate
+        self.rp = min(self.rp, self.rl) if buyer_rival else max(self.rp, self.rl)
+
+    def duel_accept(self, did):
+        self.deal = self.rp
+
+
+def selftest():
+    global MEM_FILE
+    MEM_FILE = "/tmp/duels_selftest.json"
+    # unit checks
+    assert parse_offer({"price": 7, "days": 3}) == (7.0, 3) and parse_offer(None) == (None, None)
+    assert should_accept(0, 5, 10, None, 0.06)[0] is False                     # never accept at/below margin
+    assert should_accept(3, 9, 1, None, 0.06)[0] is True                       # last round, positive: take it
+    assert should_accept(3, 9, 8, None, 0.06)[0] is False                      # early, unknown rival: hold
+    worst, results = 0, []
+    cases = [("seller", 50, 90, 30, 3), ("seller", 50, 90, 30, 0), ("seller", 50, 55, 40, 1),
+             ("buyer", 100, 60, 150, 4), ("buyer", 100, 60, 150, 0), ("buyer", 100, 95, 130, 1),
+             ("seller", 50, 45, 30, 4)]            # last: no zone of agreement, we must not sell below the limit
+    for role, limit, rlimit, ropen, rate in cases:
+        if os.path.exists(MEM_FILE):
+            os.remove(MEM_FILE)
+        sim, mem = _Fake(role, limit, rlimit, ropen, rate), load_mem()
+        for t in range(1, 17):
+            sim.tick = t
+            step(sim, mem, t, strict=True)
+            if sim.deal:
+                break
+        side = side_of(role)
+        gain = None if sim.deal is None else side * (sim.deal - limit)
+        for p in sim.sent:
+            assert side * (p - limit) >= MIN_MARGIN, f"offer {p} crossed limit {limit} as {role}"
+        if gain is not None:
+            assert gain >= 0, "deal below our limit"
+        results.append((role, limit, rlimit, rate, sim.deal, gain, len(sim.sent)))
+    print("\nrole   limit rival_limit rate  deal  gain  our_offers")
+    for r in results:
+        print("%-6s %5s %11s %4s %5s %5s %6s" % r)
+    print("selftest OK: no offer crossed our limit; no deal when the rival's limit is on the wrong side")
+
+
 if __name__ == "__main__":
-    main()
+    if "--selftest" in sys.argv:
+        selftest()
+    else:
+        main()

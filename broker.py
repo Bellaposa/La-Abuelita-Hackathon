@@ -1,97 +1,222 @@
-"""Team 6 broker: beats the auto stall on the Market Test by timing, not just quotes.
+"""Team 6 broker for the Market Test.
 
-    BROKER_KEY=bk_... python3 broker.py
+    BROKER_KEY=bk_... python3 broker.py          # on a venue opened with mechanism "board"
+    python3 broker.py --selftest                 # offline simulation, no network
 
-Bench traders quote away from a hidden limit and relax as their patience runs out; firm ones never move.
-The test scores realised gains between the TRUE limits, so:
-  * we track every bench offer's quote over ticks (how fast it relaxes = impatience);
-  * a crossing pair is matched at once only if one side looks about to leave or the book is near its end;
-    otherwise we wait a tick so quotes keep relaxing and more (and better) pairs cross;
-  * pairing is surplus-maximising: highest estimated-limit buyers with lowest estimated-limit sellers.
-Public offers on our venue are crossed card by card like the starter broker (it earns us 'value created').
+The Market Test scores the gains between the traders' TRUE limits, and the price inside [ask, bid] does not change
+those gains. What we control is WHEN to lock a crossing pair and with WHOM. Per pair, each tick:
+
+  MATCH  the session is about to end            (every unmatched pair is worth 0 after it)
+  MATCH  one side looks about to leave          (its age passed what we have seen traders live, or half the session)
+  MATCH  both sides are firm                    (>= 2 flat observations each: waiting buys nothing)
+  WAIT   only if BOTH sides were observed relaxing their quotes and none is at risk (BROKER_WAIT=0 disables waiting)
+  MATCH  anything else (mixed, or too few observations): we never wait on a guess
+
+There is no "elapsed >= 2" rule: a pair is never matched merely because time passed.
+
+Session length is read from the offers (`expires_tick`) when the book carries it, else from the schedule
+(`bench` events: params.ticks), else from what we observed on past sessions, else from SESSION_TICKS (env, default 16).
+Observed facts (lifetimes of traders that vanished unmatched, session lengths) go to broker_memory.json.
 """
+import json
 import math
 import os
+import sys
 import time
+from collections import defaultdict
 
 from bazaar_sdk import BazaarError, Broker
 from starter_broker import public_plan
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
-broker = Broker(URL, os.environ["BROKER_KEY"])
-SESSION_TICKS = 16
+MEM_FILE = os.environ.get("BROKER_MEMORY", "broker_memory.json")
+SESSION_TICKS = int(os.environ.get("SESSION_TICKS", "16"))   # last-resort default, not a truth
+URGENT_AGE_FRAC = 0.5      # with no lifetime data: a trader older than this share of the session may leave soon
+LATE_TICKS = 2             # this close to the end of a session, match everything that crosses
+WAIT_ENABLED = os.environ.get("BROKER_WAIT", "1") != "0"   # BROKER_WAIT=0: never wait, match crossing pairs at once
+MIN_LIFETIMES = 5          # observed lifetimes needed before we trust the leave-time estimate
 
 
 def log(*a):
     print(time.strftime("%H:%M:%S"), *a, flush=True)
 
 
+# ---------------------------------------------------------------- tracking
+
 class Track:
-    """Quote history per bench offer id."""
+    """Per-offer quote history, age and the observed lifetimes of traders that vanished."""
 
-    def __init__(self):
-        self.hist = {}   # id -> [(tick, quote)]
-        self.first = {}  # run -> first tick seen
+    def __init__(self, mem=None):
+        self.hist = {}        # id -> [(tick, quote)] one entry per tick
+        self.first = {}       # id -> first tick we saw it (or its created_tick)
+        self.side = {}        # id -> "ask" | "bid"
+        self.expires = {}     # id -> expires_tick if the book says so
+        self.lifetimes = list((mem or {}).get("lifetimes", []))
+        self.session_lens = list((mem or {}).get("session_lens", []))
+        self.run_first = {}   # run -> first tick seen
+        self.run_last = {}
 
-    def update(self, tick, offers):
+    def update(self, tick, offers, matched=()):
+        seen = set()
         for o in offers:
-            q = o["want"]["cash"] or o["give"]["cash"]
-            h = self.hist.setdefault(o["id"], [])
+            oid = o["id"]
+            seen.add(oid)
+            is_ask = bool(o["want"]["cash"])
+            q = o["want"]["cash"] if is_ask else o["give"]["cash"]
+            self.side[oid] = "ask" if is_ask else "bid"
+            h = self.hist.setdefault(oid, [])
             if not h or h[-1][0] != tick:
                 h.append((tick, q))
-            self.first.setdefault(o["id"].split("-")[0], tick)
-
-    def drift(self, oid):
-        """Average change of quote per tick (sellers: negative = relaxing; buyers: positive)."""
-        h = self.hist.get(oid, [])
-        if len(h) < 2:
-            return 0.0
-        return (h[-1][1] - h[0][1]) / max(1, h[-1][0] - h[0][0])
+            self.first.setdefault(oid, o.get("created_tick", tick) if isinstance(o.get("created_tick"), int) else tick)
+            if isinstance(o.get("expires_tick"), int):
+                self.expires[oid] = o["expires_tick"]
+            run = oid.split("-")[0]
+            self.run_first.setdefault(run, tick)
+            self.run_last[run] = tick
+        for oid in [i for i in self.hist if i not in seen]:          # vanished: matched by us, or it left
+            if oid not in matched:
+                self.lifetimes.append(self.age(oid, tick - 1))
+            for d in (self.hist, self.first, self.side, self.expires):
+                d.pop(oid, None)
+        self.lifetimes = self.lifetimes[-200:]
 
     def age(self, oid, tick):
-        h = self.hist.get(oid, [])
-        return tick - h[0][0] if h else 0
+        return max(0, tick - self.first.get(oid, tick))
+
+    def relax_moves(self, oid):
+        """Per-tick relaxation of the quote: >0 = moved toward its limit (ask down, bid up)."""
+        h, sign = self.hist.get(oid, []), (-1 if self.side.get(oid) == "ask" else 1)
+        return [sign * (b[1] - a[1]) for a, b in zip(h, h[1:])]
+
+    def end_session(self, run):
+        n = self.run_last.get(run, 0) - self.run_first.get(run, 0) + 1
+        if n > 1:
+            self.session_lens.append(n)
+            self.session_lens = self.session_lens[-20:]
+
+    def dump(self):
+        return {"lifetimes": self.lifetimes, "session_lens": self.session_lens,
+                "note": "observed facts only: lifetimes of traders that vanished unmatched; session lengths in ticks"}
 
 
-def bench_plan(book, tick, tr: Track):
+def session_left(tr, run, tick, offers_of_run, sched_ticks):
+    """(ticks left, source). Prefer the book's own expires_tick, then schedule, observation, default."""
+    ex = [tr.expires[o["id"]] for o in offers_of_run if o["id"] in tr.expires]
+    if ex:
+        return max(0, min(ex) - tick), "book"
+    total, src = None, None
+    if sched_ticks:
+        total, src = sched_ticks, "schedule"
+    elif len(tr.session_lens) >= 2:
+        total, src = int(sorted(tr.session_lens)[len(tr.session_lens) // 2]), "observed"
+    else:
+        total, src = SESSION_TICKS, "default"
+    return max(0, total - (tick - tr.run_first.get(run, tick))), src
+
+
+def classify(tr, oid, tick, total_len):
+    """status: yielding | firm | unknown, plus urgent (may leave soon). Needs >= 2 observations, no guessing."""
+    moves = tr.relax_moves(oid)
+    age = tr.age(oid, tick)
+    if len(moves) < 1:
+        status = "unknown"
+    elif moves[-1] > 0:
+        status = "yielding"
+    elif moves[-1] < 0 or (len(moves) >= 2 and moves[-2] == 0):
+        status = "firm"                 # moved away, or flat for two observations
+    else:
+        status = "unknown"              # one flat observation is not enough
+    if len(tr.lifetimes) >= MIN_LIFETIMES:
+        cutoff = sorted(tr.lifetimes)[max(0, len(tr.lifetimes) // 4 - 1)]   # ~25th percentile of observed stays
+        urgent, why = age >= max(1, cutoff), f"age {age} >= observed 25th pct {cutoff}"
+    else:
+        urgent, why = age >= URGENT_AGE_FRAC * total_len, f"age {age} >= {URGENT_AGE_FRAC} x session {total_len}"
+    return {"status": status, "urgent": urgent, "age": age, "why": why}
+
+
+def decide(tr, ask_o, bid_o, tick, left, total_len):
+    """('MATCH'|'WAIT', reason) for one crossing pair. WAIT only when BOTH sides are observed relaxing and none is at risk;
+    anything mixed or not yet observed (< 2 ticks) matches: we do not wait on a guess."""
+    if left <= LATE_TICKS:
+        return "MATCH", f"session ends in {left} ticks"
+    a, b = classify(tr, ask_o["id"], tick, total_len), classify(tr, bid_o["id"], tick, total_len)
+    for who, c in (("ask", a), ("bid", b)):
+        if c["urgent"]:
+            return "MATCH", f"{who} may leave ({c['why']})"
+    if a["status"] == "yielding" and b["status"] == "yielding" and WAIT_ENABLED:
+        return "WAIT", f"both still relaxing, {left} ticks left"
+    return "MATCH", f"ask {a['status']}, bid {b['status']}: not both observed relaxing"
+
+
+def bench_plan(book, tick, tr, sched_ticks=None, quiet=False):
+    """[(sell id, buy id, price)] for pairs we decide to lock now. Highest bids against lowest asks, per run."""
     plan, runs = [], {}
     for o in book.get("bench_offers") or []:
         asks, bids = runs.setdefault(o["id"].split("-")[0], ([], []))
-        if o["want"]["cash"]:
-            asks.append(o)
-        else:
-            bids.append(o)
+        (asks if o["want"]["cash"] else bids).append(o)
     for run, (asks, bids) in runs.items():
-        elapsed = tick - tr.first.get(run, tick)
-        late = elapsed >= SESSION_TICKS - 3
-        a_s = sorted(asks, key=lambda o: o["want"]["cash"])
-        b_s = sorted(bids, key=lambda o: -o["give"]["cash"])
-        for s, bu in zip(a_s, b_s):
+        left, src = session_left(tr, run, tick, asks + bids, sched_ticks)
+        total = (tick - tr.run_first.get(run, tick)) + left
+        for s, bu in zip(sorted(asks, key=lambda o: o["want"]["cash"]), sorted(bids, key=lambda o: -o["give"]["cash"])):
             ask, bid = s["want"]["cash"], bu["give"]["cash"]
             if bid < ask:
                 break
-            # impatience: a moving quote means the trader is spending patience and may leave soon
-            moving = abs(tr.drift(s["id"])) > 0 or abs(tr.drift(bu["id"])) > 0
-            old = max(tr.age(s["id"], tick), tr.age(bu["id"], tick)) >= 4
-            if late or moving or old or elapsed >= 2:
+            action, why = decide(tr, s, bu, tick, left, max(1, total))
+            if not quiet:
+                log(f"tick {tick} {run}: {s['id']}@{ask} x {bu['id']}@{bid} -> {action} ({why}; left from {src})")
+            if action == "MATCH":
                 plan.append((s["id"], bu["id"], (ask + bid) // 2))
     return plan
 
 
+def schedule_ticks(broker):
+    """Session length from the public schedule (bench events), None if not announced."""
+    try:
+        for ev in broker._call("GET", "/api/schedule").get("upcoming", []):
+            if ev.get("action") == "bench" and ev.get("params", {}).get("ticks"):
+                return int(ev["params"]["ticks"])
+    except BazaarError:
+        pass
+    return None
+
+
+# ---------------------------------------------------------------- live loop
+
+def load_mem():
+    try:
+        with open(MEM_FILE) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
 def main():
-    tr, seen = Track(), None
+    broker = Broker(URL, os.environ["BROKER_KEY"])
+    tr, seen, sched, matched, t_sched = Track(load_mem()), None, None, set(), 0
+    logged_keys = False
     while True:
         try:
             tick, book = broker.clock()["tick"], broker.book()
+            if not logged_keys:
+                log("book keys:", sorted(book.keys()))
+                logged_keys = True
+            if time.time() - t_sched > 120:                       # the schedule drops past events: remember the last value
+                sched, t_sched = schedule_ticks(broker) or sched, time.time()
             bench = book.get("bench_offers") or []
-            tr.update(tick, bench)
+            before = set(tr.hist)
+            tr.update(tick, bench, matched)
+            for run in {i.split("-")[0] for i in before} - {i.split("-")[0] for i in tr.hist}:
+                tr.end_session(run)
+                with open(MEM_FILE, "w") as f:
+                    json.dump(tr.dump(), f, indent=1)
             now = (tick, [o["id"] for o in bench + (book.get("offers") or [])])
-            if now != seen:
+            if now != seen:                                       # decide again every tick, not every poll
                 seen = now
-                for sell, buy, price in bench_plan(book, tick, tr) + public_plan(book):
+                for sell, buy, price in bench_plan(book, tick, tr, sched) + public_plan(book):
                     try:
                         broker.match(sell, buy, price)
-                        log(f"tick {tick}: matched {sell} x {buy} at {price}")
+                        matched.update((sell, buy))
+                        log(f"tick {tick}: MATCHED {sell} x {buy} at {price}")
                     except BazaarError as e:
                         log(f"tick {tick}: {sell} x {buy} at {price} refused ({e})")
         except BazaarError as e:
@@ -99,5 +224,92 @@ def main():
         time.sleep(1.0)
 
 
+# ---------------------------------------------------------------- offline simulation (made-up trader dynamics)
+
+def _simulate(policy, seed, n=10, ticks=16):
+    """Synthetic session: n sellers + n buyers, quotes shaded away from hidden limits, firm or relaxing, some leaving early."""
+    import random
+    rnd = random.Random(seed)
+    T = []
+    for i in range(2 * n):
+        ask = i < n
+        limit = rnd.uniform(20, 60) if ask else rnd.uniform(40, 80)
+        T.append({"id": f"b1-{i}", "ask": ask, "limit": limit, "shade": rnd.uniform(5, 25),
+                  "rate": 0 if rnd.random() < 0.3 else rnd.uniform(1, 3), "leave": rnd.choice([5, 8, 12, 16, 16, 16]),
+                  "q": None})
+    sellers, buyers = sorted(t["limit"] for t in T if t["ask"]), sorted((t["limit"] for t in T if not t["ask"]), reverse=True)
+    possible = sum(b - s for s, b in zip(sellers, buyers) if b > s)
+    tr, matched, gain = Track(), set(), 0.0
+    for t in range(ticks):
+        offers = []
+        for o in T:
+            if o["id"] in matched or t >= o["leave"]:
+                continue
+            shade = max(0.0, o["shade"] - o["rate"] * t)
+            q = round(o["limit"] + shade) if o["ask"] else round(o["limit"] - shade)
+            o["q"] = q
+            offers.append({"id": o["id"], "want": {"cash": q} if o["ask"] else {"cash": 0},
+                           "give": {"cash": 0} if o["ask"] else {"cash": q}, "expires_tick": ticks})
+        tr.update(t, offers, matched)
+        book = {"bench_offers": offers}
+        for sell, buy, price in policy(book, t, tr):
+            if sell in matched or buy in matched:
+                continue
+            s = next(o for o in T if o["id"] == sell)
+            b = next(o for o in T if o["id"] == buy)
+            matched.update((sell, buy))
+            gain += max(0.0, b["limit"] - s["limit"])
+    return gain / possible if possible else 0.0
+
+
+def selftest():
+    # unit checks of the decision rules
+    tr = Track()
+    def offs(t, aq, bq):
+        return [{"id": "b1-1", "want": {"cash": aq}, "give": {"cash": 0}, "expires_tick": 16},
+                {"id": "b1-2", "want": {"cash": 0}, "give": {"cash": bq}, "expires_tick": 16}]
+    tr.update(0, offs(0, 50, 55))
+    s, b = offs(0, 50, 55)
+    assert decide(tr, s, b, 0, 15, 16)[0] == "MATCH", "first sight: too few observations, do not wait on a guess"
+    tr.update(1, offs(1, 48, 56))
+    if WAIT_ENABLED:
+        assert decide(tr, s, b, 1, 14, 16)[0] == "WAIT", "both observed relaxing: wait (and not match merely because time passed)"
+    tr.update(2, offs(2, 48, 56)); tr.update(3, offs(3, 48, 56))
+    assert decide(tr, s, b, 3, 12, 16)[0] == "MATCH", "both flat for 2 observations: match"
+    assert decide(tr, s, b, 3, 2, 16)[0] == "MATCH", "session about to end: match"
+    tr2 = Track(); tr2.update(0, offs(0, 50, 55)); tr2.update(1, offs(1, 49, 56))
+    s2, b2 = offs(1, 49, 56)
+    tr2.update(9, offs(9, 45, 60))
+    assert decide(tr2, s2, b2, 9, 7, 16)[0] == "MATCH", "old trader (>= half the session): match before it leaves"
+    # policy comparison on synthetic sessions
+    def immediate(book, t, tr):                       # the starter: match every crossing pair at once
+        return bench_plan_naive(book)
+    def smart(book, t, tr):
+        return bench_plan(book, t, tr, ticks_arg(), quiet=True)
+    ticks_arg = lambda: 16
+    seeds = range(300)
+    e_imm = sum(_simulate(immediate, s) for s in seeds) / len(seeds)
+    e_smart = sum(_simulate(smart, s) for s in seeds) / len(seeds)
+    print(f"efficiency over {len(seeds)} synthetic sessions: match-at-once {e_imm:.3f} | this broker {e_smart:.3f}")
+    print("selftest OK (the simulation uses made-up dynamics: it checks the logic, not real-world performance)")
+
+
+def bench_plan_naive(book):
+    """The starter's rule, for comparison: highest bid against lowest ask while they cross."""
+    plan, runs = [], {}
+    for o in book.get("bench_offers") or []:
+        asks, bids = runs.setdefault(o["id"].split("-")[0], ([], []))
+        (asks if o["want"]["cash"] else bids).append(o)
+    for asks, bids in runs.values():
+        for s, b in zip(sorted(asks, key=lambda o: o["want"]["cash"]), sorted(bids, key=lambda o: -o["give"]["cash"])):
+            if b["give"]["cash"] < s["want"]["cash"]:
+                break
+            plan.append((s["id"], b["id"], (s["want"]["cash"] + b["give"]["cash"]) // 2))
+    return plan
+
+
 if __name__ == "__main__":
-    main()
+    if "--selftest" in sys.argv:
+        selftest()
+    else:
+        main()

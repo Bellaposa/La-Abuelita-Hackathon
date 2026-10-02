@@ -172,17 +172,31 @@ def run_agent():
                                 memory["abuela_min_price"] = ask
                                 save_memory(memory)
                         else:
-                            # Chiede troppo: controproponiamo DIRETTAMENTE il massimo budget
-                            msg = "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo."
-                            print(f"🗣️ Controproposta al massimo: {budget} P")
-                            log_chat(f"🤖 Nosotros ({budget} P): {msg}")
-                            b.say(t["id"], msg, price=budget)
+                            # Chiede troppo: varia l'offerta ogni tick per non fare stallo
+                            import time
+                            tick_var = int(time.time()) % 3  # 0,1,2 ciclico
+                            if mine:
+                                # Sali di 1 rispetto all'ultima offerta, fino al budget
+                                offer = min(budget, mine[-1]["give"]["cash"] + 1)
+                            else:
+                                offer = budget - 2 + tick_var  # es. 25,26,27 P
+                            offer = min(offer, budget)
+                            msgs = [
+                                f"¡Abuela, eres increíble! ¿Aceptas {offer} P?",
+                                f"Por favor Abuela, {offer} P y nos hacemos amigos para siempre.",
+                                f"¡{offer} P es todo lo que puedo, Abuela querida!",
+                            ]
+                            msg = msgs[tick_var]
+                            print(f"🗣️ Offriamo {offer} P (variante {tick_var})")
+                            log_chat(f"🤖 Nosotros ({offer} P): {msg}")
+                            b.say(t["id"], msg, price=offer)
                     elif not mine:
-                        # Thread vuoto: partiamo DIRETTAMENTE dal massimo per chiudere subito
-                        msg = "¡Hola Abuela! ¿Aceptas 27 P? Tengo prisa, somos amigos."
-                        print(f"🗣️ Prima mossa aggressiva: {budget} P (massimo)")
-                        log_chat(f"🤖 Nosotros ({budget} P): {msg}")
-                        b.say(t["id"], msg, price=budget)
+                        # Thread vuoto: parti leggermente sotto il budget per avere spazio di trattativa
+                        offer = budget - 2
+                        msg = f"¡Hola Abuela! ¿Aceptas {offer} P? Somos amigos y tengo prisa."
+                        print(f"🗣️ Prima mossa: {offer} P")
+                        log_chat(f"🤖 Nosotros ({offer} P): {msg}")
+                        b.say(t["id"], msg, price=offer)
             except Exception as e:
                 # Se l'Abuela dà errore (es. persona_quota), lo stampiamo e continuiamo con la FASE 3
                 if "persona_quota" in str(e):
@@ -190,27 +204,18 @@ def run_agent():
                 else:
                     print(f"⚠️ Salto Abuela per questo tick: {e}")
             
-            # --- FASE 3: Vendi SOLO doppioni a basso valore privato ---
-            held = me["assets"]
-            seen = {}
-
-            for a in sorted((a for a in held if a["kind"] == "card"), key=lambda a: a["serial"]):
-                ref = a["ref"]
-                my_val = a.get("your_value", 999)
-
-                if ref not in seen:
-                    seen[ref] = a
-                else:
-                    # Doppione trovato. Vendi SOLO se vale poco per noi (<= 5 P)
-                    if my_val <= 5.0:
-                        sell_price = max(int(my_val * 2), 10)
-                        try:
-                            b.list_offer({"assets": [a["id"]]}, {"cash": sell_price}, venue="rastro")
-                            print(f"📈 Vendo doppione '{a['name']}' (val: {my_val}P) per {sell_price} P")
-                        except Exception:
-                            pass
-                    else:
-                        print(f"💎 Tengo '{a['name']}' (val: {my_val}P) - troppo prezioso!")
+            # --- FASE 3: Cancella tutte le offerte aperte (non vendiamo nulla) ---
+            # Strategia: tenere tutte le carte per completare le pagine album e non regalare punti
+            try:
+                open_offers = b.my_offers().get("open", [])
+                my_id = me["id"]
+                for o in open_offers:
+                    if o.get("maker") == my_id:
+                        b.cancel(o["id"])
+                        print(f"🗑️ Cancellata offerta aperta {o['id']}")
+            except Exception:
+                pass
+            print("🔒 Nessuna carta in vendita - teniamo tutto per l'album!")
                 
             print("\n⏳ Attesa del prossimo tick del server (circa 60s)...")
             b.wait_tick()
