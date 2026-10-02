@@ -1,0 +1,16 @@
+21:58:29 smart_agent started (deterministic, no LLM)
+21:58:29 --- tick 97 | cash 283 | cards 26 ---
+21:58:29 opened pack: ['LAT-05', 'MAL-01', 'SAL-03']
+21:58:29 Abuela thread 181: ours [25] hers [] mood unknown cap 23 -> wait None (no reply yet)
+21:58:30 market opportunities: [{"kind": "sell", "offer": 1359, "ref": "LAT-04", "price": 6, "asset": 336, "value": 1.8, "gain": 2.2, "roi": 2.25}, {"kind": "sell", "offer": 1360, "ref": "LAT-04", "price": 6, "asset": 336, "value": 1.8, "gain": 2.2, "roi": 2.25}]
+21:58:30 MARKET SELL LAT-04 at 6: value 1.8 gain 2.2 roi 2.25
+21:58:30 LISTED spare MAL-02 (asset 81) at 9; the copy is worth 1.2 to us
+21:58:30 LISTED spare LAV-02 (asset 301) at 10; the copy is worth 4.0 to us
+21:58:30 LISTED spare LAV-05 (asset 335) at 10; the copy is worth 1.6 to us
+21:58:47 --- tick 98 | cash 287 | cards 28 ---
+21:58:47 Abuela thread 181: ours [25] hers [] mood unknown cap 23 -> wait None (no reply yet)
+21:58:51 market opportunities: [{"kind": "sell", "offer": 1395, "ref": "MAL-01", "price": 6, "asset": 419, "value": 1.2, "gain": 2.8, "roi": 2.75}]
+21:58:51 MARKET SELL MAL-01 at 6: value 1.2 gain 2.8 roi 2.75
+21:59:47 --- tick 99 | cash 291 | cards 27 ---
+21:59:47 opened pack: ['LAT-01', 'SAL-08', 'MAL-07']
+21:59:48 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)

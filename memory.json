@@ -1,1 +1,29 @@
-{"abuela_min_price": 999, "chat_history": ["T\u00fa ofreciste 22P diciendo: \u00a1Hola Abuela! \u00bfAceptas 22 P y somos amigos?", "T\u00fa ofreciste 24P diciendo: \u00a1Hola Abuela! \u00bfAceptas 24 P y somos amigos?", "T\u00fa ofreciste 16P diciendo: \u00a1Hola Abuela! \u00bfAceptas 16 P y somos amigos?", "T\u00fa ofreciste 18P diciendo: \u00a1Hola Abuela! \u00bfAceptas 18 P y somos amigos?", "T\u00fa ofreciste 20P diciendo: \u00a1Hola Abuela! \u00bfAceptas 20 P y somos amigos?", "T\u00fa ofreciste 22P diciendo: \u00a1Hola Abuela! \u00bfAceptas 22 P y somos amigos?"]}
+{
+ "abuela_min_price": 999,
+ "chat_history": [
+  "Tú ofreciste 22P diciendo: ¡Hola Abuela! ¿Aceptas 22 P y somos amigos?",
+  "Tú ofreciste 24P diciendo: ¡Hola Abuela! ¿Aceptas 24 P y somos amigos?",
+  "Tú ofreciste 16P diciendo: ¡Hola Abuela! ¿Aceptas 16 P y somos amigos?",
+  "Tú ofreciste 18P diciendo: ¡Hola Abuela! ¿Aceptas 18 P y somos amigos?",
+  "Tú ofreciste 20P diciendo: ¡Hola Abuela! ¿Aceptas 20 P y somos amigos?",
+  "Tú ofreciste 22P diciendo: ¡Hola Abuela! ¿Aceptas 22 P y somos amigos?"
+ ],
+ "observed": {
+  "negotiations": []
+ },
+ "inferred": {
+  "response_ratio": {},
+  "best_k": null,
+  "paid_median": null,
+  "paid_n": 0
+ },
+ "active": {
+  "thread": 181,
+  "topic": {
+   "buy": {
+    "pack": "sobre_barrio"
+   }
+  },
+  "cash_start": 283
+ }
+}
