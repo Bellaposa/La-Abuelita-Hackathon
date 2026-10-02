@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Bazaar - Hacker Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #00f0ff;
+            --accent-glow: rgba(0, 240, 255, 0.4);
+            --pink-accent: #ff0055;
+            --text-main: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.6);
+        }
+
+        body {
+            margin: 0;
+            padding: 2rem;
+            font-family: 'Outfit', sans-serif;
+            background: #090a0f;
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: float 20s infinite alternate;
+        }
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: var(--accent-glow);
+            top: -10%; left: -10%;
+        }
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: rgba(255, 0, 85, 0.3);
+            bottom: -5%; right: -5%;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        h1 { margin: 0; font-weight: 800; font-size: 2.5rem; letter-spacing: -1px; }
+        .highlight { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .data-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+
+        .unit { font-size: 1rem; color: var(--text-dim); font-weight: 400; }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .metric-row:last-child { border-bottom: none; }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+        
+        .status-badge.error {
+            background: rgba(255, 0, 85, 0.1);
+            color: var(--pink-accent);
+            border-color: var(--pink-accent);
+        }
+
+        /* Pulse animation for updates */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); color: var(--accent); }
+            100% { transform: scale(1); }
+        }
+        .updated { animation: pulse 0.5s ease; }
+        
+        .error-overlay {
+            display: none;
+            position: fixed;
+            top: 20px; right: 20px;
+            background: var(--pink-accent);
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(255,0,85,0.4);
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    
+    <div class="error-overlay" id="error-msg"></div>
+
+    <header class="header">
+        <div>
+            <h1>The Bazaar <span class="highlight">Hacker Dash</span></h1>
+            <div style="margin-top: 10px; color: var(--text-dim);" id="team-info">In attesa di connessione...</div>
+        </div>
+        <div>
+            <div class="status-badge" id="clock-status">CLOCK: SYNCING...</div>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- Risorse -->
+        <div class="glass-card">
+            <div class="card-title">💰 Fondi Disponibili</div>
+            <p class="data-value" id="cash-value">0 <span class="unit">Primas</span></p>
+        </div>
+        
+        <!-- Punteggio -->
+        <div class="glass-card">
+            <div class="card-title">🏆 Punteggio Totale</div>
+            <p class="data-value" id="score-value">0.0</p>
+            <div style="margin-top: 15px;">
+                <div class="metric-row">
+                    <span>Negoziazione</span>
+                    <strong id="score-neg">0.0</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Market-Making</span>
+                    <strong id="score-market">0.0</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Rank Globale</span>
+                    <strong id="score-rank" class="highlight">#--</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventario -->
+        <div class="glass-card">
+            <div class="card-title">🎒 Inventario</div>
+            <p class="data-value" id="cards-total">0 <span class="unit">Carte</span></p>
+            <div style="margin-top: 15px;">
+                <div class="metric-row">
+                    <span>Valore Collezione</span>
+                    <strong id="coll-value">0 P</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Album Completato</span>
+                    <strong id="album-status">0/40</strong>
+                </div>
+                <div class="metric-row">
+                    <span>Pacchetti Chiusi</span>
+                    <strong id="packs-count">0</strong>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thread e Attività -->
+        <div class="glass-card">
+            <div class="card-title">💬 Trattative Attive</div>
+            <p class="data-value" id="threads-count">0</p>
+            <div id="threads-list" style="margin-top: 15px; font-size: 0.9rem; color: var(--text-dim);">
+                Nessuna trattativa in corso.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const updateElement = (id, value, isHTML = false) => {
+            const el = document.getElementById(id);
+            const current = isHTML ? el.innerHTML : el.innerText;
+            if (current !== String(value)) {
+                if (isHTML) el.innerHTML = value;
+                else el.innerText = value;
+                el.classList.remove('updated');
+                void el.offsetWidth; // trigger reflow
+                el.classList.add('updated');
+            }
+        };
+
+        const showError = (msg) => {
+            const errEl = document.getElementById('error-msg');
+            errEl.innerText = msg;
+            errEl.style.display = 'block';
+            document.getElementById('clock-status').className = 'status-badge error';
+            document.getElementById('clock-status').innerText = 'OFFLINE';
+        };
+
+        async function fetchState() {
+            try {
+                const res = await fetch('/api/state');
+                const data = await res.json();
+                
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                document.getElementById('error-msg').style.display = 'none';
+                
+                const { me, clock } = data;
+
+                // Header & Clock
+                updateElement('team-info', `Team: <strong>${me.name}</strong> | Livello: <strong>${me.level}</strong>`, true);
+                
+                const clockStatus = clock.paused ? '⏸️ PAUSED' : `⏱️ TICK: ${clock.tick} (Next: ${Math.round(clock.next_tick_in)}s)`;
+                const clockEl = document.getElementById('clock-status');
+                clockEl.className = 'status-badge';
+                clockEl.innerText = clockStatus;
+
+                // Cash
+                updateElement('cash-value', me.cash + ' ');
+                document.getElementById('cash-value').innerHTML += '<span class="unit">Primas</span>';
+
+                // Score
+                const score = me.score || {};
+                updateElement('score-value', (score.score || 0).toFixed(2));
+                updateElement('score-neg', (score.negotiating || 0).toFixed(2));
+                updateElement('score-market', (score.market || 0).toFixed(2));
+                updateElement('score-rank', `#${score.rank || '--'}`);
+
+                // Inventory
+                const cards = me.assets.filter(a => a.kind === 'card');
+                const packs = me.assets.filter(a => a.kind === 'pack');
+                const collValue = cards.reduce((acc, c) => acc + (c.your_value || 0), 0).toFixed(1);
+                
+                updateElement('cards-total', cards.length + ' ');
+                document.getElementById('cards-total').innerHTML += '<span class="unit">Carte</span>';
+                updateElement('coll-value', `${collValue} P`);
+                updateElement('packs-count', packs.length);
+                
+                const album = me.album || {};
+                updateElement('album-status', `${album.filled || 0}/${album.slots || 40}`);
+
+                // Threads
+                const threads = me.open_threads || [];
+                updateElement('threads-count', threads.length);
+                if (threads.length === 0) {
+                    updateElement('threads-list', 'Nessuna trattativa in corso.');
+                } else {
+                    const tList = threads.map(t => `<div class="metric-row"><span>${t}</span><strong style="color:var(--accent)">In Corso</strong></div>`).join('');
+                    updateElement('threads-list', tList, true);
+                }
+
+            } catch (err) {
+                console.error(err);
+                showError("Connessione persa col backend.");
+            }
+        }
+
+        // Fetch initially and then every 2 seconds
+        fetchState();
+        setInterval(fetchState, 2000);
+    </script>
+</body>
+</html>
