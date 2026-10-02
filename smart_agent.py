@@ -462,7 +462,10 @@ def phase_abuela(b, me, catalog, mem):
     if hers:
         log_chat(f"👵 Abuela pide: {hers[-1][0]} P{' (final)' if hers[-1][1] else ''}")
     if action == "accept":
-        offer = next(o for o in reversed(t["standing_offers"]) if o["maker"] == "abuela" and o["status"] == "open")
+        offer = next((o for o in reversed(t["standing_offers"]) if o["maker"] == "abuela" and o["status"] == "open"), None)
+        if offer is None:                                   # already accepted (it settles next tick): nothing to do
+            log(f"Abuela thread {tid}: no open offer of hers left, already accepted?")
+            return True
         b.accept(offer["id"])
         log_chat(f"🤝 aceptado a {price} P")
         return True
@@ -549,7 +552,9 @@ def phase_chato(b, me, catalog, mem, can_accept):
     action, price, why = next_offer_sell(act["floor"], act["lp"], ours, hers, inferred)
     log(f"Chato thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {act['floor']} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
-        offer = next(o for o in reversed(t["standing_offers"]) if o["maker"] == "chato" and o["status"] == "open")
+        offer = next((o for o in reversed(t["standing_offers"]) if o["maker"] == "chato" and o["status"] == "open"), None)
+        if offer is None:
+            return True
         b.accept(offer["id"])
         log(f"CHATO SELL {act['ref']} at {price}: it was worth {act['lost']} to us")
         return True

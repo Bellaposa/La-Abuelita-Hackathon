@@ -104,3 +104,20 @@
 👵 Abuela pide: 30 P
 👵 Abuela pide: 25 P
 🤖 Nosotros (18 P): Se lo agradezco de corazón, Carmen. Subo a 18 primas, que es lo que puedo.
+👵 Abuela pide: 25 P
+👵 Abuela pide: 24 P
+🤖 Nosotros (19 P): Qué bien se está con usted. ¿Qué tal 19 primas, de verdad?
+👵 Abuela pide: 24 P
+👵 Abuela pide: 23 P
+🤖 Nosotros (20 P): Muchas gracias por su paciencia, Abuela. ¿Podríamos dejarlo en 20 primas?
+👵 Abuela pide: 23 P
+👵 Abuela pide: 22 P (final)
+🤝 aceptado a 22 P
+👵 Abuela pide: 22 P (final)
+👵 Abuela pide: 22 P (final)
+👵 Abuela pide: 22 P (final)
+👵 Abuela pide: 22 P (final)
+👵 Abuela pide: 22 P (final)
+👵 Abuela pide: 22 P (final)
+👵 Abuela pide: 22 P (final)
+🏁 {'buy': {'pack': 'sobre_barrio'}}: deal  pagado 22

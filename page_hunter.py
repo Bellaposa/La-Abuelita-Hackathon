@@ -26,7 +26,7 @@ from bazaar_sdk import Bazaar, BazaarError
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 FOCUS_AFF = float(os.environ.get("FOCUS_AFF", "1.0"))   # sets with affinity >= this are the ones we build
 BID_FRAC = 0.6
-SELL_MARGIN = 1.4          # we ask at least 1.4x what the card is worth to us, plus 2 primas
+SELL_MARGIN = 1.1          # we ask at least 1.1x what the card is worth to us, plus 1 prima: sell at the price the market pays
 MAX_POSTS = 3
 MAX_MISSING = 3            # count the page bonus only when this few page cards are missing
 MAX_OPEN = 28
@@ -82,13 +82,39 @@ def sell_stock(catalog, affinity, assets, competitors, listed):
             continue
         card = next(c for c in cards_of(catalog, sid) if c["id"] == a["ref"])
         v = value_of_card(card, sid, affinity)
-        floor = math.ceil(v * SELL_MARGIN + 2)
+        floor = math.ceil(v * SELL_MARGIN + 1)
         comp = competitors.get(a["ref"])
         target = (min(comp) - 1) if comp else math.ceil(card["book"] * 1.2)
         ask = max(floor, min(target, math.ceil(card["book"] * 1.2)))
         if ask >= floor:
             plan.append((a["id"], ask, a["ref"], round(v, 1)))
     return sorted(plan, key=lambda p: -(p[1] - p[3]))      # biggest gain first
+
+
+def sell_bid_choice(catalog, affinity, assets, offers, venue, me_id):
+    """Best existing bid for a single card of a set we do not build. We accept, so we pay the venue fee: gain = bid - fee - our value."""
+    counts, held = {}, {}
+    for a in assets:
+        if a["kind"] == "card":
+            counts[a["ref"]] = counts.get(a["ref"], 0) + 1
+            held[a["ref"]] = a
+    best = None
+    for o in offers:
+        g, w = o["give"], o["want"]
+        if o["maker"] == me_id or o["status"] != "open" or o.get("to") not in (None, me_id):
+            continue
+        if not g["cash"] or g["assets"] or len(w["types"]) != 1 or not w["types"][0].startswith("card:"):
+            continue
+        ref = w["types"][0].split(":", 1)[1]
+        sid = ref.split("-")[0]
+        if counts.get(ref) != 1 or affinity.get(sid, 1.0) >= FOCUS_AFF:
+            continue
+        card = next(c for c in cards_of(catalog, sid) if c["id"] == ref)
+        v = value_of_card(card, sid, affinity)
+        gain = g["cash"] - fee_of(venue, g["cash"]) - v
+        if gain >= max(2.0, 0.1 * v) and (best is None or gain > best["gain"]):
+            best = {"offer": o["id"], "ref": ref, "asset": held[ref]["id"], "bid": g["cash"], "value": round(v, 1), "gain": round(gain, 1)}
+    return best
 
 
 def buy_choice(targets, offers, venue, cash, me_id):
@@ -142,6 +168,14 @@ def step(b, me, catalog, venue):
             log(f"BUY {best['ref']}: cost {best['cost']} cap {best['cap']} gain {best['gain']}")
         except BazaarError as e:
             log("buy refused:", e.code, e.message)
+    if not best:
+        sb = sell_bid_choice(catalog, me["affinity"], me["assets"], offers + directed, venue, me["id"])
+        if sb:
+            try:
+                b.accept(sb["offer"], assets=[sb["asset"]])
+                log(f"SELL to bid {sb['ref']}: bid {sb['bid']}, worth {sb['value']} to us, gain {sb['gain']}")
+            except BazaarError as e:
+                log("sell-to-bid refused:", e.code, e.message)
     posted = 0
     for aid, ask, ref, v in sell_stock(catalog, me["affinity"], me["assets"], comp, listed):
         if posted >= MAX_POSTS or len(mine) + posted >= MAX_OPEN:
@@ -214,9 +248,14 @@ def selftest():
     plan = sell_stock(catalog, aff, assets, {}, set())
     refs = [p[2] for p in plan]
     assert refs == ["LAT-10"], f"only single copies of sets we do not build: {refs}"      # LAT-04 is a duplicate; LAV is a focus set
-    assert plan[0][1] >= math.ceil(49 * 1.4 + 2)
+    assert plan[0][1] >= math.ceil(49 * SELL_MARGIN + 1)
     plan2 = sell_stock(catalog, aff, assets, {"LAT-10": [60]}, set())
-    assert plan2[0][1] >= math.ceil(49 * 1.4 + 2), "undercutting never goes under our floor"
+    assert plan2[0][1] >= math.ceil(49 * SELL_MARGIN + 1), "undercutting never goes under our floor"
+    bidoff = lambda i, ref, cash: {"id": i, "maker": "tx", "status": "open", "to": None, "give": {"cash": cash, "assets": [], "types": []},
+                                   "want": {"cash": 0, "assets": [], "types": [f"card:{ref}"]}}
+    sb = sell_bid_choice(catalog, aff, assets, [bidoff(7, "LAT-10", 55), bidoff(8, "LAT-10", 70), bidoff(9, "LAV-01", 99), bidoff(10, "LAT-04", 50)], venue, "t06")
+    assert sb and sb["offer"] == 8 and sb["gain"] > 0, sb          # best bid; LAV is a set we build, LAT-04 is a duplicate
+    assert sell_bid_choice(catalog, aff, assets, [bidoff(7, "LAT-10", 52)], venue, "t06") is None, "52 less fee barely covers 49: no deal"
     assert bid_plan(t, 40, set()) == [] and len(bid_plan(t, 500, set())) == 2 and bid_plan(t, 500, {"LAV-09"})[0][0] == "LAV-10"
     print("selftest OK")
 

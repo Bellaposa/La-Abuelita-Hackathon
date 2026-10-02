@@ -34,3 +34,15 @@
 22:30:48 BID for SAL-06 at 23
 22:31:49 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
 22:32:48 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
+22:33:22 page_hunter started (Rastro only, no dealers)
+22:33:23 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
+22:33:48 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 13
+22:34:48 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
+22:35:47 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
+22:36:50 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
+22:37:48 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
+22:38:48 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
+22:39:48 cash 7 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 10
+22:39:49 SELL single LAT-10 (asset 90) at 84; worth 49.0 to us (not in a set we build)
+22:39:49 SELL single MAL-07 (asset 444) at 30; worth 12.5 to us (not in a set we build)
+22:39:49 SELL single LAT-08 (asset 88) at 30; worth 17.5 to us (not in a set we build)
