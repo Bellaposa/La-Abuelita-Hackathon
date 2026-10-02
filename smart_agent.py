@@ -163,7 +163,7 @@ def run_agent():
                         log_chat(f"👵 Abuela pide: {ask} P")
                         
                         # Se chiede meno o uguale al nostro budget, e magari meno di (nostra ultima offerta + 1)
-                        last_mine = mine[-1]["offer"]["cash"] if mine else 0
+                        last_mine = mine[-1]["give"]["cash"] if mine else 0
                         if ask <= min(budget, last_mine + 1) or (hers[-1].get("final") and ask <= budget):
                             print(f"🤝 Accettiamo l'offerta di Abuela a {ask} P!")
                             b.accept(hers[-1]["id"])
@@ -175,7 +175,7 @@ def run_agent():
                                 print(f"🧠 Memoria aggiornata: l'Abuela scende fino a {ask} P!")
                         else:
                             if mine:
-                                offer = min(budget, mine[-1]["offer"]["cash"] + 2)
+                                offer = min(budget, mine[-1]["give"]["cash"] + 2)
                             else:
                                 offer = int(budget * 0.6) if min_known_price == 999 else min_known_price - 2
                                 offer = min(offer, budget)

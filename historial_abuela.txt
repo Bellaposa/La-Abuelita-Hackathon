@@ -8,3 +8,14 @@
 👵 Abuela pide: 30 P
 🤖 Nosotros (2 P): ¡Hola Abuela! ¿Aceptas 2 P y somos amigos?
 👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+👵 Abuela pide: 30 P
+🤖 Nosotros (16 P): ¡Hola Abuela! ¿Aceptas 16 P y somos amigos?
+👵 Abuela pide: 26 P
+👵 Abuela pide: 26 P
+👵 Abuela pide: 26 P
+🤖 Nosotros (16 P): ¡Hola Abuela! ¿Aceptas 16 P y somos amigos?
+👵 Abuela pide: 26 P
+🤖 Nosotros (18 P): ¡Hola Abuela! ¿Aceptas 18 P y somos amigos?
+👵 Abuela pide: 25 P
+🤖 Nosotros (20 P): ¡Hola Abuela! ¿Aceptas 20 P y somos amigos?
