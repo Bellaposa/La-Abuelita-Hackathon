@@ -21,3 +21,8 @@
 🤖 Nosotros (20 P): ¡Hola Abuela! ¿Aceptas 20 P y somos amigos?
 👵 Abuela pide: 24 P
 🤖 Nosotros (22 P): ¡Hola Abuela! ¿Aceptas 22 P y somos amigos?
+👵 Abuela pide: 24 P
+🤖 Nosotros (24 P): ¡Hola Abuela! ¿Aceptas 24 P y somos amigos?
+🤖 Nosotros (16 P): ¡Hola Abuela! ¿Aceptas 16 P y somos amigos?
+👵 Abuela pide: 30 P
+🤖 Nosotros (18 P): ¡Hola Abuela! ¿Aceptas 18 P y somos amigos?

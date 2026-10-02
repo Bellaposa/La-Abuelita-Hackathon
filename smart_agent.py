@@ -162,9 +162,9 @@ def run_agent():
                         print(f"\n👵 Abuela chiede: {ask} P per un pacchetto (Nostro limite: {budget} P)")
                         log_chat(f"👵 Abuela pide: {ask} P")
                         
-                        # Se chiede meno o uguale al nostro budget, e magari meno di (nostra ultima offerta + 1)
+                        # Se chiede meno o uguale al nostro budget, e meno o uguale a quello che stavamo per offrirle (last_mine + 2)
                         last_mine = mine[-1]["give"]["cash"] if mine else 0
-                        if ask <= min(budget, last_mine + 1) or (hers[-1].get("final") and ask <= budget):
+                        if ask <= min(budget, last_mine + 2) or (hers[-1].get("final") and ask <= budget):
                             print(f"🤝 Accettiamo l'offerta di Abuela a {ask} P!")
                             b.accept(hers[-1]["id"])
                             log_chat(f"🤝 ¡Trato cerrado a {ask} P!")
@@ -220,7 +220,8 @@ def run_agent():
             
             for a in sorted((a for a in held if a["kind"] == "card"), key=lambda a: a["serial"]):
                 if a["ref"] in seen and books.get(a["ref"]):
-                    smart_price = int(books[a["ref"]] * 1.20) # Markup del 20%
+                    # Markup altissimo (300%) per non regalare punti (Private Value) agli avversari
+                    smart_price = int(books[a["ref"]] * 3.00) 
                     try:
                         b.list_offer({"assets": [a["id"]]}, {"cash": smart_price}, venue="rastro")
                         print(f"📈 Messo in vendita doppione '{a['name']}' per {smart_price} P sul Rastro")
