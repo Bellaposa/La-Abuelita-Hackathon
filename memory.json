@@ -132,6 +132,77 @@
       "gap_before": 4
      }
     ]
+   },
+   {
+    "dealer": "abuela",
+    "thread": 285,
+    "topic": {
+     "buy": {
+      "pack": "sobre_barrio"
+     }
+    },
+    "outcome": "closed",
+    "closed_reason": null,
+    "paid": null,
+    "rounds": [
+     {
+      "her_ask": 30,
+      "final": false,
+      "our": 13,
+      "our_move": null,
+      "her_move": null,
+      "gap_before": null
+     }
+    ]
+   },
+   {
+    "dealer": "chato",
+    "thread": 279,
+    "topic": {
+     "sell": {
+      "assets": [
+       495
+      ]
+     }
+    },
+    "outcome": "closed",
+    "closed_reason": null,
+    "paid": null,
+    "received": null,
+    "rounds": [
+     {
+      "her_ask": 13,
+      "final": false,
+      "our": 26,
+      "our_move": null,
+      "her_move": null,
+      "gap_before": null
+     },
+     {
+      "her_ask": 13,
+      "final": false,
+      "our": 21,
+      "our_move": -5,
+      "her_move": 0,
+      "gap_before": -13
+     },
+     {
+      "her_ask": 13,
+      "final": false,
+      "our": 18,
+      "our_move": -3,
+      "her_move": 0,
+      "gap_before": -8
+     },
+     {
+      "her_ask": 13,
+      "final": false,
+      "our": 16,
+      "our_move": -2,
+      "her_move": 0,
+      "gap_before": -5
+     }
+    ]
    }
   ]
  },
@@ -141,31 +212,9 @@
   "paid_median": null,
   "paid_n": 1
  },
- "active": {
-  "thread": 285,
-  "topic": {
-   "buy": {
-    "pack": "sobre_barrio"
-   }
-  },
-  "cash_start": 63
- },
- "active_chato": {
-  "thread": 279,
-  "topic": {
-   "sell": {
-    "assets": [
-     495
-    ]
-   }
-  },
-  "cash_start": 7,
-  "ref": "LAV-08",
-  "floor": 16,
-  "lp": 26,
-  "lost": 10.0
- },
- "chato_block_until": 139,
+ "active": null,
+ "active_chato": null,
+ "chato_block_until": 179,
  "chato_tried": {
   "MAL-07": 109
  }

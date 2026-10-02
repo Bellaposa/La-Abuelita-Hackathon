@@ -56,3 +56,20 @@
 22:42:48 BID for SAL-06 at 23
 22:42:48 BID for SAL-09 at 53
 22:42:49 BID for SAL-10 at 53
+22:43:49 cash 63 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 18
+22:44:48 cash 63 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 17
+22:45:48 cash 63 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 17
+22:46:48 cash 40 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-09', 77.0, 95), ('SAL-10', 77.0, 95)] | open offers 16
+22:47:49 cash 40 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-09', 77.0, 95), ('SAL-10', 77.0, 95)] | open offers 16
+22:48:49 cash 40 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-09', 77.0, 95), ('SAL-10', 77.0, 95)] | open offers 16
+22:49:48 cash 40 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-09', 77.0, 95), ('SAL-10', 77.0, 95)] | open offers 15
+22:50:48 cash 40 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-09', 77.0, 95), ('SAL-10', 77.0, 95)] | open offers 13
+22:50:49 SELL single MAL-07 (asset 444) at 30; worth 12.5 to us (not in a set we build)
+22:50:49 SELL single LAT-08 (asset 88) at 30; worth 17.5 to us (not in a set we build)
+22:51:48 cash 40 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-09', 77.0, 95), ('SAL-10', 77.0, 95)] | open offers 10
+22:51:48 SELL single MAL-03 (asset 285) at 12; worth 5.0 to us (not in a set we build)
+22:51:48 SELL single LAT-05 (asset 418) at 9; worth 7.0 to us (not in a set we build)
+22:52:48 cash 48 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-09', 77.0, 95), ('SAL-10', 77.0, 95)] | open offers 11
+22:52:50 SELL single MAL-01 (asset 325) at 9; worth 5.0 to us (not in a set we build)
+22:53:48 cash 48 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-09', 77.0, 95), ('SAL-10', 77.0, 95)] | open offers 12
+22:54:48 cash 48 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-09', 77.0, 95), ('SAL-10', 77.0, 95)] | open offers 12
