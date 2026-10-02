@@ -14,3 +14,45 @@
 21:59:47 --- tick 99 | cash 291 | cards 27 ---
 21:59:47 opened pack: ['LAT-01', 'SAL-08', 'MAL-07']
 21:59:48 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)
+22:00:47 --- tick 100 | cash 291 | cards 30 ---
+22:00:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)
+22:00:51 LISTED spare LAT-01 (asset 442) at 8; the copy is worth 1.8 to us
+22:01:47 --- tick 101 | cash 21 | cards 30 ---
+22:01:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 21 -> wait None (at our cap, letting her move)
+22:02:47 --- tick 102 | cash 21 | cards 30 ---
+22:02:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 21 -> wait None (at our cap, letting her move)
+22:02:58 smart_agent started (deterministic, no LLM)
+22:02:58 --- tick 102 | cash 21 | cards 30 ---
+22:02:59 Abuela thread 181: ours [25] hers [30] mood unknown cap 21 -> wait None (at our cap, letting her move)
+22:02:59 Chato: offering MAL-07 (worth 12.5 to us), floor 20, his list 26
+22:02:59 Chato thread 194: ours [] his [] floor 20 -> offer 26 (opening ask at his list price)
+22:03:47 --- tick 103 | cash 21 | cards 30 ---
+22:03:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 21 -> wait None (at our cap, letting her move)
+22:03:48 Chato thread 194: ours [26] his [] floor 20 -> wait None (no reply yet)
+22:04:47 --- tick 104 | cash 21 | cards 30 ---
+22:04:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 21 -> wait None (at our cap, letting her move)
+22:04:47 Chato thread 194: ours [26, 21] his [13] floor 20 -> wait None (he has not answered our last ask)
+22:05:46 --- tick 105 | cash 31 | cards 29 ---
+22:05:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)
+22:05:47 Chato thread 194: ours [26, 21] his [13] floor 20 -> wait None (he has not answered our last ask)
+22:06:47 --- tick 106 | cash 31 | cards 29 ---
+22:06:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)
+22:06:48 Chato thread 194: ours [26, 21] his [13, 13] floor 20 -> offer 20 (he is firm, gap 8, step 3 (k=0.35))
+22:07:47 --- tick 107 | cash 40 | cards 28 ---
+22:07:48 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)
+22:07:48 Chato thread 194: ours [26, 21, 20] his [13, 13] floor 20 -> wait None (he has not answered our last ask)
+22:08:47 --- tick 108 | cash 40 | cards 28 ---
+22:08:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)
+22:08:53 LISTED spare MAL-02 (asset 81) at 7; the copy is worth 1.2 to us
+22:08:54 LISTED spare LAV-05 (asset 335) at 10; the copy is worth 4.0 to us
+22:08:54 LISTED spare MAL-04 (asset 323) at 8; the copy is worth 1.2 to us
+22:09:46 --- tick 109 | cash 40 | cards 28 ---
+22:09:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)
+22:09:47 Chato negotiation 194 ended: closed  received None
+22:09:48 Chato: offering MAL-07 (worth 12.5 to us), floor 20, his list 26
+22:09:48 Chato thread 206: ours [] his [] floor 20 -> offer 26 (opening ask at his list price)
+22:10:16 smart_agent started (deterministic, no LLM)
+22:10:16 --- tick 109 | cash 40 | cards 28 ---
+22:10:16 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)
+22:10:47 --- tick 110 | cash 40 | cards 28 ---
+22:10:47 Abuela thread 181: ours [25] hers [30] mood unknown cap 23 -> wait None (at our cap, letting her move)

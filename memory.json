@@ -9,7 +9,49 @@
   "Tú ofreciste 22P diciendo: ¡Hola Abuela! ¿Aceptas 22 P y somos amigos?"
  ],
  "observed": {
-  "negotiations": []
+  "negotiations": [
+   {
+    "dealer": "chato",
+    "thread": 194,
+    "topic": {
+     "sell": {
+      "assets": [
+       444
+      ]
+     }
+    },
+    "outcome": "closed",
+    "closed_reason": null,
+    "paid": null,
+    "received": null,
+    "rounds": [
+     {
+      "her_ask": 13,
+      "final": false,
+      "our": 26,
+      "our_move": null,
+      "her_move": null,
+      "gap_before": null
+     },
+     {
+      "her_ask": 13,
+      "final": false,
+      "our": 21,
+      "our_move": -5,
+      "her_move": 0,
+      "gap_before": -13
+     },
+     {
+      "her_ask": 13,
+      "final": false,
+      "our": 20,
+      "our_move": -1,
+      "her_move": 0,
+      "gap_before": -8
+     }
+    ]
+   }
+  ]
  },
  "inferred": {
   "response_ratio": {},
@@ -25,5 +67,10 @@
    }
   },
   "cash_start": 283
+ },
+ "active_chato": null,
+ "chato_block_until": 139,
+ "chato_tried": {
+  "MAL-07": 109
  }
 }
