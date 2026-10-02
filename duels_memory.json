@@ -98,21 +98,44 @@
       "our_move": 8,
       "our_price": 173,
       "our_days": null
+     },
+     {
+      "tick": 129,
+      "round": 8,
+      "remaining": 3,
+      "rival_price": 145.0,
+      "rival_days": 0,
+      "rival_move": 4.0,
+      "our_prev": 173,
+      "decision": "offer",
+      "our_move": 10,
+      "our_price": 163,
+      "our_days": null
+     },
+     {
+      "tick": 130,
+      "round": 9,
+      "remaining": 2,
+      "rival_price": 149.0,
+      "rival_days": 0,
+      "rival_move": 4.0,
+      "our_prev": 163,
+      "decision": "accept"
      }
     ]
    },
    "inferred": {
-    "rival_rate": 3.75,
+    "rival_rate": 5.75,
     "rival_firm": false,
     "note": "inferred from >=2 observed rival moves; None = not enough samples"
    },
    "state": {
-    "rounds": 7,
-    "our_last": 173,
+    "rounds": 9,
+    "our_last": 163,
     "anchor": 204.0,
-    "rival_last": 141.0,
-    "last_tick": 128,
-    "done": false,
+    "rival_last": 149.0,
+    "last_tick": 130,
+    "done": true,
     "total": 12
    }
   },
@@ -214,20 +237,59 @@
       "our_move": 7,
       "our_price": 81,
       "our_days": null
+     },
+     {
+      "tick": 129,
+      "round": 8,
+      "remaining": 3,
+      "rival_price": 119.0,
+      "rival_days": 0,
+      "rival_move": 4.0,
+      "our_prev": 81,
+      "decision": "offer",
+      "our_move": 8,
+      "our_price": 89,
+      "our_days": null
+     },
+     {
+      "tick": 130,
+      "round": 9,
+      "remaining": 2,
+      "rival_price": 115.0,
+      "rival_days": 0,
+      "rival_move": 4.0,
+      "our_prev": 89,
+      "decision": "offer",
+      "our_move": 9,
+      "our_price": 98,
+      "our_days": null
+     },
+     {
+      "tick": 131,
+      "round": 10,
+      "remaining": 1,
+      "rival_price": 111.0,
+      "rival_days": 0,
+      "rival_move": 4.0,
+      "our_prev": 98,
+      "decision": "offer",
+      "our_move": 12,
+      "our_price": 110,
+      "our_days": null
      }
     ]
    },
    "inferred": {
-    "rival_rate": 6.75,
+    "rival_rate": 3.0,
     "rival_firm": false,
     "note": "inferred from >=2 observed rival moves; None = not enough samples"
    },
    "state": {
-    "rounds": 7,
-    "our_last": 81,
+    "rounds": 10,
+    "our_last": 110,
     "anchor": 55.5,
-    "rival_last": 123.0,
-    "last_tick": 128,
+    "rival_last": 111.0,
+    "last_tick": 131,
     "done": false,
     "total": 12
    }
@@ -330,6 +392,45 @@
       "our_move": 5,
       "our_price": 103,
       "our_days": null
+     },
+     {
+      "tick": 129,
+      "round": 8,
+      "remaining": 3,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": 103,
+      "decision": "offer",
+      "our_move": 5,
+      "our_price": 98,
+      "our_days": null
+     },
+     {
+      "tick": 130,
+      "round": 9,
+      "remaining": 2,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": 98,
+      "decision": "offer",
+      "our_move": 6,
+      "our_price": 92,
+      "our_days": null
+     },
+     {
+      "tick": 131,
+      "round": 10,
+      "remaining": 1,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": 92,
+      "decision": "offer",
+      "our_move": 7,
+      "our_price": 85,
+      "our_days": null
      }
     ]
    },
@@ -339,11 +440,11 @@
     "note": "inferred from >=2 observed rival moves; None = not enough samples"
    },
    "state": {
-    "rounds": 7,
-    "our_last": 103,
+    "rounds": 10,
+    "our_last": 85,
     "anchor": 126.0,
     "rival_last": null,
-    "last_tick": 128,
+    "last_tick": 131,
     "done": false,
     "total": 12
    }
@@ -446,6 +547,45 @@
       "our_move": 7,
       "our_price": 88,
       "our_days": null
+     },
+     {
+      "tick": 129,
+      "round": 8,
+      "remaining": 3,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": 88,
+      "decision": "offer",
+      "our_move": 7,
+      "our_price": 95,
+      "our_days": null
+     },
+     {
+      "tick": 130,
+      "round": 9,
+      "remaining": 2,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": 95,
+      "decision": "offer",
+      "our_move": 9,
+      "our_price": 104,
+      "our_days": null
+     },
+     {
+      "tick": 131,
+      "round": 10,
+      "remaining": 1,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": 104,
+      "decision": "offer",
+      "our_move": 9,
+      "our_price": 113,
+      "our_days": null
      }
     ]
    },
@@ -455,11 +595,11 @@
     "note": "inferred from >=2 observed rival moves; None = not enough samples"
    },
    "state": {
-    "rounds": 7,
-    "our_last": 88,
+    "rounds": 10,
+    "our_last": 113,
     "anchor": 57.0,
     "rival_last": null,
-    "last_tick": 128,
+    "last_tick": 131,
     "done": false,
     "total": 12
    }
@@ -510,21 +650,57 @@
       "our_move": 0,
       "our_price": 84,
       "our_days": null
+     },
+     {
+      "tick": 129,
+      "round": 4,
+      "remaining": 7,
+      "rival_price": 145.0,
+      "rival_days": 0,
+      "rival_move": 8.0,
+      "our_prev": 84,
+      "decision": "offer",
+      "our_move": 4,
+      "our_price": 88,
+      "our_days": null
+     },
+     {
+      "tick": 130,
+      "round": 5,
+      "remaining": 6,
+      "rival_price": 145.0,
+      "rival_days": 0,
+      "rival_move": -0.0,
+      "our_prev": 88,
+      "decision": "offer",
+      "our_move": 6,
+      "our_price": 94,
+      "our_days": null
+     },
+     {
+      "tick": 131,
+      "round": 6,
+      "remaining": 5,
+      "rival_price": 138.0,
+      "rival_days": 0,
+      "rival_move": 7.0,
+      "our_prev": 94,
+      "decision": "accept"
      }
     ]
    },
    "inferred": {
-    "rival_rate": 10.0,
+    "rival_rate": 3.75,
     "rival_firm": false,
     "note": "inferred from >=2 observed rival moves; None = not enough samples"
    },
    "state": {
-    "rounds": 3,
-    "our_last": 84,
+    "rounds": 6,
+    "our_last": 94,
     "anchor": 76.0,
-    "rival_last": 153.0,
-    "last_tick": 128,
-    "done": false,
+    "rival_last": 138.0,
+    "last_tick": 131,
+    "done": true,
     "total": 12
    }
   },
@@ -561,6 +737,109 @@
       "our_move": 1,
       "our_price": 80,
       "our_days": null
+     },
+     {
+      "tick": 129,
+      "round": 3,
+      "remaining": 8,
+      "rival_price": 59.0,
+      "rival_days": 0,
+      "rival_move": 9.0,
+      "our_prev": 80,
+      "decision": "offer",
+      "our_move": 0,
+      "our_price": 80,
+      "our_days": null
+     },
+     {
+      "tick": 130,
+      "round": 4,
+      "remaining": 7,
+      "rival_price": 63.0,
+      "rival_days": 0,
+      "rival_move": 4.0,
+      "our_prev": 80,
+      "decision": "offer",
+      "our_move": 1,
+      "our_price": 79,
+      "our_days": null
+     },
+     {
+      "tick": 131,
+      "round": 5,
+      "remaining": 6,
+      "rival_price": 63.0,
+      "rival_days": 0,
+      "rival_move": 0.0,
+      "our_prev": 79,
+      "decision": "offer",
+      "our_move": 2,
+      "our_price": 77,
+      "our_days": null
+     },
+     {
+      "tick": 132,
+      "round": 6,
+      "remaining": 5,
+      "rival_price": 66.0,
+      "rival_days": 0,
+      "rival_move": 3.0,
+      "our_prev": 77,
+      "decision": "offer",
+      "our_move": 2,
+      "our_price": 75,
+      "our_days": null
+     }
+    ]
+   },
+   "inferred": {
+    "rival_rate": 4.0,
+    "rival_firm": false,
+    "note": "inferred from >=2 observed rival moves; None = not enough samples"
+   },
+   "state": {
+    "rounds": 6,
+    "our_last": 75,
+    "anchor": 81.0,
+    "rival_last": 66.0,
+    "last_tick": 132,
+    "done": false,
+    "total": 10
+   }
+  },
+  "183": {
+   "observed": {
+    "role": "seller",
+    "limit": 71.0,
+    "issues": [
+     "price"
+    ],
+    "history": [
+     {
+      "tick": 131,
+      "round": 1,
+      "remaining": 12,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": null,
+      "decision": "offer",
+      "our_move": null,
+      "our_price": 107,
+      "our_days": null
+     },
+     {
+      "tick": 132,
+      "round": 2,
+      "remaining": 11,
+      "rival_price": 41.0,
+      "rival_days": 0,
+      "rival_move": null,
+      "our_prev": 107,
+      "decision": "offer",
+      "our_move": 1,
+      "our_price": 106,
+      "our_days": null
      }
     ]
    },
@@ -571,12 +850,164 @@
    },
    "state": {
     "rounds": 2,
-    "our_last": 80,
-    "anchor": 81.0,
-    "rival_last": 50.0,
-    "last_tick": 128,
+    "our_last": 106,
+    "anchor": 106.5,
+    "rival_last": 41.0,
+    "last_tick": 132,
     "done": false,
-    "total": 10
+    "total": 12
+   }
+  },
+  "49": {
+   "observed": {
+    "role": "seller",
+    "limit": 66.0,
+    "issues": [
+     "price"
+    ],
+    "history": [
+     {
+      "tick": 132,
+      "round": 1,
+      "remaining": 12,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": null,
+      "decision": "offer",
+      "our_move": null,
+      "our_price": 99,
+      "our_days": null
+     }
+    ]
+   },
+   "inferred": {
+    "rival_rate": null,
+    "rival_firm": null,
+    "note": "inferred from >=2 observed rival moves; None = not enough samples"
+   },
+   "state": {
+    "rounds": 1,
+    "our_last": 99,
+    "anchor": 99.0,
+    "rival_last": null,
+    "last_tick": 132,
+    "done": false,
+    "total": 12
+   }
+  },
+  "50": {
+   "observed": {
+    "role": "buyer",
+    "limit": 157.0,
+    "issues": [
+     "price"
+    ],
+    "history": [
+     {
+      "tick": 132,
+      "round": 1,
+      "remaining": 12,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": null,
+      "decision": "offer",
+      "our_move": null,
+      "our_price": 79,
+      "our_days": null
+     }
+    ]
+   },
+   "inferred": {
+    "rival_rate": null,
+    "rival_firm": null,
+    "note": "inferred from >=2 observed rival moves; None = not enough samples"
+   },
+   "state": {
+    "rounds": 1,
+    "our_last": 79,
+    "anchor": 78.5,
+    "rival_last": null,
+    "last_tick": 132,
+    "done": false,
+    "total": 12
+   }
+  },
+  "65": {
+   "observed": {
+    "role": "seller",
+    "limit": 101.0,
+    "issues": [
+     "price"
+    ],
+    "history": [
+     {
+      "tick": 132,
+      "round": 1,
+      "remaining": 12,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": null,
+      "decision": "offer",
+      "our_move": null,
+      "our_price": 152,
+      "our_days": null
+     }
+    ]
+   },
+   "inferred": {
+    "rival_rate": null,
+    "rival_firm": null,
+    "note": "inferred from >=2 observed rival moves; None = not enough samples"
+   },
+   "state": {
+    "rounds": 1,
+    "our_last": 152,
+    "anchor": 151.5,
+    "rival_last": null,
+    "last_tick": 132,
+    "done": false,
+    "total": 12
+   }
+  },
+  "66": {
+   "observed": {
+    "role": "buyer",
+    "limit": 147.0,
+    "issues": [
+     "price"
+    ],
+    "history": [
+     {
+      "tick": 132,
+      "round": 1,
+      "remaining": 12,
+      "rival_price": null,
+      "rival_days": null,
+      "rival_move": null,
+      "our_prev": null,
+      "decision": "offer",
+      "our_move": null,
+      "our_price": 74,
+      "our_days": null
+     }
+    ]
+   },
+   "inferred": {
+    "rival_rate": null,
+    "rival_firm": null,
+    "note": "inferred from >=2 observed rival moves; None = not enough samples"
+   },
+   "state": {
+    "rounds": 1,
+    "our_last": 74,
+    "anchor": 73.5,
+    "rival_last": null,
+    "last_tick": 132,
+    "done": false,
+    "total": 12
    }
   }
  },

@@ -26,7 +26,7 @@ URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 PORT = int(os.environ.get("DASH_PORT", "5051"))
 POLL, SAMPLE = 8, 15
 HISTORY_FILE = os.path.join(HERE, "history.json")
-LOGS = [("agente", "smart_agent.log"), ("cacciatore", "page_hunter.log"), ("broker", "broker.log")]
+LOGS = [("agente", "smart_agent.log"), ("cazador", "page_hunter.log"), ("broker", "broker.log")]
 EVENT = re.compile(r"MARKET|LISTED|SELL|BUY|BID for|Chato|negotiation .* ended|opened pack|MATCHED|ACCEPT|walk|"
                    r"error|Traceback|refused|Abuela thread .*-> (accept|offer|walk)")
 SCRIPTS = ("smart_agent.py", "smart_duels.py", "page_hunter.py", "broker.py", "agent.py", "smart_broker.py")

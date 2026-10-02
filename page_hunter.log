@@ -25,3 +25,12 @@
 22:28:50 SELL single LAT-10 (asset 90) at 84; worth 49.0 to us (not in a set we build)
 22:28:51 SELL single MAL-07 (asset 444) at 30; worth 12.5 to us (not in a set we build)
 22:28:51 SELL single LAT-08 (asset 88) at 30; worth 17.5 to us (not in a set we build)
+22:29:48 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 8
+22:29:48 SELL single MAL-03 (asset 285) at 12; worth 5.0 to us (not in a set we build)
+22:29:49 SELL single LAT-04 (asset 334) at 12; worth 7.0 to us (not in a set we build)
+22:29:49 SELL single LAT-05 (asset 418) at 12; worth 7.0 to us (not in a set we build)
+22:30:48 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 9
+22:30:48 SELL single MAL-01 (asset 325) at 9; worth 5.0 to us (not in a set we build)
+22:30:48 BID for SAL-06 at 23
+22:31:49 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
+22:32:48 cash 29 | missing page cards [('LAV-09', 112.0, 138), ('LAV-10', 112.0, 138), ('SAL-06', 27.5, 40), ('SAL-09', 77.0, 89), ('SAL-10', 77.0, 89)] | open offers 14
