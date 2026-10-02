@@ -1,0 +1,9 @@
+# secrets
+.broker_key
+.team_key
+.env
+# runtime output
+*.log
+__pycache__/
+*.pyc
+broker_memory.json
