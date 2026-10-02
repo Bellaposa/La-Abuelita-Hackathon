@@ -26,3 +26,14 @@
 🤖 Nosotros (16 P): ¡Hola Abuela! ¿Aceptas 16 P y somos amigos?
 👵 Abuela pide: 30 P
 🤖 Nosotros (18 P): ¡Hola Abuela! ¿Aceptas 18 P y somos amigos?
+👵 Abuela pide: 25 P
+🤖 Nosotros (20 P): ¡Hola Abuela! ¿Aceptas 20 P y somos amigos?
+👵 Abuela pide: 23 P
+🤖 Nosotros (22 P): ¡Hola Abuela! ¿Aceptas 22 P y somos amigos?
+🤖 Nosotros (27 P): ¡Hola Abuela! ¿Aceptas 27 P? Tengo prisa, somos amigos.
+👵 Abuela pide: 30 P
+🤖 Nosotros (27 P): ¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.
+👵 Abuela pide: 30 P
+🤖 Nosotros (27 P): ¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.
+👵 Abuela pide: 30 P
+🤖 Nosotros (27 P): ¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.

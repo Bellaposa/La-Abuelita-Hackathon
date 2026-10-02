@@ -162,50 +162,27 @@ def run_agent():
                         print(f"\n👵 Abuela chiede: {ask} P per un pacchetto (Nostro limite: {budget} P)")
                         log_chat(f"👵 Abuela pide: {ask} P")
                         
-                        # Se chiede meno o uguale al nostro budget, e meno o uguale a quello che stavamo per offrirle (last_mine + 2)
-                        last_mine = mine[-1]["give"]["cash"] if mine else 0
-                        if ask <= min(budget, last_mine + 2) or (hers[-1].get("final") and ask <= budget):
-                            print(f"🤝 Accettiamo l'offerta di Abuela a {ask} P!")
+                        # MODO AGGRESSIVO: accettiamo SUBITO qualsiasi prezzo <= budget
+                        if ask <= budget:
+                            print(f"🚀 ACCETTIAMO SUBITO a {ask} P! (Modo aggressivo)")
                             b.accept(hers[-1]["id"])
                             log_chat(f"🤝 ¡Trato cerrado a {ask} P!")
                             
                             if ask < memory.get("abuela_min_price", 999):
                                 memory["abuela_min_price"] = ask
                                 save_memory(memory)
-                                print(f"🧠 Memoria aggiornata: l'Abuela scende fino a {ask} P!")
                         else:
-                            if mine:
-                                offer = min(budget, mine[-1]["give"]["cash"] + 2)
-                            else:
-                                offer = int(budget * 0.6) if min_known_price == 999 else min_known_price - 2
-                                offer = min(offer, budget)
-                            
-                            msg = get_llm_haggle_message("abuela", offer, budget, memory.get("chat_history"))
-                            
-                            print(f"🗣️ Diciamo: '{msg}' (Offriamo {offer} P)")
-                            log_chat(f"🤖 Nosotros ({offer} P): {msg}")
-                            b.say(t["id"], msg, price=offer)
-                            
-                            if "chat_history" not in memory:
-                                memory["chat_history"] = []
-                            memory["chat_history"].append(f"Tú ofreciste {offer}P diciendo: {msg}")
-                            memory["chat_history"] = memory["chat_history"][-6:]
-                            save_memory(memory)
+                            # Chiede troppo: controproponiamo DIRETTAMENTE il massimo budget
+                            msg = "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo."
+                            print(f"🗣️ Controproposta al massimo: {budget} P")
+                            log_chat(f"🤖 Nosotros ({budget} P): {msg}")
+                            b.say(t["id"], msg, price=budget)
                     elif not mine:
-                        # Se il thread è vuoto, dobbiamo fare noi la prima mossa
-                        offer = int(budget * 0.6) if min_known_price == 999 else min_known_price - 2
-                        offer = min(offer, budget)
-                        
-                        msg = get_llm_haggle_message("abuela", offer, budget, memory.get("chat_history"))
-                        print(f"🗣️ Rompiamo il ghiaccio: '{msg}' (Offriamo {offer} P)")
-                        log_chat(f"🤖 Nosotros ({offer} P): {msg}")
-                        b.say(t["id"], msg, price=offer)
-                        
-                        if "chat_history" not in memory:
-                            memory["chat_history"] = []
-                        memory["chat_history"].append(f"Tú ofreciste {offer}P diciendo: {msg}")
-                        memory["chat_history"] = memory["chat_history"][-6:]
-                        save_memory(memory)
+                        # Thread vuoto: partiamo DIRETTAMENTE dal massimo per chiudere subito
+                        msg = "¡Hola Abuela! ¿Aceptas 27 P? Tengo prisa, somos amigos."
+                        print(f"🗣️ Prima mossa aggressiva: {budget} P (massimo)")
+                        log_chat(f"🤖 Nosotros ({budget} P): {msg}")
+                        b.say(t["id"], msg, price=budget)
             except Exception as e:
                 # Se l'Abuela dà errore (es. persona_quota), lo stampiamo e continuiamo con la FASE 3
                 if "persona_quota" in str(e):
@@ -213,21 +190,27 @@ def run_agent():
                 else:
                     print(f"⚠️ Salto Abuela per questo tick: {e}")
             
-            # --- FASE 3: Speculazione sui doppioni ---
-            books = {c["id"]: c["book"] for s in catalog["sets"] for c in s["cards"]}
+            # --- FASE 3: Vendi SOLO doppioni a basso valore privato ---
             held = me["assets"]
-            seen = set()
-            
+            seen = {}
+
             for a in sorted((a for a in held if a["kind"] == "card"), key=lambda a: a["serial"]):
-                if a["ref"] in seen and books.get(a["ref"]):
-                    # Markup altissimo (300%) per non regalare punti (Private Value) agli avversari
-                    smart_price = int(books[a["ref"]] * 3.00) 
-                    try:
-                        b.list_offer({"assets": [a["id"]]}, {"cash": smart_price}, venue="rastro")
-                        print(f"📈 Messo in vendita doppione '{a['name']}' per {smart_price} P sul Rastro")
-                    except Exception:
-                        pass
-                seen.add(a["ref"])
+                ref = a["ref"]
+                my_val = a.get("your_value", 999)
+
+                if ref not in seen:
+                    seen[ref] = a
+                else:
+                    # Doppione trovato. Vendi SOLO se vale poco per noi (<= 5 P)
+                    if my_val <= 5.0:
+                        sell_price = max(int(my_val * 2), 10)
+                        try:
+                            b.list_offer({"assets": [a["id"]]}, {"cash": sell_price}, venue="rastro")
+                            print(f"📈 Vendo doppione '{a['name']}' (val: {my_val}P) per {sell_price} P")
+                        except Exception:
+                            pass
+                    else:
+                        print(f"💎 Tengo '{a['name']}' (val: {my_val}P) - troppo prezioso!")
                 
             print("\n⏳ Attesa del prossimo tick del server (circa 60s)...")
             b.wait_tick()
