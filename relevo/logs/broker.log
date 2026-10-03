@@ -60,3 +60,6 @@
 18:00:27 tick 932 b55: b55-19@36 x b55-3@51 -> MATCH (bid may leave (age 2 >= observed 25th pct 1); left from book)
 18:00:30 tick 932: MATCHED b55-19 x b55-3 at 43
 18:03:29 learned (session b55 ended): best hold 0 -> waiting off; est. eff by hold {0: 0.782, 1: 0.709, 2: 0.709, 3: 0.782}; relax {'ask': 3.5, 'bid': 2.07}; lifetime 3 over 3 sessions
+18:26:07 learned (startup): best hold 0 -> waiting off; est. eff by hold {0: 0.782, 1: 0.709, 2: 0.709, 3: 0.782}; relax {'ask': 3.5, 'bid': 2.07}; lifetime 3 over 3 sessions
+18:26:08 announced (9.52 h): Team 6 · v01: 0 % fee, no per-card charge. Our broker matches every cr...
+18:26:08 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
