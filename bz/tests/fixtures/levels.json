@@ -1,0 +1,35 @@
+{
+ "levels": [
+  {
+   "id": "chato",
+   "kind": "persona",
+   "name": "El Chato",
+   "state": "active",
+   "teaser": "«Better packs, friendly prices. If I like you.»",
+   "how": "Better packs and rare singles; he buys uncommon and rare cards. Open a thread with him (with: chato).",
+   "active_since_hours": 1.633,
+   "opens_to_all_at_hours": 2.633,
+   "open_to_all": true
+  },
+  {
+   "id": "pilar",
+   "kind": "persona",
+   "name": "Doña Pilar",
+   "state": "active",
+   "teaser": "«I collect what others throw away.»",
+   "how": "A collector: she pays over book for the cards she loves and sells gold packs. Open a thread with her (with: pilar).",
+   "active_since_hours": 3.508,
+   "opens_to_all_at_hours": 5.508,
+   "open_to_all": false
+  },
+  {
+   "id": "radio",
+   "kind": "radio",
+   "name": "Radio Rastro",
+   "state": "active",
+   "teaser": "«At El Rastro you hear everything. Some of it is true.»",
+   "how": "News on air: GET /api/news (newest first; also news.posted on the live stream). Three sources: the Boletín del Bazar (the Bazaar bulletin), Radio Rastro and El Tablón, the notice board. Some items are true and the market moves as they say; some are rumours that never happen; some are just Madrid. Nothing tells you which is which.",
+   "active_since_hours": 3.675
+  }
+ ]
+}

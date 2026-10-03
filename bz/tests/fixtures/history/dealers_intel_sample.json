@@ -1,0 +1,2180 @@
+{
+ "source": "dealers_intel.json (saved_at 2026-10-02 22:12:53, tick 112)",
+ "dealers": {
+  "abuela": {
+   "id": "abuela",
+   "name": "Abuela Carmen",
+   "status": "active",
+   "level": 1,
+   "title": "card stall at El Rastro, since 1985",
+   "kind": "dealer",
+   "enabled": true,
+   "avatar": {
+    "initials": "AC",
+    "color": "#E07A5F",
+    "emoji": "🧶"
+   },
+   "bio": "Carmen has sold cards from the same folding table at El Rastro every Sunday for forty years. She knows every child who ever swapped a duplicate there and most of their grandchildren.\n",
+   "traits": {
+    "patience": 0.85,
+    "generosity": 0.8,
+    "shrewdness": 0.2,
+    "memory": 0.15,
+    "strictness": 0.1,
+    "chattiness": 0.75
+   },
+   "unlock": {
+    "always": true,
+    "early_deals_with": null,
+    "early_min_deals": 3,
+    "early_min_level": 0,
+    "open_to_all_at": null
+   },
+   "open_to_all": true,
+   "menu": {
+    "sells": [
+     {
+      "pack": "sobre_barrio",
+      "name": "Neighbourhood pack",
+      "list_price": 26,
+      "opening_ask": 30,
+      "per_team_per_hour": 3
+     },
+     {
+      "rarity": "common",
+      "sets": "released",
+      "list_price": 10
+     },
+     {
+      "rarity": "uncommon",
+      "sets": "released",
+      "list_price": 25
+     }
+    ],
+    "buys": [
+     {
+      "rarity": "common",
+      "sets": "released"
+     },
+     {
+      "rarity": "uncommon",
+      "sets": "released"
+     }
+    ],
+    "deals_per_team_per_hour": 8
+   }
+  },
+  "chato": {
+   "id": "chato",
+   "name": "El Chato",
+   "status": "active",
+   "level": 2,
+   "title": "Rastro regular, silver packs and rare singles",
+   "kind": "dealer",
+   "enabled": true,
+   "avatar": {
+    "initials": "CH",
+    "color": "#5C6B73",
+    "emoji": "🧢"
+   },
+   "bio": "Nobody knows his real name. He has worked the stall next to Abuela Carmen for twenty years, knows the price of every card in Madrid, and has a long memory for people who try to be clever.\n",
+   "traits": {
+    "patience": 0.35,
+    "generosity": 0.25,
+    "shrewdness": 0.85,
+    "memory": 0.9,
+    "strictness": 0.85,
+    "chattiness": 0.3
+   },
+   "unlock": {
+    "always": false,
+    "early_deals_with": "abuela",
+    "early_min_deals": 3,
+    "early_min_level": 0,
+    "open_to_all_at": "+2.63h"
+   },
+   "open_to_all": false,
+   "menu": {
+    "sells": [
+     {
+      "pack": "sobre_plata",
+      "name": "Silver pack",
+      "list_price": 150,
+      "opening_ask": 188,
+      "per_team_per_hour": 2
+     },
+     {
+      "rarity": "uncommon",
+      "sets": "released",
+      "list_price": 26
+     },
+     {
+      "rarity": "rare",
+      "sets": "released",
+      "list_price": 77
+     }
+    ],
+    "buys": [
+     {
+      "rarity": "uncommon",
+      "sets": "released"
+     },
+     {
+      "rarity": "rare",
+      "sets": "released"
+     }
+    ],
+    "deals_per_team_per_hour": 6
+   }
+  }
+ },
+ "levels": {
+  "levels": [
+   {
+    "id": "chato",
+    "kind": "persona",
+    "name": "El Chato",
+    "state": "active",
+    "teaser": "«Better packs, friendly prices. If I like you.»",
+    "how": "Better packs and rare singles; he buys uncommon and rare cards. Open a thread with him (with: chato).",
+    "active_since_hours": 1.633,
+    "opens_to_all_at_hours": 2.633,
+    "open_to_all": false
+   }
+  ]
+ },
+ "threads": {
+  "2": {
+   "id": 2,
+   "kind": "persona",
+   "team": "t06",
+   "with": "abuela",
+   "venue": null,
+   "topic": {
+    "buy": {
+     "pack": "sobre_barrio"
+    }
+   },
+   "status": "deal",
+   "created_tick": 0,
+   "messages": [
+    {
+     "id": 3,
+     "tick": 0,
+     "sender": "t06",
+     "text": "¡Hola, Abuela Carmen! Qué alegría verla. Would you take 15 primas for a neighbourhood pack? Muchas gracias.",
+     "offer": {
+      "id": 3,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 2,
+      "status": "cancelled",
+      "give": {
+       "cash": 15,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 2,
+      "created_tick": 0,
+      "final": false
+     }
+    },
+    {
+     "id": 17,
+     "tick": 1,
+     "sender": "t06",
+     "text": "Hola de nuevo, Carmen. Could you let it go for 16 primas? Muchas gracias, de verdad.",
+     "offer": {
+      "id": 17,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 2,
+      "status": "cancelled",
+      "give": {
+       "cash": 16,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 3,
+      "created_tick": 1,
+      "final": false
+     }
+    },
+    {
+     "id": 5,
+     "tick": 1,
+     "sender": "abuela",
+     "text": "Welcome, hijo! Look, Neighbourhood pack, 17 P. Made for beginners.",
+     "offer": {
+      "id": 5,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 2,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 17,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 3,
+      "created_tick": 1,
+      "final": false
+     }
+    },
+    {
+     "id": 19,
+     "tick": 2,
+     "sender": "abuela",
+     "text": "Oh, oh... 17 P, and only because you have a kind face. A little advice, cariño: a full page is worth much more than the loose cards. Swap your duplicates!",
+     "offer": {
+      "id": 19,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 2,
+      "status": "settled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 17,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 4,
+      "created_tick": 2,
+      "final": false
+     }
+    }
+   ],
+   "standing_offers": [],
+   "item": "Neighbourhood pack",
+   "closed_reason": null
+  },
+  "33": {
+   "id": 33,
+   "kind": "persona",
+   "team": "t06",
+   "with": "abuela",
+   "venue": null,
+   "topic": {
+    "buy": {
+     "pack": "sobre_barrio"
+    }
+   },
+   "status": "deal",
+   "created_tick": 14,
+   "messages": [
+    {
+     "id": 121,
+     "tick": 14,
+     "sender": "t06",
+     "text": "¡Hola, Abuela Carmen! Qué alegría verla, ¿cómo está hoy? Vengo por un sobre de barrio; ¿le parece bien 11 primas?",
+     "offer": {
+      "id": 147,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 33,
+      "status": "cancelled",
+      "give": {
+       "cash": 11,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 16,
+      "created_tick": 14,
+      "final": false
+     }
+    },
+    {
+     "id": 125,
+     "tick": 15,
+     "sender": "abuela",
+     "text": "Welcome, hijo! Look, Neighbourhood pack, 30 P. Made for beginners.",
+     "offer": {
+      "id": 151,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 33,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 17,
+      "created_tick": 15,
+      "final": false
+     }
+    },
+    {
+     "id": 128,
+     "tick": 15,
+     "sender": "t06",
+     "text": "Es usted un sol. Me estiro un poquito más: 15 primas. ¿Le parece justo?",
+     "offer": {
+      "id": 154,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 33,
+      "status": "cancelled",
+      "give": {
+       "cash": 15,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 17,
+      "created_tick": 15,
+      "final": false
+     }
+    },
+    {
+     "id": 133,
+     "tick": 16,
+     "sender": "abuela",
+     "text": "Oh, oh... 27 P, and only because you have a kind face.",
+     "offer": {
+      "id": 159,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 33,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 18,
+      "created_tick": 16,
+      "final": false
+     }
+    },
+    {
+     "id": 139,
+     "tick": 16,
+     "sender": "t06",
+     "text": "Entiendo, Carmen, y se lo agradezco. Subo a 18 primas, que es lo que puedo.",
+     "offer": {
+      "id": 165,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 33,
+      "status": "cancelled",
+      "give": {
+       "cash": 18,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 18,
+      "created_tick": 16,
+      "final": false
+     }
+    },
+    {
+     "id": 146,
+     "tick": 17,
+     "sender": "abuela",
+     "text": "Look, 26 P. My grandchildren would pay more! A little advice, cariño: a full page is worth much more than the loose cards. Swap your duplicates!",
+     "offer": {
+      "id": 172,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 33,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 26,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 19,
+      "created_tick": 17,
+      "final": false
+     }
+    },
+    {
+     "id": 155,
+     "tick": 17,
+     "sender": "t06",
+     "text": "Qué bien se está con usted. ¿Qué tal 20 primas, de corazón?",
+     "offer": {
+      "id": 180,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 33,
+      "status": "cancelled",
+      "give": {
+       "cash": 20,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 19,
+      "created_tick": 17,
+      "final": false
+     }
+    },
+    {
+     "id": 156,
+     "tick": 18,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 25 P. A little advice, cariño: a full page is worth much more than the loose cards. Swap your duplicates!",
+     "offer": {
+      "id": 181,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 33,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 25,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 20,
+      "created_tick": 18,
+      "final": false
+     }
+    },
+    {
+     "id": 163,
+     "tick": 18,
+     "sender": "t06",
+     "text": "Muchas gracias por su paciencia, Abuela. Con cariño, ¿podríamos dejarlo en 22 primas?",
+     "offer": {
+      "id": 188,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 33,
+      "status": "cancelled",
+      "give": {
+       "cash": 22,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 20,
+      "created_tick": 18,
+      "final": false
+     }
+    },
+    {
+     "id": 166,
+     "tick": 19,
+     "sender": "abuela",
+     "text": "Look, 24 P. My grandchildren would pay more! Look, cariño, I can't go lower. This is my last offer.",
+     "offer": {
+      "id": 190,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 33,
+      "status": "settled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 24,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 21,
+      "created_tick": 19,
+      "final": true
+     }
+    }
+   ],
+   "standing_offers": [],
+   "item": "Neighbourhood pack",
+   "closed_reason": null
+  },
+  "55": {
+   "id": 55,
+   "kind": "persona",
+   "team": "t06",
+   "with": "abuela",
+   "venue": null,
+   "topic": {
+    "buy": {
+     "pack": "sobre_barrio"
+    }
+   },
+   "status": "closed",
+   "created_tick": 28,
+   "messages": [
+    {
+     "id": 262,
+     "tick": 28,
+     "sender": "t06",
+     "text": "¡Hola, Abuela Carmen! Qué alegría verla, ¿cómo está hoy? Vengo por un sobre de barrio; ¿le parece bien 11 primas?",
+     "offer": {
+      "id": 299,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 55,
+      "status": "expired",
+      "give": {
+       "cash": 11,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 30,
+      "created_tick": 28,
+      "final": false
+     }
+    },
+    {
+     "id": 268,
+     "tick": 29,
+     "sender": "abuela",
+     "text": "Oh, cariño, that I don't do. you bought enough of these this hour; come back later",
+     "offer": null
+    }
+   ],
+   "standing_offers": [],
+   "item": null,
+   "closed_reason": "persona_quota"
+  },
+  "109": {
+   "id": 109,
+   "kind": "persona",
+   "team": "t06",
+   "with": "abuela",
+   "venue": null,
+   "topic": {
+    "buy": {
+     "pack": "sobre_barrio"
+    }
+   },
+   "status": "walked",
+   "created_tick": 60,
+   "messages": [
+    {
+     "id": 649,
+     "tick": 60,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 27 P y somos amigos?",
+     "offer": {
+      "id": 777,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 62,
+      "created_tick": 60,
+      "final": false
+     }
+    },
+    {
+     "id": 657,
+     "tick": 61,
+     "sender": "abuela",
+     "text": "Welcome, hijo! Look, Neighbourhood pack, 30 P. Made for beginners.",
+     "offer": {
+      "id": 784,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 63,
+      "created_tick": 61,
+      "final": false
+     }
+    },
+    {
+     "id": 668,
+     "tick": 61,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 27 P y somos amigos?",
+     "offer": {
+      "id": 799,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 63,
+      "created_tick": 61,
+      "final": false
+     }
+    },
+    {
+     "id": 678,
+     "tick": 62,
+     "sender": "abuela",
+     "text": "Oh, oh... 30 P, and only because you have a kind face. A little advice, cariño: a full page is worth much more than the loose cards. Swap your duplicates!",
+     "offer": {
+      "id": 809,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 64,
+      "created_tick": 62,
+      "final": false
+     }
+    },
+    {
+     "id": 688,
+     "tick": 62,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 27 P y somos amigos?",
+     "offer": {
+      "id": 823,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 64,
+      "created_tick": 62,
+      "final": false
+     }
+    },
+    {
+     "id": 696,
+     "tick": 63,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 30 P.",
+     "offer": {
+      "id": 837,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 65,
+      "created_tick": 63,
+      "final": false
+     }
+    },
+    {
+     "id": 705,
+     "tick": 63,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 2 P y somos amigos?",
+     "offer": {
+      "id": 849,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 2,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 65,
+      "created_tick": 63,
+      "final": false
+     }
+    },
+    {
+     "id": 711,
+     "tick": 64,
+     "sender": "abuela",
+     "text": "Oh, oh... 30 P, and only because you have a kind face.",
+     "offer": {
+      "id": 862,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 66,
+      "created_tick": 64,
+      "final": false
+     }
+    },
+    {
+     "id": 720,
+     "tick": 64,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 2 P y somos amigos?",
+     "offer": {
+      "id": 871,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "expired",
+      "give": {
+       "cash": 2,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 66,
+      "created_tick": 64,
+      "final": false
+     }
+    },
+    {
+     "id": 729,
+     "tick": 65,
+     "sender": "abuela",
+     "text": "Oh, oh... 30 P, and only because you have a kind face.",
+     "offer": {
+      "id": 887,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 67,
+      "created_tick": 65,
+      "final": false
+     }
+    },
+    {
+     "id": 773,
+     "tick": 67,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 16 P y somos amigos?",
+     "offer": {
+      "id": 954,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "expired",
+      "give": {
+       "cash": 16,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 69,
+      "created_tick": 67,
+      "final": false
+     }
+    },
+    {
+     "id": 777,
+     "tick": 68,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 26 P.",
+     "offer": {
+      "id": 958,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 26,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 70,
+      "created_tick": 68,
+      "final": false
+     }
+    },
+    {
+     "id": 807,
+     "tick": 70,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 16 P y somos amigos?",
+     "offer": {
+      "id": 998,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 16,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 72,
+      "created_tick": 70,
+      "final": false
+     }
+    },
+    {
+     "id": 809,
+     "tick": 71,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 26 P. A little advice, cariño: a full page is worth much more than the loose cards. Swap your duplicates!",
+     "offer": {
+      "id": 1001,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 26,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 73,
+      "created_tick": 71,
+      "final": false
+     }
+    },
+    {
+     "id": 829,
+     "tick": 72,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 18 P y somos amigos?",
+     "offer": {
+      "id": 1021,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 18,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 74,
+      "created_tick": 72,
+      "final": false
+     }
+    },
+    {
+     "id": 831,
+     "tick": 73,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 25 P.",
+     "offer": {
+      "id": 1023,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 25,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 75,
+      "created_tick": 73,
+      "final": false
+     }
+    },
+    {
+     "id": 840,
+     "tick": 73,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 20 P y somos amigos?",
+     "offer": {
+      "id": 1033,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 20,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 75,
+      "created_tick": 73,
+      "final": false
+     }
+    },
+    {
+     "id": 843,
+     "tick": 74,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 24 P.",
+     "offer": {
+      "id": 1043,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 24,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 76,
+      "created_tick": 74,
+      "final": false
+     }
+    },
+    {
+     "id": 852,
+     "tick": 74,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 22 P y somos amigos?",
+     "offer": {
+      "id": 1056,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 22,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 76,
+      "created_tick": 74,
+      "final": false
+     }
+    },
+    {
+     "id": 854,
+     "tick": 75,
+     "sender": "abuela",
+     "text": "Look, 24 P. My grandchildren would pay more!",
+     "offer": {
+      "id": 1069,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 24,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 77,
+      "created_tick": 75,
+      "final": false
+     }
+    },
+    {
+     "id": 862,
+     "tick": 75,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 24 P y somos amigos?",
+     "offer": {
+      "id": 1079,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 109,
+      "status": "cancelled",
+      "give": {
+       "cash": 24,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 77,
+      "created_tick": 75,
+      "final": false
+     }
+    },
+    {
+     "id": 867,
+     "tick": 76,
+     "sender": "abuela",
+     "text": "Oh no, hijo, not today. Come back after lunch, okay? A little advice, cariño: a full page is worth much more than the loose cards. Swap your duplicates!",
+     "offer": null
+    }
+   ],
+   "standing_offers": [],
+   "item": "Neighbourhood pack",
+   "closed_reason": "no_progress"
+  },
+  "148": {
+   "id": 148,
+   "kind": "persona",
+   "team": "t06",
+   "with": "abuela",
+   "venue": null,
+   "topic": {
+    "buy": {
+     "pack": "sobre_barrio"
+    }
+   },
+   "status": "cooloff",
+   "created_tick": 80,
+   "messages": [
+    {
+     "id": 928,
+     "tick": 80,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 27 P? Tengo prisa, somos amigos.",
+     "offer": {
+      "id": 1173,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 82,
+      "created_tick": 80,
+      "final": false
+     }
+    },
+    {
+     "id": 933,
+     "tick": 81,
+     "sender": "abuela",
+     "text": "Welcome, hijo! Look, Neighbourhood pack, 30 P. Made for beginners. A little advice, cariño: a full page is worth much more than the loose cards. Swap your duplicates!",
+     "offer": {
+      "id": 1178,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 83,
+      "created_tick": 81,
+      "final": false
+     }
+    },
+    {
+     "id": 936,
+     "tick": 81,
+     "sender": "t06",
+     "text": "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.",
+     "offer": {
+      "id": 1181,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 83,
+      "created_tick": 81,
+      "final": false
+     }
+    },
+    {
+     "id": 941,
+     "tick": 82,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 30 P.",
+     "offer": {
+      "id": 1193,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 84,
+      "created_tick": 82,
+      "final": false
+     }
+    },
+    {
+     "id": 962,
+     "tick": 83,
+     "sender": "t06",
+     "text": "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.",
+     "offer": {
+      "id": 1216,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 85,
+      "created_tick": 83,
+      "final": false
+     }
+    },
+    {
+     "id": 966,
+     "tick": 84,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 30 P.",
+     "offer": {
+      "id": 1221,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 86,
+      "created_tick": 84,
+      "final": false
+     }
+    },
+    {
+     "id": 977,
+     "tick": 84,
+     "sender": "t06",
+     "text": "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.",
+     "offer": {
+      "id": 1232,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 86,
+      "created_tick": 84,
+      "final": false
+     }
+    },
+    {
+     "id": 980,
+     "tick": 85,
+     "sender": "abuela",
+     "text": "Look, 30 P. My grandchildren would pay more! A little advice, cariño: a full page is worth much more than the loose cards. Swap your duplicates!",
+     "offer": {
+      "id": 1241,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 87,
+      "created_tick": 85,
+      "final": false
+     }
+    },
+    {
+     "id": 992,
+     "tick": 85,
+     "sender": "t06",
+     "text": "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.",
+     "offer": {
+      "id": 1254,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 87,
+      "created_tick": 85,
+      "final": false
+     }
+    },
+    {
+     "id": 995,
+     "tick": 86,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 30 P. Eh, eh. Be nice to your abuela.",
+     "offer": {
+      "id": 1273,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 88,
+      "created_tick": 86,
+      "final": false
+     }
+    },
+    {
+     "id": 1007,
+     "tick": 86,
+     "sender": "t06",
+     "text": "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.",
+     "offer": {
+      "id": 1286,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 88,
+      "created_tick": 86,
+      "final": false
+     }
+    },
+    {
+     "id": 1009,
+     "tick": 87,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 30 P. Eh, eh. Be nice to your abuela.",
+     "offer": {
+      "id": 1289,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 89,
+      "created_tick": 87,
+      "final": false
+     }
+    },
+    {
+     "id": 1018,
+     "tick": 87,
+     "sender": "t06",
+     "text": "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.",
+     "offer": {
+      "id": 1297,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 89,
+      "created_tick": 87,
+      "final": false
+     }
+    },
+    {
+     "id": 1021,
+     "tick": 88,
+     "sender": "abuela",
+     "text": "Let's meet in the middle, cariño: 30 P. Eh, eh. Be nice to your abuela.",
+     "offer": {
+      "id": 1300,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 90,
+      "created_tick": 88,
+      "final": false
+     }
+    },
+    {
+     "id": 1028,
+     "tick": 88,
+     "sender": "t06",
+     "text": "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.",
+     "offer": {
+      "id": 1308,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 90,
+      "created_tick": 88,
+      "final": false
+     }
+    },
+    {
+     "id": 1033,
+     "tick": 89,
+     "sender": "abuela",
+     "text": "Oh, oh... 30 P, and only because you have a kind face. Eh, eh. Be nice to your abuela.",
+     "offer": {
+      "id": 1315,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 91,
+      "created_tick": 89,
+      "final": false
+     }
+    },
+    {
+     "id": 1041,
+     "tick": 89,
+     "sender": "t06",
+     "text": "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.",
+     "offer": {
+      "id": 1324,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 91,
+      "created_tick": 89,
+      "final": false
+     }
+    },
+    {
+     "id": 1043,
+     "tick": 90,
+     "sender": "abuela",
+     "text": "Oh, oh... 30 P, and only because you have a kind face. Eh, eh. Be nice to your abuela. A little advice, cariño: a full page is worth much more than the loose cards. Swap your duplicates!",
+     "offer": {
+      "id": 1339,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 92,
+      "created_tick": 90,
+      "final": false
+     }
+    },
+    {
+     "id": 1053,
+     "tick": 90,
+     "sender": "t06",
+     "text": "¡Abuela, eres la mejor! Acepta 27 P por favor, es todo lo que tengo.",
+     "offer": {
+      "id": 1349,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 148,
+      "status": "cancelled",
+      "give": {
+       "cash": 27,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 92,
+      "created_tick": 90,
+      "final": false
+     }
+    },
+    {
+     "id": 1055,
+     "tick": 91,
+     "sender": "abuela",
+     "text": "Hijo, with those manners? Go and think a little, then come back.",
+     "offer": null
+    }
+   ],
+   "standing_offers": [],
+   "item": "Neighbourhood pack",
+   "closed_reason": "cooloff",
+   "until_tick": 96
+  },
+  "181": {
+   "id": 181,
+   "kind": "persona",
+   "team": "t06",
+   "with": "abuela",
+   "venue": null,
+   "topic": {
+    "buy": {
+     "pack": "sobre_barrio"
+    }
+   },
+   "status": "open",
+   "created_tick": 97,
+   "messages": [
+    {
+     "id": 1123,
+     "tick": 97,
+     "sender": "t06",
+     "text": "¡Hola Abuela! ¿Aceptas 25 P? Somos amigos y tengo prisa.",
+     "offer": {
+      "id": 1436,
+      "maker": "t06",
+      "to": "abuela",
+      "venue": null,
+      "thread": 181,
+      "status": "expired",
+      "give": {
+       "cash": 25,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "expires_tick": 99,
+      "created_tick": 97,
+      "final": false
+     }
+    },
+    {
+     "id": 1131,
+     "tick": 98,
+     "sender": "abuela",
+     "text": "¡Hola, cariño! Qué prisa llevas, hijo. ¿Has comido ya? Mira, el Neighbourhood pack te lo dejo en 30 P. Es bonito, tiene cartas para empezar bien. Mi nieto empezó con uno igual, hace años, aquí mismo en esta mesita. Anda, llévatelo.",
+     "offer": {
+      "id": 1452,
+      "maker": "abuela",
+      "to": "t06",
+      "venue": null,
+      "thread": 181,
+      "status": "expired",
+      "give": {
+       "cash": 0,
+       "assets": [],
+       "types": [
+        "pack:sobre_barrio"
+       ]
+      },
+      "want": {
+       "cash": 30,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 100,
+      "created_tick": 98,
+      "final": false
+     }
+    }
+   ],
+   "standing_offers": [],
+   "item": "Neighbourhood pack",
+   "closed_reason": null
+  },
+  "194": {
+   "id": 194,
+   "kind": "persona",
+   "team": "t06",
+   "with": "chato",
+   "venue": null,
+   "topic": {
+    "sell": {
+     "assets": [
+      444
+     ]
+    }
+   },
+   "status": "closed",
+   "created_tick": 102,
+   "messages": [
+    {
+     "id": 1203,
+     "tick": 102,
+     "sender": "t06",
+     "text": "Buenas, Chato. Te ofrezco MAL-07: 26 primas.",
+     "offer": {
+      "id": 1543,
+      "maker": "t06",
+      "to": "chato",
+      "venue": null,
+      "thread": 194,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [
+        {
+         "id": 444,
+         "kind": "card",
+         "ref": "MAL-07",
+         "serial": 6,
+         "rarity": "uncommon",
+         "set": "MAL",
+         "print_run": 90
+        }
+       ],
+       "types": []
+      },
+      "want": {
+       "cash": 26,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 104,
+      "created_tick": 102,
+      "final": false
+     }
+    },
+    {
+     "id": 1216,
+     "tick": 103,
+     "sender": "chato",
+     "text": "Mercado de San Ildefonso. 13 P. Take it or leave it.",
+     "offer": {
+      "id": 1557,
+      "maker": "chato",
+      "to": "t06",
+      "venue": null,
+      "thread": 194,
+      "status": "cancelled",
+      "give": {
+       "cash": 13,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [
+        {
+         "id": 444,
+         "kind": "card",
+         "ref": "MAL-07",
+         "serial": 6,
+         "rarity": "uncommon",
+         "set": "MAL",
+         "print_run": 90
+        }
+       ],
+       "types": []
+      },
+      "expires_tick": 105,
+      "created_tick": 103,
+      "final": false
+     }
+    },
+    {
+     "id": 1240,
+     "tick": 104,
+     "sender": "t06",
+     "text": "Entendido. Bajo a 21 primas.",
+     "offer": {
+      "id": 1583,
+      "maker": "t06",
+      "to": "chato",
+      "venue": null,
+      "thread": 194,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [
+        {
+         "id": 444,
+         "kind": "card",
+         "ref": "MAL-07",
+         "serial": 6,
+         "rarity": "uncommon",
+         "set": "MAL",
+         "print_run": 90
+        }
+       ],
+       "types": []
+      },
+      "want": {
+       "cash": 21,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 106,
+      "created_tick": 104,
+      "final": false
+     }
+    },
+    {
+     "id": 1247,
+     "tick": 105,
+     "sender": "chato",
+     "text": "Still 13 P. You moved, I didn't. That's how it goes.",
+     "offer": {
+      "id": 1596,
+      "maker": "chato",
+      "to": "t06",
+      "venue": null,
+      "thread": 194,
+      "status": "cancelled",
+      "give": {
+       "cash": 13,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [
+        {
+         "id": 444,
+         "kind": "card",
+         "ref": "MAL-07",
+         "serial": 6,
+         "rarity": "uncommon",
+         "set": "MAL",
+         "print_run": 90
+        }
+       ],
+       "types": []
+      },
+      "expires_tick": 107,
+      "created_tick": 105,
+      "final": false
+     }
+    },
+    {
+     "id": 1274,
+     "tick": 106,
+     "sender": "t06",
+     "text": "Entendido. Bajo a 20 primas.",
+     "offer": {
+      "id": 1622,
+      "maker": "t06",
+      "to": "chato",
+      "venue": null,
+      "thread": 194,
+      "status": "cancelled",
+      "give": {
+       "cash": 0,
+       "assets": [
+        {
+         "id": 444,
+         "kind": "card",
+         "ref": "MAL-07",
+         "serial": 6,
+         "rarity": "uncommon",
+         "set": "MAL",
+         "print_run": 90
+        }
+       ],
+       "types": []
+      },
+      "want": {
+       "cash": 20,
+       "assets": [],
+       "types": []
+      },
+      "expires_tick": 108,
+      "created_tick": 106,
+      "final": false
+     }
+    },
+    {
+     "id": 1284,
+     "tick": 107,
+     "sender": "chato",
+     "text": "13 P. Same as before. You keep walking down, I keep standing still.",
+     "offer": {
+      "id": 1632,
+      "maker": "chato",
+      "to": "t06",
+      "venue": null,
+      "thread": 194,
+      "status": "cancelled",
+      "give": {
+       "cash": 13,
+       "assets": [],
+       "types": []
+      },
+      "want": {
+       "cash": 0,
+       "assets": [
+        {
+         "id": 444,
+         "kind": "card",
+         "ref": "MAL-07",
+         "serial": 6,
+         "rarity": "uncommon",
+         "set": "MAL",
+         "print_run": 90
+        }
+       ],
+       "types": []
+      },
+      "expires_tick": 109,
+      "created_tick": 107,
+      "final": false
+     }
+    }
+   ],
+   "standing_offers": [],
+   "item": "Mercado de San Ildefonso",
+   "closed_reason": null
+  }
+ }
+}

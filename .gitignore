@@ -7,3 +7,7 @@
 __pycache__/
 *.pyc
 broker_memory.json
+
+# phase 0: raw captures and backups may hold private values; repo is public
+bz/tests/fixtures/_private/
+backup/

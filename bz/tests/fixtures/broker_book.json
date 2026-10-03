@@ -1,0 +1,37 @@
+{
+ "venue": "v01",
+ "status": "open",
+ "fee_bps": 0,
+ "fee_per_card": 0,
+ "offers": [],
+ "bench_offers": [],
+ "recent": [
+  {
+   "settlement": 399,
+   "tick": 286,
+   "kind": "trade",
+   "parties": [
+    "rival_14",
+    "rival_02"
+   ],
+   "venue": "v01",
+   "persona": null,
+   "fee": 0,
+   "items": [
+    {
+     "id": 405,
+     "kind": "card",
+     "ref": "LAT-05",
+     "serial": 13,
+     "rarity": "common",
+     "set": "LAT",
+     "print_run": 300,
+     "frm": "rival_14",
+     "to": "rival_02",
+     "name": "El Organillero"
+    }
+   ],
+   "price": 5
+  }
+ ]
+}

@@ -1,0 +1,208 @@
+{
+ "personas": [
+  {
+   "id": "abuela",
+   "name": "Abuela Carmen",
+   "status": "active",
+   "level": 1,
+   "title": "card stall at El Rastro, since 1985",
+   "kind": "dealer",
+   "enabled": true,
+   "avatar": {
+    "initials": "AC",
+    "color": "#E07A5F",
+    "emoji": "🧶"
+   },
+   "bio": "Carmen has sold cards from the same folding table at El Rastro every Sunday for forty years. She knows every child who ever swapped a duplicate there and most of their grandchildren.\n",
+   "traits": {
+    "patience": 0.85,
+    "generosity": 0.8,
+    "shrewdness": 0.2,
+    "memory": 0.15,
+    "strictness": 0.1,
+    "chattiness": 0.75
+   },
+   "unlock": {
+    "always": true,
+    "early_deals_with": null,
+    "early_min_deals": 3,
+    "early_min_level": 0,
+    "open_to_all_at": null
+   },
+   "open_to_all": true,
+   "menu": {
+    "sells": [
+     {
+      "pack": "sobre_barrio",
+      "name": "Neighbourhood pack",
+      "list_price": 26,
+      "opening_ask": 30,
+      "per_team_per_hour": 3
+     },
+     {
+      "rarity": "common",
+      "sets": "released",
+      "list_price": 10
+     },
+     {
+      "rarity": "uncommon",
+      "sets": "released",
+      "list_price": 25
+     }
+    ],
+    "buys": [
+     {
+      "rarity": "common",
+      "sets": "released"
+     },
+     {
+      "rarity": "uncommon",
+      "sets": "released"
+     }
+    ],
+    "deals_per_team_per_hour": 8
+   }
+  },
+  {
+   "id": "chato",
+   "name": "El Chato",
+   "status": "active",
+   "level": 2,
+   "title": "Rastro regular, silver packs and rare singles",
+   "kind": "dealer",
+   "enabled": true,
+   "avatar": {
+    "initials": "CH",
+    "color": "#5C6B73",
+    "emoji": "🧢"
+   },
+   "bio": "Nobody knows his real name. He has worked the stall next to Abuela Carmen for twenty years, knows the price of every card in Madrid, and has a long memory for people who try to be clever.\n",
+   "traits": {
+    "patience": 0.35,
+    "generosity": 0.25,
+    "shrewdness": 0.85,
+    "memory": 0.9,
+    "strictness": 0.85,
+    "chattiness": 0.3
+   },
+   "unlock": {
+    "always": false,
+    "early_deals_with": "abuela",
+    "early_min_deals": 3,
+    "early_min_level": 0,
+    "open_to_all_at": "+2.63h"
+   },
+   "open_to_all": true,
+   "menu": {
+    "sells": [
+     {
+      "pack": "sobre_plata",
+      "name": "Silver pack",
+      "list_price": 150,
+      "opening_ask": 188,
+      "per_team_per_hour": 2
+     },
+     {
+      "rarity": "uncommon",
+      "sets": "released",
+      "list_price": 26
+     },
+     {
+      "rarity": "rare",
+      "sets": "released",
+      "list_price": 77
+     }
+    ],
+    "buys": [
+     {
+      "rarity": "uncommon",
+      "sets": "released"
+     },
+     {
+      "rarity": "rare",
+      "sets": "released"
+     }
+    ],
+    "deals_per_team_per_hour": 6
+   }
+  },
+  {
+   "id": "pilar",
+   "name": "Doña Pilar",
+   "status": "active",
+   "level": 3,
+   "title": "collector from Salamanca, buys what completes her albums",
+   "kind": "collector",
+   "enabled": true,
+   "avatar": {
+    "initials": "DP",
+    "color": "#2E86AB",
+    "emoji": "💎"
+   },
+   "bio": "Pilar has collected cards since the 1960s and keeps her albums in a safe. She pays very well for the cards she loves and looks down on everything else. She also sells gold packs to people she considers serious.\n",
+   "traits": {
+    "patience": 0.6,
+    "generosity": 0.5,
+    "shrewdness": 0.75,
+    "memory": 0.7,
+    "strictness": 0.6,
+    "chattiness": 0.55
+   },
+   "unlock": {
+    "always": false,
+    "early_deals_with": "chato",
+    "early_min_deals": 3,
+    "early_min_level": 2,
+    "open_to_all_at": "+5.51h"
+   },
+   "open_to_all": false,
+   "menu": {
+    "sells": [
+     {
+      "pack": "sobre_oro",
+      "name": "Gold pack",
+      "list_price": 420,
+      "opening_ask": 504,
+      "per_team_per_hour": 1
+     }
+    ],
+    "buys": [
+     {
+      "rarity": "uncommon",
+      "sets": [
+       "SAL",
+       "RET"
+      ]
+     },
+     {
+      "rarity": "rare",
+      "sets": [
+       "SAL",
+       "RET"
+      ]
+     },
+     {
+      "rarity": "epic",
+      "sets": [
+       "SAL",
+       "RET"
+      ]
+     },
+     {
+      "rarity": "uncommon",
+      "sets": "released"
+     },
+     {
+      "rarity": "rare",
+      "sets": "released"
+     },
+     {
+      "rarity": "epic",
+      "sets": "released"
+     }
+    ],
+    "deals_per_team_per_hour": 6
+   }
+  }
+ ]
+}
