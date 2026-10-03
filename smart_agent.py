@@ -867,6 +867,20 @@ def fresh_accept_target(b, tid, dealer, me_id, expect_give, expect_want, labels)
     return None, (f"{len(hits)} standing offers match the evaluated one" if hits else "; ".join(why))
 
 
+def open_packs(b, me):
+    """Open every sealed pack we hold (gifts, grants, purchases). Runs every tick, whatever any dealer phase is doing."""
+    opened = False
+    for a in me["assets"]:
+        if a["kind"] == "pack":
+            try:
+                cards = b.open_pack(a["id"])["cards"]
+                log("opened pack:", [c.get("ref") or c.get("id") for c in cards])
+                opened = True
+            except BazaarError as e:
+                log("open_pack:", e)
+    return opened
+
+
 def phase_abuela(b, me, catalog, mem):
     """One step of the Abuela negotiation. Returns True if we accepted something this tick."""
     if mem.get("active_buy_abuela"):
@@ -887,13 +901,6 @@ def phase_abuela(b, me, catalog, mem):
             mem["abuela_min_price"] = min(mem["abuela_min_price"], paid)
         log(f"negotiation {rec['thread']} ended: {outcome} {rec['closed_reason'] or ''} paid {paid}")
         log_chat(f"🏁 {rec['topic']}: {outcome} {rec['closed_reason'] or ''} pagado {paid}")
-    for a in me["assets"]:                                              # open any sealed pack we hold
-        if a["kind"] == "pack":
-            try:
-                cards = b.open_pack(a["id"])["cards"]
-                log("opened pack:", [c.get("ref") or c.get("id") for c in cards])
-            except BazaarError as e:
-                log("open_pack:", e)
     cap = pack_cap(me, catalog)
     if tid is None:
         best_ever = min(mem.get("abuela_min_price", 999), 20)         # the lowest she ever sold a pack to us (capped at 20)
@@ -1267,6 +1274,11 @@ def run_agent():
             refresh_traits(b, mem, me["tick"])
             log(f"--- tick {me['tick']} | cash {me['cash']} | cards {sum(a['kind'] == 'card' for a in me['assets'])} ---")
             accepted = False
+            try:
+                if open_packs(b, me):
+                    me = b.me()                                            # the new cards are in our hand now
+            except BazaarError as e:
+                log("packs:", e.code, e.message)
             try:
                 accepted = phase_abuela(b, me, catalog, mem)
             except BazaarError as e:
