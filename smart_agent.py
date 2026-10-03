@@ -394,12 +394,13 @@ def opening_bid(list_price, inferred):
     return max(1, round(base * scale))
 
 
-def next_offer(cap, list_price, ours, hers, inferred):
-    """(action, price, reason). action: accept | offer | wait | walk. Never above cap."""
+def next_offer(cap, list_price, ours, hers, inferred, open_cap=None):
+    """(action, price, reason). action: accept | offer | wait | walk. Never above cap. open_cap: the opening bid never
+    goes above it (the private-value cap: a ladder premium is room to haggle into, never where we start)."""
     if not hers:
         if ours:
             return "wait", None, "no reply yet"
-        return "offer", min(cap, opening_bid(list_price, inferred)), "opening bid"
+        return "offer", min(cap, open_cap if open_cap is not None else cap, opening_bid(list_price, inferred)), "opening bid"
     if len(ours) > len(hers):
         return "wait", None, "she has not answered our last offer"
     ask, final, _ = hers[-1]
@@ -1434,8 +1435,9 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
     ours, hers = read_thread(t, me["id"], dealer)
     rarity = act.get("rarity") or {c["id"]: c["rarity"] for st in catalog["sets"] for c in st["cards"]}.get(act["ref"])
     fh = feed_intel.hints(mem, dealer, "sells", rarity, act["ref"].split("-")[0], act["ref"])
+    value_cap = cap
     cap = buy_cap_with_ladder(mem, me, dealer, rarity, act["lp"], fh, cap, hers, act["ref"])
-    action, price, why = next_offer(cap, act["lp"], ours, hers, learned(mem, f"{dealer}_buy"))
+    action, price, why = next_offer(cap, act["lp"], ours, hers, learned(mem, f"{dealer}_buy"), open_cap=value_cap)
     log(f"{name} buy {tid} {act['ref']}: ours {ours} his {[h[0] for h in hers]} cap {cap} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
         if price is None or price > cap:
@@ -1642,7 +1644,14 @@ def _test_behaviour_flags():
     assert next_offer_sell(15, 26, [26, 20], sfin, {"final_unreliable": True})[0] in ("offer", "wait")
 
 
+def _test_ladder_open_cap():
+    inf = {"open_bid": 59, "params": {"open_scale": 1.0}}                  # a profile learned on rares, used on an uncommon
+    assert next_offer(26, 26, [], [], inf, open_cap=16) == ("offer", 16, "opening bid"), "never open into the ladder premium"
+    assert next_offer(26, 26, [], [], inf)[1] == 26, "without open_cap the old behaviour stands"
+
+
 def selftest():
+    _test_ladder_open_cap()
     _test_pilar_one_prima()
     _test_candidates_take_menu()
     _test_behaviour_flags()
