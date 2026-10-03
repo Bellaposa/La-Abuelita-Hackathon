@@ -113,11 +113,12 @@ def test_broker_wait_switch_off_always_matches(monkeypatch):
 
 @pytest.mark.golden
 def test_synthetic_efficiency_baseline_is_reproducible():
-    """BRK-11: 300 fixed-seed synthetic sessions (made-up dynamics). Frozen from the phase-0 selftest output."""
+    """BRK-11: 300 fixed-seed synthetic sessions (made-up dynamics). Frozen from the phase-0 selftest output (0.871),
+    re-frozen at 0.923 after broker.max_pairs (lock the most crossing pairs instead of zipping cheapest ask with highest bid)."""
     seeds = range(300)
     imm = sum(broker._simulate(lambda book, t, tr: broker.bench_plan_naive(book), s) for s in seeds) / len(seeds)
     smart = sum(broker._simulate(lambda book, t, tr: broker.bench_plan(book, t, tr, 16, quiet=True), s) for s in seeds) / len(seeds)
-    assert (round(imm, 3), round(smart, 3)) == (0.902, 0.871)
+    assert (round(imm, 3), round(smart, 3)) == (0.902, 0.923)
 
 
 # ------------------------------------------------------------------ public offers (card by card)
