@@ -1950,3 +1950,79 @@
 18:29:31 smart_agent started (deterministic, no LLM)
 18:29:36 --- tick 990 | cash 35 | cards 37 ---
 18:29:36 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:29:42 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.59], "uncommon": [19.0, 0.9], "rare": [59.0, 0.5], "epic": [153.0, 0.55], "legendary": [1, 0.75]}
+18:30:07 --- tick 991 | cash 35 | cards 37 ---
+18:30:07 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:30:31 --- tick 992 | cash 35 | cards 37 ---
+18:30:31 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:31:03 --- tick 993 | cash 35 | cards 37 ---
+18:31:03 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:31:31 --- tick 994 | cash 35 | cards 37 ---
+18:31:31 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:32:04 --- tick 995 | cash 35 | cards 37 ---
+18:32:04 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:32:13 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.61], "uncommon": [19.0, 0.9], "rare": [59.0, 0.5], "epic": [167.0, 0.3], "legendary": [1, 0.75]}
+18:32:33 --- tick 996 | cash 35 | cards 37 ---
+18:32:33 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:33:02 --- tick 997 | cash 35 | cards 37 ---
+18:33:02 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:33:34 --- tick 998 | cash 35 | cards 37 ---
+18:33:34 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:34:02 --- tick 999 | cash 35 | cards 37 ---
+18:34:02 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:34:32 --- tick 1000 | cash 35 | cards 37 ---
+18:34:32 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:34:43 workshop: no craft clears the margin 3.0 | market {"common": [5.5, 0.65], "uncommon": [19.0, 0.9], "rare": [59.0, 0.5], "epic": [167.0, 0.3], "legendary": [1.0, 0.67]}
+18:35:03 --- tick 1001 | cash 35 | cards 37 ---
+18:35:03 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:35:34 --- tick 1002 | cash 35 | cards 37 ---
+18:35:34 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:36:05 --- tick 1003 | cash 35 | cards 37 ---
+18:36:05 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:36:32 --- tick 1004 | cash 35 | cards 37 ---
+18:36:32 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:37:02 --- tick 1005 | cash 35 | cards 37 ---
+18:37:02 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:37:10 workshop: no craft clears the margin 3.0 | market {"common": [5.5, 0.66], "uncommon": [19.0, 0.9], "rare": [59.0, 0.5], "epic": [167.0, 0.3], "legendary": [1, 0.75]}
+18:37:38 --- tick 1006 | cash 35 | cards 37 ---
+18:37:38 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:38:03 --- tick 1007 | cash 35 | cards 37 ---
+18:38:03 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:38:33 --- tick 1008 | cash 35 | cards 37 ---
+18:38:33 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:39:03 --- tick 1009 | cash 35 | cards 37 ---
+18:39:03 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:39:33 --- tick 1010 | cash 35 | cards 37 ---
+18:39:33 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:39:44 workshop: no craft clears the margin 3.0 | market {"common": [5.5, 0.68], "uncommon": [19.0, 0.9], "rare": [59.0, 0.5], "epic": [167.0, 0.3], "legendary": [1, 0.75]}
+18:40:18 --- tick 1011 | cash 35 | cards 37 ---
+18:40:18 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:40:37 --- tick 1012 | cash 35 | cards 37 ---
+18:40:37 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:41:03 --- tick 1013 | cash 35 | cards 37 ---
+18:41:03 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:41:35 --- tick 1014 | cash 35 | cards 37 ---
+18:41:35 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:42:05 --- tick 1015 | cash 35 | cards 37 ---
+18:42:05 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:42:13 workshop: no craft clears the margin 3.0 | market {"common": [5.5, 0.78], "uncommon": [19.0, 0.9], "rare": [58.0, 0.83], "epic": [167.0, 0.3], "legendary": [1, 0.5]}
+18:42:35 --- tick 1016 | cash 35 | cards 37 ---
+18:42:35 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:43:04 --- tick 1017 | cash 35 | cards 37 ---
+18:43:04 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:43:33 --- tick 1018 | cash 35 | cards 37 ---
+18:43:33 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:44:03 --- tick 1019 | cash 35 | cards 37 ---
+18:44:03 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:44:36 --- tick 1020 | cash 35 | cards 37 ---
+18:44:36 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:44:44 workshop: no craft clears the margin 3.0 | market {"common": [5.5, 0.73], "uncommon": [19.5, 0.9], "rare": [57.5, 0.75], "epic": [167.0, 0.3], "legendary": [1, 0.5]}
+18:45:04 --- tick 1021 | cash 35 | cards 37 ---
+18:45:04 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:45:39 --- tick 1022 | cash 35 | cards 37 ---
+18:45:39 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:46:04 --- tick 1023 | cash 35 | cards 37 ---
+18:46:04 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:46:11 smart_agent started (deterministic, no LLM)
+18:46:12 --- tick 1023 | cash 35 | cards 37 ---
+18:46:12 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
