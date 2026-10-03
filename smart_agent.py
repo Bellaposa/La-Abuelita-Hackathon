@@ -3,8 +3,9 @@
     BAZAAR_KEY=tk-... python3 smart_agent.py        # runs forever, one pass per tick
     python3 smart_agent.py --selftest               # offline checks, no network
 
-Phase 1  market   buy cards that are worth more to us than they cost (value - price - fee), sell surplus copies for
-                  more than what the copy is worth to us (never `book * k`: floors come from OUR value of the copy).
+Phase 1  market   buy cards that are worth more to us than they cost (value - price - fee), fill bids and swaps
+                  that gain at our own values, and sell surplus copies (floors from OUR value of the copy, never
+                  `book * k`). New asks, bids and swaps are posted on El Duende (v02, no fee) for 120 ticks.
 Phase 2  Abuela   adaptive haggling. Every round we ask: how did she answer our last concession?
                   - her move per our move (response ratio) sizes the next step;
                   - she stopped moving -> we stop paying for nothing;  `final` -> take it under our cap or walk.
@@ -31,6 +32,9 @@ BUY_MIN_GAIN = 3          # primas of private-value gain we need to buy from ano
 SELL_MIN_GAIN = 2         # primas over what the copy is worth to us to sell it
 LISTINGS_PER_TICK = 3
 MAX_VALUE_CHECKS = 12     # b.value() calls per tick (rate limit friendly)
+BOARD_TTL = 120           # board offers; an offer inside a thread dies after 2 ticks
+DUENDE = "v02"            # El Duende: 0% and 0 P per card
+TRECE = "v03"             # Mercado Trece: 1% , 0 P per card (swaps are free)
 
 
 # ---------------------------------------------------------------- memory: observed vs inferred
@@ -264,6 +268,42 @@ def fee_of(venue, price):
     return math.ceil(venue.get("fee_bps", 0) * price / 10000) + venue.get("fee_per_card", 0)
 
 
+def card_refs(side):
+    """Card refs a side asks for: want.types is 'card:REF' on the board; want.cards is how we post a bid."""
+    if not isinstance(side, dict):
+        return []
+    out = []
+    for t in side.get("types") or []:
+        if isinstance(t, str) and t.startswith("card:"):
+            ref = t.split(":", 1)[1]
+            if ref and ref not in out:
+                out.append(ref)
+    for c in side.get("cards") or []:
+        if isinstance(c, str) and c:
+            ref = c.split(":", 1)[1] if c.startswith("card:") else c
+            if ref and ref not in out:
+                out.append(ref)
+    return out
+
+
+def offer_fees(offer, default):
+    v = offer.get("_venue")
+    return v if isinstance(v, dict) else default
+
+
+def swap_taker_fee(venue):
+    """The side that accepts pays. A 1-for-1 swap moves two cards and no cash, so only the per-card fee counts."""
+    return int(venue.get("fee_per_card") or 0) * 2
+
+
+def bid_price(value):
+    """Most cash we will offer for a missing card. We pay the cash; the team that accepts pays the venue fee."""
+    price = int(value - BUY_MIN_GAIN)
+    while price > 0 and (value - price) < max(BUY_MIN_GAIN, 0.1 * price):
+        price -= 1
+    return max(0, price)
+
+
 def marginal_value(ref, count, catalog, affinity):
     """What the `count`-th copy of `ref` is worth to us: book * set affinity * copy marginal."""
     card = next((c for s in catalog["sets"] for c in s["cards"] if c["id"] == ref), None)
@@ -296,19 +336,26 @@ def rank_pick(opps):
     return min(opps, key=lambda o: (by_gain[id(o)] + by_roi[id(o)], -o["gain"]))
 
 
-def market_opportunities(me, catalog, venue, offers, value_of):
-    """Accept-able offers from others. buy: their ask vs our value of one more copy. sell: their bid vs the copy we would lose."""
+def market_opportunities(me, catalog, venue, offers, value_of, free_cash=None):
+    """Accept-able offers from others. buy: their ask vs our value of one more copy. sell: their bid vs the copy we
+    would lose. swap: their card for one surplus copy of ours. The venue on the offer (else `venue`) is the fee."""
     counts, ids = card_counts(me)
-    free_cash = me["cash"] - CASH_RESERVE
+    cash = (me["cash"] - CASH_RESERVE) if free_cash is None else free_cash
     opps = []
     for o in offers:
-        if o["maker"] == me["id"] or o.get("to") not in (None, me["id"]) or o["status"] != "open":
+        if o.get("maker") == me["id"] or o.get("to") not in (None, me["id"]) or o.get("status", "open") != "open":
             continue
-        g, w = o["give"], o["want"]
-        if len(g["assets"]) == 1 and g["cash"] == 0 and w["cash"] > 0 and not w["types"]:      # they sell a card
-            ref, ask = g["assets"][0]["ref"], w["cash"]
-            cost = ask + fee_of(venue, ask)
-            if cost > free_cash:
+        if o.get("thread"):                                 # dealer and team threads stay with that phase
+            continue
+        g, w = o.get("give") or {}, o.get("want") or {}
+        fees = offer_fees(o, venue)
+        g_assets, g_cash = g.get("assets") or [], g.get("cash") or 0
+        w_cash, w_assets = w.get("cash") or 0, w.get("assets") or []
+        refs = card_refs(w)
+        if len(g_assets) == 1 and isinstance(g_assets[0], dict) and g_assets[0].get("ref") and not g_cash and w_cash > 0 and not refs:
+            ref, ask = g_assets[0]["ref"], w_cash
+            cost = ask + fee_of(fees, ask)
+            if cost > cash:
                 continue
             v = value_of(ref, counts.get(ref, 0))
             if v is None:
@@ -317,17 +364,35 @@ def market_opportunities(me, catalog, venue, offers, value_of):
             if gain >= max(BUY_MIN_GAIN, 0.1 * cost):
                 opps.append({"kind": "buy", "offer": o["id"], "ref": ref, "price": ask, "cost": cost, "value": round(v, 1),
                              "gain": round(gain, 1), "roi": round(gain / cost, 2)})
-        elif g["cash"] > 0 and not g["assets"] and len(w["types"]) == 1 and w["types"][0].startswith("card:"):  # they bid for a card
-            ref, bid = w["types"][0].split(":", 1)[1], g["cash"]
+        elif g_cash > 0 and not g_assets and len(refs) == 1 and not w_cash and not w_assets:  # they bid for a card
+            ref, bid = refs[0], g_cash
             n = counts.get(ref, 0)
             if n < 2:
                 continue                                   # never sell our only copy
             lost = marginal_value(ref, n, catalog, me["affinity"])
-            net = bid - fee_of(venue, bid)
+            net = bid - fee_of(fees, bid)
             gain = net - lost
             if gain >= SELL_MIN_GAIN:
                 opps.append({"kind": "sell", "offer": o["id"], "ref": ref, "price": bid, "asset": ids[ref][-1]["id"],
                              "value": round(lost, 1), "gain": round(gain, 1), "roi": round(gain, 2)})   # no cash needed
+        elif len(g_assets) == 1 and isinstance(g_assets[0], dict) and g_assets[0].get("ref") and not g_cash \
+                and len(refs) == 1 and not w_cash and not w_assets:  # their card for one of ours
+            their, ours = g_assets[0]["ref"], refs[0]
+            n = counts.get(ours, 0)
+            if n < 2 or their == ours:
+                continue
+            v = value_of(their, counts.get(their, 0))
+            if v is None:
+                continue
+            lost = marginal_value(ours, n, catalog, me["affinity"])
+            fee = swap_taker_fee(fees)
+            if fee > cash:
+                continue
+            gain = v - lost - fee
+            if gain >= SELL_MIN_GAIN:
+                opps.append({"kind": "swap", "offer": o["id"], "ref": their, "give": ours, "price": 0, "cost": fee,
+                             "asset": ids[ours][-1]["id"], "value": round(v, 1), "gain": round(gain, 1),
+                             "roi": round(gain / fee, 2) if fee else round(gain, 2)})
     return opps
 
 
@@ -336,8 +401,11 @@ def listing_plan(me, catalog, venue, offers, listed_assets):
     counts, ids = card_counts(me)
     comp = {}
     for o in offers:
-        if o["maker"] != me["id"] and len(o["give"]["assets"]) == 1 and o["want"]["cash"] and o["status"] == "open":
-            comp.setdefault(o["give"]["assets"][0]["ref"], []).append(o["want"]["cash"])
+        g, w = o.get("give") or {}, o.get("want") or {}
+        assets = g.get("assets") or []
+        if o.get("maker") != me["id"] and len(assets) == 1 and isinstance(assets[0], dict) and assets[0].get("ref") \
+                and w.get("cash") and o.get("status", "open") == "open":
+            comp.setdefault(assets[0]["ref"], []).append(w["cash"])
     plan = []
     for ref, n in counts.items():
         if n < 2:
@@ -354,27 +422,165 @@ def listing_plan(me, catalog, venue, offers, listed_assets):
     return plan
 
 
+def holders_from(offers, me_id):
+    """ref -> team id, from cards someone is offering. Only used to address a bid with to=."""
+    found = {}
+    for o in offers:
+        maker = o.get("maker")
+        if not isinstance(maker, str) or maker == me_id or not maker.startswith("t") or o.get("status", "open") != "open":
+            continue
+        for a in (o.get("give") or {}).get("assets") or []:
+            if isinstance(a, dict) and a.get("ref") and a["ref"] not in found:
+                found[a["ref"]] = maker
+    return found
+
+
+def bid_plan(me, catalog, open_wants, free_cash, holders, limit):
+    """[(ref, price, value, to or None)] for missing cards. Price leaves BUY_MIN_GAIN; `to` only when we saw a holder."""
+    counts, _ = card_counts(me)
+    cands = []
+    for s in catalog.get("sets", []):
+        if not s.get("released", True):
+            continue
+        for c in s["cards"]:
+            ref = c["id"]
+            if counts.get(ref, 0) or ref in open_wants:
+                continue
+            v = marginal_value(ref, 0, catalog, me["affinity"])
+            price = bid_price(v)
+            if price >= 1 and price <= free_cash:
+                cands.append((v - price, ref, price, round(v, 1), holders.get(ref)))
+    cands.sort(key=lambda row: -row[0])
+    plan, cash = [], free_cash
+    for _gain, ref, price, v, holder in cands:
+        if len(plan) >= limit or price > cash:
+            continue
+        plan.append((ref, price, v, holder))
+        cash -= price
+    return plan
+
+
+def swap_plan(me, catalog, listed, skip_wants, holders, limit):
+    """[(asset, give_ref, want_ref, to or None)] surplus we don't need for a card we are missing."""
+    counts, ids = card_counts(me)
+    spares = []
+    for ref, n in counts.items():
+        if n < 2:
+            continue
+        lost = marginal_value(ref, n, catalog, me["affinity"])
+        for a in sorted(ids[ref], key=lambda a: -a["serial"])[:n - 1]:
+            if a["id"] not in listed:
+                spares.append((lost, a["id"], ref))
+    spares.sort()
+    wants = []
+    for s in catalog.get("sets", []):
+        if not s.get("released", True):
+            continue
+        for c in s["cards"]:
+            ref = c["id"]
+            if counts.get(ref, 0) or ref in skip_wants:
+                continue
+            wants.append((marginal_value(ref, 0, catalog, me["affinity"]), ref))
+    wants.sort(key=lambda row: -row[0])
+    plan, used = [], set()
+    for v, wref in wants:
+        if len(plan) >= limit:
+            break
+        for lost, aid, gref in spares:
+            if aid in used or gref == wref:
+                continue
+            if v - lost >= SELL_MIN_GAIN:
+                plan.append((aid, gref, wref, holders.get(wref)))
+                used.add(aid)
+                break
+    return plan
+
+
 # ---------------------------------------------------------------- runtime
 
-def current_venue(b):
-    for v in b.venues().get("venues", []):
-        if v["venue"] == "rastro":
-            return v
-    return {"fee_bps": 500, "fee_per_card": 1}
+def venue_table(rows):
+    table = {}
+    for v in rows or []:
+        vid = v.get("venue") or v.get("id")
+        if vid:
+            table[vid] = v
+    return table
+
+
+def fees_for(vid, table):
+    """Fees from the live venue list. Fallbacks match the day-2 announcement and the boards as published."""
+    v = table.get(vid)
+    if isinstance(v, dict) and v.get("fee_bps") is not None:
+        return v
+    if vid == DUENDE:
+        return {"venue": DUENDE, "fee_bps": 0, "fee_per_card": 0}
+    if vid == TRECE:
+        return {"venue": TRECE, "fee_bps": 100, "fee_per_card": 0}
+    return {"venue": vid or "rastro", "fee_bps": 500, "fee_per_card": 1}
+
+
+def boards_to_scan(table, me_id):
+    """Every market we can trade on, plus v02 and v03 even if the venue list is stale. Never our own stall."""
+    scan = [vid for vid, v in table.items() if v.get("owner") != me_id]
+    for vid in (DUENDE, TRECE, "rastro"):
+        if vid not in scan and table.get(vid, {}).get("owner") != me_id:
+            scan.append(vid)
+    return scan
+
+
+def place_board(b, give, want, to=None):
+    """Post on El Duende. El Rastro only if v02 refuses because it is our own stall or not live yet."""
+    try:
+        b.list_offer(give, want, venue=DUENDE, to=to, expires_in_ticks=BOARD_TTL)
+        return DUENDE
+    except BazaarError as e:
+        if e.code not in ("self_venue", "venue_not_live"):
+            raise
+        log(f"v02 post refused ({e.code}); posting on El Rastro instead")
+        b.list_offer(give, want, venue="rastro", to=to, expires_in_ticks=BOARD_TTL)
+        return "rastro"
 
 
 def phase_market(b, me, catalog, can_accept):
     try:
-        venue = current_venue(b)
-        offers = b.board("rastro").get("offers", [])
-        mine = b.my_offers()
-        listed = {a["id"] for o in mine.get("offers", []) if o.get("maker") == me["id"] for a in o["give"]["assets"]}
-        directed = [o for o in mine.get("offers", []) if o.get("to") == me["id"]]
+        table = venue_table(b.venues().get("venues", []))
+        mine = b.my_offers().get("offers", [])
     except BazaarError as e:
         log("market unreadable:", e)
         return False
-    seen = {o["id"] for o in offers}
-    offers += [o for o in directed if o["id"] not in seen]
+    offers, seen = [], set()
+    for vid in boards_to_scan(table, me["id"]):
+        try:
+            board = b.board(vid).get("offers", [])
+        except BazaarError as e:
+            log("board", vid, e.code)
+            continue
+        fees = fees_for(vid, table)
+        for o in board:
+            if o.get("id") in seen:
+                continue
+            seen.add(o.get("id"))
+            stamped = dict(o)
+            stamped["_venue"] = fees
+            offers.append(stamped)
+    for o in mine:
+        if o.get("to") != me["id"] or o.get("id") in seen:
+            continue
+        seen.add(o.get("id"))
+        stamped = dict(o)
+        stamped["_venue"] = fees_for(o.get("venue") or "rastro", table)
+        offers.append(stamped)
+    listed, open_wants, committed, open_n = set(), set(), 0, 0
+    for o in mine:
+        if o.get("maker") != me["id"] or o.get("status", "open") != "open":
+            continue
+        open_n += 1
+        committed += int((o.get("give") or {}).get("cash") or 0)
+        for a in (o.get("give") or {}).get("assets") or []:
+            if isinstance(a, dict) and a.get("id") is not None:
+                listed.add(a["id"])
+        open_wants.update(card_refs(o.get("want") or {}))
+    rastro = fees_for("rastro", table)
     cache, checks = {}, [0]
 
     def value_of(ref, count):
@@ -389,30 +595,58 @@ def phase_market(b, me, catalog, can_accept):
                 cache[key] = None
         return cache[key]
 
-    accepted = False
-    opps = market_opportunities(me, catalog, venue, offers, value_of)
+    free = max(0, me["cash"] - CASH_RESERVE - committed)
+    accepted, best = False, None
+    opps = market_opportunities(me, catalog, rastro, offers, value_of, free_cash=free)
     if opps:
         log("market opportunities:", json.dumps(sorted(opps, key=lambda o: -o["gain"])[:5]))
     if can_accept:
         best = rank_pick(opps)
         if best:
             try:
-                b.accept(best["offer"], assets=[best["asset"]] if best["kind"] == "sell" else None)
+                b.accept(best["offer"], assets=[best["asset"]] if best["kind"] in ("sell", "swap") else None)
                 accepted = True
                 log(f"MARKET {best['kind'].upper()} {best['ref']} at {best['price']}: value {best['value']} gain {best['gain']} roi {best['roi']}")
             except BazaarError as e:
                 log("market accept refused:", e.code, e.message)
-    posted = 0
-    for asset, ask, ref, lost in listing_plan(me, catalog, venue, offers, listed):
-        if posted >= LISTINGS_PER_TICK or len(listed) + posted >= 28:
-            break
-        try:
-            b.list_offer({"assets": [asset]}, {"cash": ask}, venue="rastro")
-            posted += 1
-            log(f"LISTED spare {ref} (asset {asset}) at {ask}; the copy is worth {lost} to us")
-        except BazaarError as e:
-            log("listing refused:", e.code, e.message)
-            break
+                best = None
+    if accepted and best.get("asset"):
+        listed.add(best["asset"])
+    if accepted and best["kind"] == "buy":
+        free = max(0, free - best["cost"])
+    got = {best["ref"]} if accepted else set()
+    holders = holders_from(offers, me["id"])
+    # One spare becomes a swap when we are missing something; the other spares stay cash asks.
+    raw_swaps = swap_plan(me, catalog, listed, open_wants | got, holders, 1)
+    swap_assets = {row[0] for row in raw_swaps}
+    asks = [("ask", asset, ask, ref, lost) for asset, ask, ref, lost in listing_plan(me, catalog, rastro, offers, listed)
+            if asset not in swap_assets]
+    bids = [("bid", ref, price, v, holder) for ref, price, v, holder in
+            bid_plan(me, catalog, open_wants | got | {row[2] for row in raw_swaps}, free, holders, LISTINGS_PER_TICK)]
+    swaps = [("swap", asset, gref, wref, holder) for asset, gref, wref, holder in raw_swaps]
+    queues, posted = [asks, bids, swaps], 0
+    while posted < LISTINGS_PER_TICK and open_n + posted < 28 and any(queues):
+        for q in queues:
+            if not q or posted >= LISTINGS_PER_TICK or open_n + posted >= 28:
+                continue
+            item = q.pop(0)
+            try:
+                if item[0] == "ask":
+                    _, asset, ask, ref, lost = item
+                    place_board(b, {"assets": [asset]}, {"cash": ask})
+                    log(f"LISTED spare {ref} (asset {asset}) at {ask} on {DUENDE}; the copy is worth {lost} to us")
+                elif item[0] == "bid":
+                    _, ref, price, v, holder = item
+                    place_board(b, {"cash": price}, {"cards": [ref]}, to=holder)
+                    log(f"BID {price} for {ref} on {DUENDE}" + (f" to {holder}" if holder else "") + f"; worth {v} to us")
+                else:
+                    _, asset, gref, wref, holder = item
+                    place_board(b, {"assets": [asset]}, {"cards": [wref]}, to=holder)
+                    log(f"SWAP asset {asset} ({gref}) for {wref} on {DUENDE}" + (f" to {holder}" if holder else ""))
+                posted += 1
+            except BazaarError as e:
+                log("listing refused:", e.code, e.message)
+                return accepted
     return accepted
 
 
@@ -749,6 +983,89 @@ def selftest():
     buy_down = {"observed": {"negotiations": [
         {"outcome": "deal", "paid": 21, "rounds": [concession] * 5}]}}
     assert infer(buy_down)["response_ratio"] == {}, "a buy that moved the wrong way is not a concession"
+
+    # A bid stored as want.cards (how we post it) is the same opportunity as want.types (how the board returns it).
+    cards_bid = mk(14, {"cash": 8, "assets": [], "types": []}, {"cash": 0, "assets": [], "cards": ["LAT-04"]})
+    got_cards = [o for o in market_opportunities(me, catalog, venue, [cards_bid], lambda ref, n: None) if o["kind"] == "sell"]
+    assert got_cards and got_cards[0]["ref"] == "LAT-04" and got_cards[0]["asset"] == 2, got_cards
+    v03 = {"venue": "v03", "fee_bps": 100, "fee_per_card": 0}
+    thin = mk(15, {"cash": 0, "assets": [{"ref": "LAV-03", "id": 70}], "types": []},
+              {"cash": 0, "assets": [], "types": ["card:LAT-04"]})
+    # Incoming card worth 4, our spare LAT-04 worth 1.75. v03 charges no per-card fee; El Rastro charges 1 P per card.
+    swap_v3 = market_opportunities(me, catalog, venue, [dict(thin, _venue=v03)], lambda ref, n: 4.0)
+    swap_r = market_opportunities(me, catalog, venue, [dict(thin, _venue=venue)], lambda ref, n: 4.0)
+    assert swap_v3 and swap_v3[0]["kind"] == "swap" and swap_v3[0]["gain"] >= SELL_MIN_GAIN, swap_v3
+    assert swap_r == [], swap_r
+    assert swap_taker_fee(v03) == 0 and swap_taker_fee(venue) == 2
+    assert fee_of(v03, 20) == 1, "Mercado Trece is 1% and the acceptor pays it"
+
+    class _Mkt:
+        def __init__(self):
+            self.posts, self.accepted, self.boards = [], [], []
+        def venues(self):
+            return {"venues": [
+                {"venue": "v01", "fee_bps": 0, "fee_per_card": 0, "owner": "t06"},
+                {"venue": "v02", "fee_bps": 0, "fee_per_card": 0, "owner": "t12"},
+                {"venue": "v03", "fee_bps": 100, "fee_per_card": 0, "owner": "t13"},
+                {"venue": "rastro", "fee_bps": 500, "fee_per_card": 1, "owner": "world"}]}
+        def my_offers(self):
+            return {"offers": [{"id": 99, "maker": "t09", "to": "t06", "status": "open", "venue": "v03", "thread": None,
+                                "give": {"cash": 20, "assets": [], "types": []},
+                                "want": {"cash": 0, "assets": [], "types": ["card:LAT-04"]}}]}
+        def board(self, vid):
+            self.boards.append(vid)
+            if vid == "v01":
+                raise AssertionError("must not scan our own venue")
+            if vid == "v02":
+                return {"offers": [{"id": 7, "maker": "t03", "to": None, "status": "open", "thread": None,
+                                    "give": {"cash": 0, "assets": [{"id": 70, "ref": "LAV-03"}], "types": []},
+                                    "want": {"cash": 0, "assets": [], "cards": ["LAT-04"]}}]}
+            if vid == "rastro":
+                return {"offers": [{"id": 8, "maker": "t04", "to": None, "status": "open", "thread": None,
+                                    "give": {"cash": 0, "assets": [{"id": 80, "ref": "LAV-09"}], "types": []},
+                                    "want": {"cash": 4, "assets": [], "types": []}}]}
+            return {"offers": []}
+        def value(self, ref):
+            return {"your_value": 30.0 if ref == "LAV-09" else 3.0}
+        def accept(self, oid, assets=None):
+            self.accepted.append((oid, assets))
+            return {"ok": True}
+        def list_offer(self, give, want, venue=None, to=None, expires_in_ticks=40):
+            self.posts.append((give, want, venue, to, expires_in_ticks))
+            return {"ok": True}
+
+    mkt_cat = {"sets": [{"id": "LAT", "released": True, "cards": [{"id": "LAT-04", "book": 10}, {"id": "LAT-05", "book": 10}]},
+                        {"id": "LAV", "released": True, "cards": [{"id": "LAV-01", "book": 10}, {"id": "LAV-03", "book": 20},
+                                                                 {"id": "LAV-09", "book": 40}]}],
+               "values": {"copy_marginals": [1.0, 0.25, 0.1]}}
+    mkt_me = {"id": "t06", "cash": 100, "tick": 1, "affinity": {"LAT": 0.7, "LAV": 1.6},
+              "assets": [{"id": 1, "kind": "card", "ref": "LAT-04", "serial": 3},
+                         {"id": 2, "kind": "card", "ref": "LAT-04", "serial": 9},
+                         {"id": 3, "kind": "card", "ref": "LAT-05", "serial": 1},
+                         {"id": 4, "kind": "card", "ref": "LAT-05", "serial": 4}]}
+    mkt = _Mkt()
+    assert phase_market(mkt, mkt_me, mkt_cat, True) is True
+    assert mkt.accepted == [(8, None)], mkt.accepted          # one accept, and it is the ask that gains at our value
+    assert "v01" not in mkt.boards and "v02" in mkt.boards and "v03" in mkt.boards
+    assert mkt.posts and all(p[2] == "v02" and p[4] == 120 for p in mkt.posts), mkt.posts
+    asks = [p for p in mkt.posts if p[0].get("assets") and "cash" in p[1]]
+    bids = [p for p in mkt.posts if p[0].get("cash")]
+    swaps = [p for p in mkt.posts if p[0].get("assets") and p[1].get("cards")]
+    assert asks and asks[0][0]["assets"] == [4] and asks[0][1] == {"cash": 10}, asks
+    assert swaps and swaps[0][0] == {"assets": [2]} and swaps[0][1] == {"cards": ["LAV-03"]} and swaps[0][3] == "t03", swaps
+    assert bids and bids[0][1] == {"cards": ["LAV-01"]} and bids[0][3] is None, bids
+    assert phase_market(mkt, mkt_me, mkt_cat, False) is False and len(mkt.accepted) == 1, "a second call must not take the accept"
+
+    class _Own:
+        def list_offer(self, give, want, venue=None, to=None, expires_in_ticks=40):
+            self.calls.append((venue, expires_in_ticks))
+            if venue == "v02":
+                raise BazaarError("self_venue", "own market", 400)
+            return {"ok": True}
+        calls = []
+    own = _Own()
+    assert place_board(own, {"cash": 5}, {"cards": ["LAT-04"]}) == "rastro"
+    assert own.calls == [("v02", 120), ("rastro", 120)]
     print("selftest OK")
 
 
