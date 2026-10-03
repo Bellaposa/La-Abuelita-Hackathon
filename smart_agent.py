@@ -195,6 +195,12 @@ def learned(mem, key, list_price=None):
     traits = (mem.get("dealer_traits") or {}).get(base)
     if traits:
         inf["prior_mult"] = trait_multiplier(traits)
+    # behaviour of this dealer with ALL teams (public conversations): the dealer sells to us on "abuela" (packs) and
+    # "<x>_buy" keys, and buys from us on the plain sell keys ("chato", "pilar", "picaros")
+    side = "sells" if (key.endswith("_buy") or key == "abuela") else "buys"
+    bh = feed_intel.behavior(mem, base, side)
+    inf["final_unreliable"] = bool(bh.get("final_unreliable"))
+    inf["fixed_bidder"] = bool(bh.get("fixed_bidder"))
     return inf
 
 
@@ -305,7 +311,7 @@ def next_offer(cap, list_price, ours, hers, inferred):
     tol = max(1, int((inferred.get("params") or {}).get("tol_share", dparams.static("tol_share")) * list_price))
     if ask <= cap and (ask <= last + tol or final):
         return "accept", ask, ("her final is under our cap" if final else "her ask is within reach of our own bid")
-    if final:
+    if final and not inferred.get("final_unreliable"):
         return "walk", None, f"her final {ask} is above our cap {cap}"
     if last > cap:
         return "walk", None, f"our standing offer {last} is above our cap {cap} (inherited): start clean"
@@ -371,13 +377,16 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=None, soft_floor
     tol = 0 if hold else max(1, int((inferred.get("params") or {}).get("tol_share", dparams.static("tol_share")) * list_price))
     if hold:
         soft_floor = None
+    if inferred.get("fixed_bidder"):                       # all teams saw it never move from its first bid: no haggling
+        return (("accept", bid, f"fixed bidder: {bid} clears our floor {floor}") if bid >= floor
+                else ("walk", None, f"fixed bidder: {bid} under our floor {floor}, it will not move"))
     if last is None and not (bid >= floor and final):
         return "offer", max(floor, ask0), "opening ask (he spoke first)"
     if soft_floor is not None and bid >= soft_floor and len(hers) >= dparams.static("firm_rounds") and len({h[0] for h in hers[-dparams.static("firm_rounds"):]}) == 1:
         return "accept", bid, f"he repeated {bid} three times and it clears our soft floor {soft_floor}"
     if bid >= floor and (final or bid >= last - tol):          # `final` first: with ours empty `last` is None (he spoke first)
         return "accept", bid, "his final is over our floor" if final else "his bid is within reach of our ask"
-    if final:
+    if final and not inferred.get("final_unreliable"):
         return "walk", None, f"his final {bid} is below our floor {floor}"
     if last <= floor:
         stalled = len(hers) >= 2 and hers[-1][0] <= hers[-2][0]
@@ -1489,8 +1498,22 @@ def _test_deal_price_and_hold():
     assert next_offer_sell(20, 25, [25, 22, 21], rep, inf, soft_floor=12, hold=True)[0] != "accept", "no soft floor"
 
 
+def _test_behaviour_flags():
+    hers = [(13, False, ""), (13, False, "")]
+    assert next_offer_sell(10, 26, [26], hers[:1], {"fixed_bidder": True})[0] == "accept", "fixed 13 >= floor 10: close"
+    assert next_offer_sell(16, 26, [26], hers[:1], {"fixed_bidder": True})[0] == "walk", "fixed 13 < floor 16: leave"
+    fin = [(70, False, ""), (66, True, "")]
+    assert next_offer(60, 63, [40, 50], fin, {})[0] == "walk", "a trusted final over our cap: walk"
+    act = next_offer(60, 63, [40, 50], fin, {"final_unreliable": True})
+    assert act[0] == "offer" and act[1] <= 60, ("broken finals: keep conceding inside the cap", act)
+    sfin = [(10, False, ""), (12, True, "")]
+    assert next_offer_sell(15, 26, [26, 20], sfin, {})[0] == "walk"
+    assert next_offer_sell(15, 26, [26, 20], sfin, {"final_unreliable": True})[0] in ("offer", "wait")
+
+
 def selftest():
     _test_candidates_take_menu()
+    _test_behaviour_flags()
     _test_deal_price_and_hold()
     import tempfile
     os.environ["ACCEPT_GATE_DIR"] = tempfile.mkdtemp(prefix="gate_selftest_")     # never reserve real ticks in the repo-root gate
