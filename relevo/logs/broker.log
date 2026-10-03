@@ -47,3 +47,7 @@
 16:05:04 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
 16:08:10 learned (startup): best hold 0 -> waiting off; est. eff by hold {0: 0.756, 1: 0.718, 2: 0.753, 3: 0.753}; relax {'ask': 3.0, 'bid': 1.46}; lifetime 4 over 2 sessions
 16:08:10 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
+17:55:27 tick 922 b55: b55-16@42 x b55-6@45 -> MATCH (ask unknown, bid unknown: not both observed relaxing; left from book)
+17:55:28 tick 922: MATCHED b55-16 x b55-6 at 43
+17:57:00 tick 925 b55: b55-12@51 x b55-4@78 -> MATCH (ask may leave (age 1 >= observed 25th pct 1); left from book)
+17:57:00 tick 925: MATCHED b55-12 x b55-4 at 64

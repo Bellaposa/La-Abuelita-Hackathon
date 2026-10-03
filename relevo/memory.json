@@ -1664,11 +1664,11 @@
    149.9
   ],
   "RET-09": [
-   904,
+   925,
    63.0
   ],
   "RET-10": [
-   904,
+   925,
    63.0
   ],
   "RET-07": [
@@ -1688,23 +1688,23 @@
    9.0
   ],
   "RET-05": [
-   904,
+   925,
    9.0
   ],
   "LAT-09": [
-   904,
+   925,
    49.0
   ],
   "LAT-10": [
-   904,
+   925,
    49.0
   ],
   "LAT-06": [
-   904,
+   925,
    17.5
   ],
   "LAT-07": [
-   904,
+   925,
    17.5
   ],
   "RET-06": [
@@ -1724,7 +1724,7 @@
    35.0
   ],
   "MAL-06": [
-   903,
+   924,
    12.5
   ],
   "MAL-07": [
@@ -1733,7 +1733,7 @@
   ]
  },
  "active_buy_chato": null,
- "flags_scan_tick": 917,
+ "flags_scan_tick": 925,
  "flags_seen": [
   5,
   19,
@@ -1927,7 +1927,8 @@
   8483,
   8506,
   8527,
-  8549
+  8549,
+  8700
  ],
  "active_buy_abuela": null,
  "chato_buy_tried": {
@@ -1939,7 +1940,7 @@
  },
  "abuela_buy_block_until": 736,
  "chato_buy_block_until": 776,
- "ws_tick": 915,
+ "ws_tick": 925,
  "ws_obs": {
   "common": [
    5.0,
@@ -1979,7 +1980,9 @@
    8.0,
    5.0,
    6.0,
-   5.0
+   5.0,
+   5.0,
+   6.0
   ],
   "rare": [
    70.0,
@@ -2002,7 +2005,9 @@
    52.0,
    84.0,
    63.0,
-   75.0
+   75.0,
+   57.0,
+   60.0
   ],
   "uncommon": [
    16.0,
@@ -2052,7 +2057,8 @@
    19.0
   ],
   "epic": [
-   167.0
+   167.0,
+   139.0
   ]
  },
  "ws_seen": [
@@ -2163,7 +2169,12 @@
   46412,
   46498,
   46499,
-  46564
+  46564,
+  46638,
+  46707,
+  46708,
+  46730,
+  46851
  ],
  "ws_out": {
   "LAV-08": 1,
@@ -2312,7 +2323,18 @@
   "abuela": "tol_share 0.100 from 3 deals (median gap 0.308 of list)",
   "pilar": "tol_share 0.087 from 4 deals (median gap 0.058 of list)"
  },
- "active_buy_picaros": null,
+ "active_buy_picaros": {
+  "thread": 1340,
+  "topic": {
+   "buy": {
+    "card": "RET-10"
+   }
+  },
+  "cash_start": 90,
+  "ref": "RET-10",
+  "value": 63.0,
+  "lp": 63
+ },
  "flags_sent": [
   {
    "message": 8251,
@@ -2325,6 +2347,12 @@
    "dealer": "picaros",
    "thread": 1263,
    "why": "asked for RET-09 (El Ángel Caído), the offer gives RET-06 (La Rosaleda)"
+  },
+  {
+   "message": 8700,
+   "dealer": "picaros",
+   "thread": 1340,
+   "why": "words sell RET-10 (Monumento a Alfonso XII) as asked, the structured offer gives RET-07 (Fuente de la Alcachofa)"
   }
  ],
  "active_picaros": null,

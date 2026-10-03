@@ -32,10 +32,11 @@ nohup python3 -u smart_agent.py  >> smart_agent.log 2>&1 &   # dealers, mercado,
 nohup python3 -u smart_duels.py  >> smart_duels.log 2>&1 &   # duelos
 nohup python3 -u page_hunter.py  >> page_hunter.log 2>&1 &   # páginas y cartas sueltas
 BROKER_KEY=$(cat .broker_key) nohup python3 -u broker.py >> broker.log 2>&1 &   # nuestro mercado v01
-nohup python3 -u dashboard/app.py >> dashboard/dashboard.log 2>&1 &              # http://localhost:5051 (necesita flask)
+nohup python3 -u dashboard/app.py >> dashboard/dashboard.log 2>&1 &              # http://localhost:5051
 ps -eo pid,command | grep -E "\.py" | grep -v grep                               # deben salir los 5, una vez cada uno
 ```
 
+No hace falta instalar nada: todo (agentes y dashboard) usa solo la biblioteca estándar de Python 3.
 Comprobaciones rápidas: `python3 smart_agent.py --selftest` (y `smart_duels`, `broker`, `workshop`, `flags`).
 
 ## 4. Calendario

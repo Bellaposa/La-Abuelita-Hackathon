@@ -1753,3 +1753,28 @@
 17:52:58 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
 17:53:28 --- tick 918 | cash 90 | cards 36 ---
 17:53:28 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:53:57 --- tick 919 | cash 90 | cards 36 ---
+17:53:57 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:54:27 --- tick 920 | cash 90 | cards 36 ---
+17:54:27 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:54:38 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.64], "uncommon": [18.5, 0.72], "rare": [62.0, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.8]}
+17:54:58 --- tick 921 | cash 90 | cards 36 ---
+17:54:58 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:55:27 --- tick 922 | cash 90 | cards 36 ---
+17:55:27 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:55:58 --- tick 923 | cash 90 | cards 36 ---
+17:55:58 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:56:27 --- tick 924 | cash 90 | cards 36 ---
+17:56:27 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:56:32 Picaros: buying RET-10 (rare), worth 63 to us, cap 59, his list 63
+17:56:32 Picaros buy 1340 RET-10: ours [] his [] cap 59 -> offer 36 (opening bid)
+17:56:41 BID 9 for MAL-07 on v07; worth 12.5 to us
+17:56:41 BID 2 for MAL-05 on v07; worth 5.0 to us
+17:56:59 --- tick 925 | cash 90 | cards 36 ---
+17:57:02 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:57:02 Picaros buy 1340 RET-10: ours [36] his [] cap 59 -> wait None (no reply yet)
+17:57:08 FLAG picaros message 8700 (thread 1340): words sell RET-10 (Monumento a Alfonso XII) as asked, the structured offer gives RET-07 (Fuente de la Alcachofa)
+17:57:10 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.58], "uncommon": [18.5, 0.8], "rare": [62.0, 0.9], "epic": [153.0, 0.3], "legendary": [1, 0.8]}
+17:57:28 --- tick 926 | cash 90 | cards 36 ---
+17:57:29 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:57:29 Picaros buy 1340 RET-10: ours [36] his [73] cap 59 -> offer 45 (mood unknown, gap 37, step 9 (k=0.25))
