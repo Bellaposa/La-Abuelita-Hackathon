@@ -5,8 +5,8 @@
 
 Phase 1  market   buy cards that are worth more to us than they cost (value - price - fee), fill bids and swaps
                   that gain at our own values, and sell surplus copies (floors from OUR value of the copy, never
-                  `book * k`). Cash asks and bids go to Team 10 (v07, 0 fee, midpoint match) for 120 ticks.
-                  Swaps stay on El Duende (v02): v07's broker crosses a bid with an ask, not card for card.
+                  `book * k`). Cash asks and bids go to FAIR (v21, Team 9, 0 fee, midpoint match; v07 would score for Team 10) for 120 ticks.
+                  Swaps stay on El Duende (v02): the fair venue's broker crosses a bid with an ask, not card for card.
 Phase 2  Abuela   adaptive haggling. Every round we ask: how did she answer our last concession?
                   - her move per our move (response ratio) sizes the next step;
                   - she stopped moving -> we stop paying for nothing;  `final` -> take it under our cap or walk.
@@ -46,7 +46,7 @@ MAX_VALUE_CHECKS = 12     # b.value() calls per tick (rate limit friendly)
 BOARD_TTL = 120           # board offers; an offer inside a thread dies after 2 ticks
 DUENDE = "v02"            # El Duende: 0% and 0 P per card; swaps live here
 TRECE = "v03"             # Mercado Trece: 1% , 0 P per card (swaps are free)
-FAIR = "v07"              # Team 10: 0% and 0 P per card; broker crosses bid/ask at the midpoint
+FAIR = os.environ.get("FAIR_VENUE", "v21")   # 0% broker venue for our cash bids/asks: Team 9 (v21). Not v07: a trade there scores for Team 10, our closest rival
 
 
 # ---------------------------------------------------------------- memory: observed vs inferred
@@ -817,7 +817,7 @@ def fees_for(vid, table):
 
 
 def boards_to_scan(table, me_id):
-    """Every market we can trade on, plus v02, v03 and v07 even if the venue list is stale. Never our own stall."""
+    """Every market we can trade on, plus v02, v03 and FAIR even if the venue list is stale. Never our own stall."""
     scan = [vid for vid, v in table.items() if v.get("owner") != me_id]
     for vid in (DUENDE, TRECE, FAIR, "rastro"):
         if vid not in scan and table.get(vid, {}).get("owner") != me_id:
@@ -830,7 +830,7 @@ def _has_cash(side):
 
 
 def place_board(b, give, want, to=None):
-    """Cash bids and asks go to Team 10 (v07). Their broker matches a bid above an ask at the midpoint, any copy, every tick.
+    """Cash bids and asks go to FAIR (v21, Team 9). Its broker matches a bid above an ask at the midpoint, any copy, every tick.
     Swaps stay on El Duende: that match is bid against ask, not card for card. One venue only — a refusal falls through,
     the same offer is never posted on two boards."""
     order = (FAIR, DUENDE, "rastro") if (_has_cash(give) or _has_cash(want)) else (DUENDE, "rastro")
@@ -1851,17 +1851,17 @@ def selftest():
     mkt = _Mkt()
     assert phase_market(mkt, mkt_me, mkt_cat, True) is True
     assert mkt.accepted == [(8, None)], mkt.accepted          # one accept, and it is the ask that gains at our value
-    assert "v01" not in mkt.boards and {"v02", "v03", "v07"} <= set(mkt.boards)
+    assert "v01" not in mkt.boards and {"v02", "v03", FAIR} <= set(mkt.boards)
     asks = [p for p in mkt.posts if p[0].get("assets") and "cash" in p[1]]
     bids = [p for p in mkt.posts if p[0].get("cash")]
     swaps = [p for p in mkt.posts if p[0].get("assets") and p[1].get("cards")]
-    assert asks and asks[0][0]["assets"] == [4] and asks[0][1] == {"cash": math.ceil(10 * BUYER_MULT)} and asks[0][2] == "v07" and asks[0][4] == 120, asks
+    assert asks and asks[0][0]["assets"] == [4] and asks[0][1] == {"cash": math.ceil(10 * BUYER_MULT)} and asks[0][2] == FAIR and asks[0][4] == 120, asks
     assert swaps and swaps[0][0] == {"assets": [2]} and swaps[0][1] == {"cards": ["LAV-03"]} and swaps[0][2] == "v02" and swaps[0][3] == "t03", swaps
-    assert bids and bids[0][1] == {"cards": ["LAV-01"]} and bids[0][2] == "v07" and bids[0][3] is None and bids[0][4] == 120, bids
+    assert bids and bids[0][1] == {"cards": ["LAV-01"]} and bids[0][2] == FAIR and bids[0][3] is None and bids[0][4] == 120, bids
     assert len({p[1]["cards"][0] for p in bids}) == len(bids), "the same bid is not posted twice"
     assert phase_market(mkt, mkt_me, mkt_cat, False) is False and len(mkt.accepted) == 1, "a second call must not take the accept"
-    assert fees_for("v07", {})["fee_bps"] == 0 and fees_for("v07", {})["fee_per_card"] == 0
-    assert "v07" in boards_to_scan({}, "t06") and "v07" not in boards_to_scan({"v07": {"owner": "t06"}}, "t06")
+    assert fees_for(FAIR, {})["fee_bps"] == 0 and fees_for(FAIR, {})["fee_per_card"] == 0
+    assert FAIR in boards_to_scan({}, "t06") and FAIR not in boards_to_scan({FAIR: {"owner": "t06"}}, "t06")
 
     class _Book:
         def __init__(self, refuse=()):
@@ -1869,12 +1869,12 @@ def selftest():
         def list_offer(self, give, want, venue=None, to=None, expires_in_ticks=40):
             self.calls.append(venue)
             if venue in self.refuse:
-                raise BazaarError("venue_not_live" if venue == "v07" else "self_venue", "no", 400)
+                raise BazaarError("venue_not_live" if venue == FAIR else "self_venue", "no", 400)
             return {"ok": True}
-    cash, swap, down = _Book(), _Book(), _Book(("v07",))
-    assert place_board(cash, {"cash": 5}, {"cards": ["LAT-04"]}) == "v07" and cash.calls == ["v07"]
+    cash, swap, down = _Book(), _Book(), _Book((FAIR,))
+    assert place_board(cash, {"cash": 5}, {"cards": ["LAT-04"]}) == FAIR and cash.calls == [FAIR]
     assert place_board(swap, {"assets": [2]}, {"cards": ["LAV-03"]}) == "v02" and swap.calls == ["v02"]
-    assert place_board(down, {"cash": 5}, {"cards": ["LAT-04"]}) == "v02" and down.calls == ["v07", "v02"]
+    assert place_board(down, {"cash": 5}, {"cards": ["LAT-04"]}) == "v02" and down.calls == [FAIR, "v02"]
     print("selftest OK")
 
 

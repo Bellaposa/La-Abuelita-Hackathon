@@ -25,7 +25,8 @@ import sys
 import time
 from collections import defaultdict
 
-from bazaar_sdk import BazaarError, Broker
+import venue_promoter
+from bazaar_sdk import Bazaar, BazaarError, Broker, _Http
 from starter_broker import public_plan
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
@@ -269,6 +270,11 @@ def main():
     relearn("startup")
     run_deadline, pending = {}, set()           # a run is over only after its offers' expires_tick, not when the book empties
     announce_state = {}
+    promo_state = {}                            # venue_promoter: pairs already announced, pseudonym -> team
+    team = Bazaar(URL, os.environ["BAZAAR_KEY"], wait_on_tick=False) if os.environ.get("BAZAAR_KEY") else None
+    public = _Http(URL, {}, 15.0, False, 1)      # keyless public reads for the promoter
+    if team is None:
+        log("promoter off: no BAZAAR_KEY in the environment")
     while True:
         try:
             clock = broker.clock()
@@ -310,6 +316,8 @@ def main():
                         log(f"tick {tick}: MATCHED {sell} x {buy} at {price} -> {json.dumps(resp)[:300]}")
                     except BazaarError as e:
                         log(f"tick {tick}: {sell} x {buy} at {price} refused ({e})")
+                if team is not None and not bench:             # never during a Market Test: matching comes first
+                    venue_promoter.step(broker, team, promo_state, tick, log, public=lambda p: public._call("GET", p))
         except BazaarError as e:
             log(f"cannot read the book ({e})")
         time.sleep(1.0)
