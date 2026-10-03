@@ -41,7 +41,8 @@ OFFER_KEEP = 0.10      # OUR offers never go closer to the limit than this share
 BETA = 2.0             # concession exponent: >1 holds early, concedes late
 DEFAULT_TICKS = 16     # duel length when the payload does not say (schedule: duel_ticks 16)
 DEFAULT_DECAY = 0.06   # pie shrink per round of talk (schedule: decay 0.06 / 0.08)
-DAYS_SIGN = 1          # ASSUMPTION: utility from days = DAYS_SIGN * your_days_weight * (days - 5). Flip after the first days duel
+DAYS_SIGN = 1          # utility from days = DAYS_SIGN * your_days_weight * days (official deck: "seller gains 1 per later day,
+                       # buyer loses 4" -> pie 50, 47, 44 ... from day 0). Check `days_meaning` in the first Duels II payload.
 DAYS_CARE = 0.15       # a full 0-10 day swing worth more than this share of our limit = days matter to us
 
 
@@ -153,7 +154,7 @@ def utility(side, limit, w, price, days, use_days):
     """Our gain from (price, days). Price part is surplus over our private limit; days part per DAYS_SIGN."""
     u = side * (price - limit)
     if use_days and days is not None:
-        u += DAYS_SIGN * w * (days - 5)
+        u += DAYS_SIGN * w * days
     return u
 
 
@@ -311,6 +312,9 @@ def act(b, duel, tick, mem):
     if len(mem["raw_samples"]) < 3 and did not in {s.get("id") for s in mem["raw_samples"]}:
         mem["raw_samples"].append(duel)            # learn the real payload shape
 
+    if use_days and duel.get("days_meaning") and mem.get("days_meaning") != duel["days_meaning"]:
+        mem["days_meaning"] = duel["days_meaning"]                      # the server's own definition of the day weight
+        log(f"days_meaning from the server: {duel['days_meaning']!r} (our model: utility += weight x days)")
     rival_price, rival_days = parse_offer(duel.get("rival_offer"))
     hist = obs["history"]
     rival_move = None
