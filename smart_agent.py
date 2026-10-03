@@ -361,8 +361,9 @@ def deal_price(t, me_id):
 
 def next_offer_sell(floor, list_price, ours, hers, inferred, k0=None, soft_floor=None, hold=False):
     """Mirror of next_offer for selling to a dealer: we ask, they bid. (action, price, reason); never below floor.
-    hold=True (Doña Pilar): no tolerance and no soft floor: accept only her `final` or a bid that meets our ask, since she
-    keeps raising when we keep conceding (16 -> 18 seen) and closing early captured ~0 of her range."""
+    hold=True (Doña Pilar): no tolerance, no soft floor and one prima per round: accept only her `final` or a bid that
+    meets our ask. Her pattern (6 talks): opens 16 (22 for SAL/RET), holds two rounds, then +1 a round; our old 3-2-1
+    steps gave the ground away and closing at her opening captured ~0 of her range (the ladder measures that share)."""
     ask0 = min(list_price, inferred["open_ask"]) if inferred.get("open_ask") else list_price      # open_ask: profile_hints
     if inferred.get("open_ask"):
         ask0 = min(list_price, round(ask0 * (inferred.get("params") or {}).get("open_scale", 1.0)))
@@ -398,6 +399,9 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=None, soft_floor
     if mood == "firm" and len(hers) >= dparams.static("firm_rounds"):
         k = max(k, dparams.static("firm_k"))
     step = max(1, round(gap * k))
+    if hold:
+        step = 1                                          # Pilar: she moves +1 a round after holding; we match her pace,
+                                                          # the minimum that still counts as a new offer (a repeat earns nothing)
     new = max(floor, last - step)
     if new >= last:
         return "walk", None, "no room left above the floor"
@@ -1498,6 +1502,14 @@ def _test_deal_price_and_hold():
     assert next_offer_sell(20, 25, [25, 22, 21], rep, inf, soft_floor=12, hold=True)[0] != "accept", "no soft floor"
 
 
+def _test_pilar_one_prima():
+    act, price, _ = next_offer_sell(16, 25, [25], [(16, False, "")], {}, hold=True)
+    assert (act, price) == ("offer", 24), (act, price)                  # was 25 -> 22 (step 3)
+    act, price, _ = next_offer_sell(16, 25, [25, 24], [(16, False, ""), (16, False, "")], {}, hold=True)
+    assert (act, price) == ("offer", 23), (act, price)
+    assert next_offer_sell(16, 25, [25, 24], [(16, False, ""), (17, True, "")], {}, hold=True)[0] == "accept"
+
+
 def _test_behaviour_flags():
     hers = [(13, False, ""), (13, False, "")]
     assert next_offer_sell(10, 26, [26], hers[:1], {"fixed_bidder": True})[0] == "accept", "fixed 13 >= floor 10: close"
@@ -1512,6 +1524,7 @@ def _test_behaviour_flags():
 
 
 def selftest():
+    _test_pilar_one_prima()
     _test_candidates_take_menu()
     _test_behaviour_flags()
     _test_deal_price_and_hold()
