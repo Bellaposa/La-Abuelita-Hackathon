@@ -28,6 +28,7 @@ con la misma key y los dos controladores se pisan. Al arrancar en tu máquina, b
 | `broker_memory.json`, `bench_model.json`, `bench_snapshots.jsonl` | Market Test: libros grabados y política aprendida |
 | `dashboard/history.json` | Historial de puntuación del dashboard |
 | `historial_abuela.txt` | Chat con Abuela |
+| `team_profiles.json` | Perfiles de los otros equipos (qué buscan, qué les sobra, qué tienen, si responden a anuncios) |
 | `logs/*.log` | Logs (solo historial; los agentes escriben los suyos nuevos) |
 
 ## 3. Arrancar (5 procesos)

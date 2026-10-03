@@ -18,6 +18,8 @@ Our own offers and v01 itself are skipped: we cannot trade on our venue, and our
 import json
 import sys
 
+import team_profiles
+
 VENUE = "v01"
 EVERY_TICKS = 3            # at most one targeted announcement every this many ticks
 REPEAT_TICKS = 30          # the same pair is not announced again for this long
@@ -120,7 +122,7 @@ def compose(items, sent, now):
     return (text, keys) if keys else (None, [])
 
 
-def gather(read, me_id, my_offer_ids=(), alias=None):
+def gather(read, me_id, my_offer_ids=(), alias=None, profiles=None):
     """read(path) -> json. Every open board but ours, the feed, and the offers/pulls made from them."""
     venues = [v["venue"] for v in read("/api/venues").get("venues", []) if v.get("status") == "open" and v.get("venue") != VENUE]
     boards = {}
@@ -132,6 +134,8 @@ def gather(read, me_id, my_offer_ids=(), alias=None):
     feed = read("/api/feed?limit=500").get("events", [])
     now = max([e.get("tick") or 0 for e in feed] or [0])
     offers = offers_from(boards, feed, exclude_makers={me_id}, exclude_ids=set(my_offer_ids), alias=alias)
+    if profiles is not None:
+        team_profiles.update(profiles, feed)
     return offers, pulls_from(feed, now, exclude_teams={me_id}), now
 
 
@@ -146,8 +150,19 @@ def step(broker, team, state, tick, log, public=None):
         state["me"] = me_id
         mine = [o["id"] for o in team.my_offers().get("offers", [])]
         read = public or (lambda p: team.call("GET", p))
-        offers, pulls, _now = gather(read, me_id, mine, alias=state.setdefault("alias", {}))
+        if "profiles" not in state:
+            state["profiles"] = team_profiles.load()
+        offers, pulls, _now = gather(read, me_id, mine, alias=state.setdefault("alias", {}), profiles=state["profiles"])
+        team_profiles.save(state["profiles"])
+        live = {}
+        for o in offers:
+            if o["side"] == "ask" and str(o["maker"]).startswith("t"):
+                live.setdefault(o["ref"], []).append((o["maker"], o["price"]))
         items = opportunities(offers, pulls)
+        seen_refs = {t.split(":")[0] for _s, _k, t in items}                 # one item per card: live ones win
+        items += [(s * 0.5, k, t) for s, k, t in team_profiles.match(state["profiles"], me_id, live)   # history-based pairs,
+                  if k.split(":")[3] not in seen_refs]                                               # after live ones
+        items.sort(key=lambda x: -x[0])
         state["last_items"] = len(items)
         text, keys = compose(items, state.setdefault("sent", {}), tick)
         if not text:
