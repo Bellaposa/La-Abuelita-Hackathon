@@ -1,0 +1,49 @@
+22:38:51 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
+23:24:01 cannot read the book (network: GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>)
+23:35:41 cannot read the book (network: GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>)
+09:51:07 tick 204 b1: b1-14@23 x b1-6@88 -> MATCH (ask unknown, bid unknown: not both observed relaxing; left from book)
+09:51:07 tick 204 b1: b1-18@47 x b1-3@61 -> MATCH (ask unknown, bid yielding: not both observed relaxing; left from book)
+09:51:07 tick 204: MATCHED b1-14 x b1-6 at 55
+09:51:08 tick 204: MATCHED b1-18 x b1-3 at 54
+09:52:18 tick 206 b1: b1-11@65 x b1-5@90 -> MATCH (ask unknown, bid unknown: not both observed relaxing; left from book)
+09:52:18 tick 206: MATCHED b1-11 x b1-5 at 77
+09:55:13 tick 212 b1: b1-12@54 x b1-2@69 -> MATCH (ask unknown, bid unknown: not both observed relaxing; left from book)
+09:55:13 tick 212: MATCHED b1-12 x b1-2 at 61
+10:42:18 cannot read the book (network: GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>)
+10:42:22 cannot read the book (network: GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>)
+10:58:06 cannot read the book (network: GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>)
+10:58:10 cannot read the book (network: GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>)
+11:15:58 cannot read the book (network: GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>)
+11:16:57 cannot read the book (network: GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>)
+11:17:01 cannot read the book (network: GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>)
+11:24:44 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
+11:30:10 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
+11:44:57 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
+11:50:49 tick 442 b19: b19-17@28 x b19-4@76 -> MATCH (ask may leave (age 1 >= observed 25th pct 0); left from book)
+11:50:50 tick 442: MATCHED b19-17 x b19-4 at 52
+11:53:22 tick 447 b19: b19-15@30 x b19-6@85 -> MATCH (ask unknown, bid unknown: not both observed relaxing; left from book)
+11:53:22 tick 447 b19: b19-16@40 x b19-9@80 -> MATCH (ask may leave (age 2 >= observed 25th pct 2); left from book)
+11:53:22 tick 447: MATCHED b19-15 x b19-6 at 57
+11:53:23 tick 447: MATCHED b19-16 x b19-9 at 60
+11:53:49 tick 448 b19: b19-13@66 x b19-7@84 -> MATCH (ask may leave (age 2 >= observed 25th pct 2); left from book)
+11:53:49 tick 448: MATCHED b19-13 x b19-7 at 75
+13:22:32 cannot read the book (rate_limited: at most 60 requests per second)
+15:43:24 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
+15:49:59 learned (startup): best hold 0 -> waiting off; est. eff by hold {0: 0.69, 1: 0.626, 2: 0.69, 3: 0.69}; relax {'ask': 3.25, 'bid': 2.0}; lifetime 4 over 1 sessions
+15:49:59 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
+15:55:49 tick 683 b37: b37-14@71 x b37-0@86 -> MATCH (ask unknown, bid unknown: not both observed relaxing; left from book)
+15:55:49 tick 683: MATCHED b37-14 x b37-0 at 78
+15:56:14 tick 684 b37: b37-17@31 x b37-5@63 -> MATCH (ask unknown, bid unknown: not both observed relaxing; left from book)
+15:56:14 tick 684: MATCHED b37-17 x b37-5 at 47
+15:57:14 tick 686 b37: b37-19@36 x b37-3@51 -> MATCH (bid may leave (age 1 >= observed 25th pct 1); left from book)
+15:57:14 tick 686: MATCHED b37-19 x b37-3 at 43
+15:58:44 tick 689 b37: b37-13@38 x b37-4@41 -> MATCH (ask may leave (age 1 >= observed 25th pct 1); left from book)
+15:58:44 tick 689: MATCHED b37-13 x b37-4 at 39
+15:58:46 learned (session b37 ended): best hold 0 -> waiting off; est. eff by hold {0: 0.746, 1: 0.702, 2: 0.675, 3: 0.675}; relax {'ask': 3.5, 'bid': 2.0}; lifetime 4.0 over 2 sessions
+15:59:47 tick 691 b37: b37-16@42 x b37-1@62 -> MATCH (bid may leave (age 1 >= observed 25th pct 1); left from book)
+15:59:48 tick 691: MATCHED b37-16 x b37-1 at 52
+16:02:44 learned (session b37 ended): best hold 0 -> waiting off; est. eff by hold {0: 0.756, 1: 0.718, 2: 0.753, 3: 0.753}; relax {'ask': 3.0, 'bid': 1.46}; lifetime 4 over 2 sessions
+16:05:04 learned (startup): best hold 0 -> waiting off; est. eff by hold {0: 0.756, 1: 0.718, 2: 0.753, 3: 0.753}; relax {'ask': 3.0, 'bid': 1.46}; lifetime 4 over 2 sessions
+16:05:04 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']
+16:08:10 learned (startup): best hold 0 -> waiting off; est. eff by hold {0: 0.756, 1: 0.718, 2: 0.753, 3: 0.753}; relax {'ask': 3.0, 'bid': 1.46}; lifetime 4 over 2 sessions
+16:08:10 book keys: ['bench_offers', 'fee_bps', 'fee_per_card', 'offers', 'recent', 'status', 'venue']

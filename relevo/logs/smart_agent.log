@@ -1,0 +1,1755 @@
+22:38:51 smart_agent started (deterministic, no LLM)
+22:38:51 --- tick 138 | cash 29 | cards 30 ---
+22:38:51 Abuela thread 254: ours [13, 17, 18, 19, 20] hers [30, 25, 24, 23, 22] mood near_final cap 23 -> accept 22 (her final is under our cap)
+22:38:51 error StopIteration: 
+22:38:56 --- tick 138 | cash 29 | cards 30 ---
+22:38:56 Abuela thread 254: ours [13, 17, 18, 19, 20] hers [30, 25, 24, 23, 22] mood near_final cap 23 -> accept 22 (her final is under our cap)
+22:38:56 error StopIteration: 
+22:39:02 --- tick 138 | cash 29 | cards 30 ---
+22:39:02 Abuela thread 254: ours [13, 17, 18, 19, 20] hers [30, 25, 24, 23, 22] mood near_final cap 23 -> accept 22 (her final is under our cap)
+22:39:02 error StopIteration: 
+22:39:07 --- tick 138 | cash 29 | cards 30 ---
+22:39:07 Abuela thread 254: ours [13, 17, 18, 19, 20] hers [30, 25, 24, 23, 22] mood near_final cap 23 -> accept 22 (her final is under our cap)
+22:39:07 error StopIteration: 
+22:39:12 --- tick 138 | cash 29 | cards 30 ---
+22:39:13 Abuela thread 254: ours [13, 17, 18, 19, 20] hers [30, 25, 24, 23, 22] mood near_final cap 23 -> accept 22 (her final is under our cap)
+22:39:13 error StopIteration: 
+22:39:18 --- tick 138 | cash 29 | cards 30 ---
+22:39:18 Abuela thread 254: ours [13, 17, 18, 19, 20] hers [30, 25, 24, 23, 22] mood near_final cap 23 -> accept 22 (her final is under our cap)
+22:39:18 error StopIteration: 
+22:39:20 smart_agent started (deterministic, no LLM)
+22:39:20 --- tick 138 | cash 29 | cards 30 ---
+22:39:20 Abuela thread 254: ours [13, 17, 18, 19, 20] hers [30, 25, 24, 23, 22] mood near_final cap 23 -> accept 22 (her final is under our cap)
+22:39:20 Abuela thread 254: no open offer of hers left, already accepted?
+22:39:48 --- tick 139 | cash 7 | cards 30 ---
+22:39:48 negotiation 254 ended: deal  paid 22
+22:39:48 opened pack: ['LAT-04', 'LAT-04', 'LAV-08']
+22:39:48 Abuela: cap 7 too low, skipping
+22:40:48 --- tick 140 | cash 7 | cards 33 ---
+22:40:48 Abuela: cap 7 too low, skipping
+22:40:48 Chato: offering LAV-08 (worth 10.0 to us), floor 16, his list 26
+22:40:48 Chato thread 279: ours [] his [] floor 16 -> offer 26 (opening ask at his list price)
+22:40:49 LISTED spare MAL-02 (asset 477) at 5; the copy is worth 0.5 to us
+22:40:49 LISTED spare LAT-04 (asset 494) at 9; the copy is worth 0.7 to us
+22:40:49 LISTED spare LAT-04 (asset 493) at 9; the copy is worth 0.7 to us
+22:41:48 --- tick 141 | cash 7 | cards 33 ---
+22:41:48 Abuela: cap 7 too low, skipping
+22:41:48 Chato thread 279: ours [26] his [] floor 16 -> wait None (no reply yet)
+22:41:49 LISTED spare MAL-02 (asset 81) at 4; the copy is worth 0.5 to us
+22:41:49 LISTED spare LAV-05 (asset 335) at 8; the copy is worth 4.0 to us
+22:41:49 LISTED spare MAL-04 (asset 323) at 8; the copy is worth 1.2 to us
+22:42:47 --- tick 142 | cash 63 | cards 32 ---
+22:42:48 Abuela thread 285: ours [] hers [] mood unknown cap 23 -> offer 13 (opening bid)
+22:42:48 Chato thread 279: ours [26] his [13] floor 16 -> offer 21 (he is yielding, gap 13, step 5 (k=0.35))
+22:42:53 smart_agent started (deterministic, no LLM)
+22:42:54 --- tick 142 | cash 63 | cards 32 ---
+22:42:54 Abuela thread 285: ours [13] hers [] mood unknown cap 9 -> wait None (no reply yet)
+22:42:55 Chato thread 279: ours [26, 21] his [13] floor 16 -> wait None (he has not answered our last ask)
+22:43:47 --- tick 143 | cash 63 | cards 32 ---
+22:43:48 Abuela thread 285: ours [13] hers [] mood unknown cap 9 -> wait None (no reply yet)
+22:43:48 Chato thread 279: ours [26, 21] his [13] floor 16 -> wait None (he has not answered our last ask)
+22:44:47 --- tick 144 | cash 63 | cards 32 ---
+22:44:48 Abuela thread 285: ours [13] hers [30] mood unknown cap 9 -> walk None (our standing offer 13 is above our cap 9 (inherited): start clean)
+22:44:48 Chato thread 279: ours [26, 21] his [13, 13] floor 16 -> offer 18 (he is firm, gap 8, step 3 (k=0.35))
+22:44:52 LISTED spare LAT-01 (asset 442) at 7; the copy is worth 1.8 to us
+22:45:47 --- tick 145 | cash 63 | cards 32 ---
+22:45:48 negotiation 285 ended: closed  paid None
+22:45:48 Abuela: a pack is worth 10.6 to us (cap 9) and she never goes under 20: no deal
+22:45:48 Chato thread 279: ours [26, 21, 18] his [13, 13] floor 16 -> wait None (he has not answered our last ask)
+22:46:48 --- tick 146 | cash 40 | cards 33 ---
+22:46:48 Abuela: a pack is worth 10.2 to us (cap 9) and she never goes under 20: no deal
+22:46:48 Chato thread 279: ours [26, 21, 18] his [13, 13, 13] floor 16 -> offer 16 (he is firm, gap 5, step 2 (k=0.5))
+22:47:48 --- tick 147 | cash 40 | cards 33 ---
+22:47:48 Abuela: a pack is worth 10.2 to us (cap 9) and she never goes under 20: no deal
+22:47:49 Chato thread 279: ours [26, 21, 18, 16] his [13, 13, 13] floor 16 -> wait None (he has not answered our last ask)
+22:48:48 --- tick 148 | cash 40 | cards 33 ---
+22:48:48 Abuela: a pack is worth 10.2 to us (cap 9) and she never goes under 20: no deal
+22:48:49 Chato thread 279: ours [26, 21, 18, 16] his [13, 13, 13, 13] floor 16 -> walk None (at our floor 16, he bids 13)
+22:48:51 LISTED spare LAV-08 (asset 495) at 30; the copy is worth 10.0 to us
+22:49:47 --- tick 149 | cash 40 | cards 33 ---
+22:49:47 Abuela: a pack is worth 10.2 to us (cap 9) and she never goes under 20: no deal
+22:49:47 Chato negotiation 279 ended: closed  received None
+22:49:47 error TypeError: 'NoneType' object is not subscriptable
+22:49:53 --- tick 149 | cash 40 | cards 33 ---
+22:49:53 Abuela: a pack is worth 10.2 to us (cap 9) and she never goes under 20: no deal
+22:50:47 --- tick 150 | cash 40 | cards 33 ---
+22:50:47 Abuela: a pack is worth 10.2 to us (cap 9) and she never goes under 20: no deal
+22:51:47 --- tick 151 | cash 40 | cards 33 ---
+22:51:47 Abuela: a pack is worth 10.2 to us (cap 9) and she never goes under 20: no deal
+22:51:51 LISTED spare MAL-02 (asset 477) at 3; the copy is worth 0.5 to us
+22:51:52 LISTED spare LAT-04 (asset 494) at 9; the copy is worth 0.7 to us
+22:51:52 LISTED spare LAT-04 (asset 493) at 9; the copy is worth 0.7 to us
+22:52:47 --- tick 152 | cash 48 | cards 32 ---
+22:52:47 Abuela: a pack is worth 10.5 to us (cap 9) and she never goes under 20: no deal
+22:52:51 LISTED spare MAL-02 (asset 81) at 3; the copy is worth 0.5 to us
+22:52:51 LISTED spare MAL-04 (asset 323) at 7; the copy is worth 1.2 to us
+22:53:47 --- tick 153 | cash 48 | cards 32 ---
+22:53:47 Abuela: a pack is worth 10.5 to us (cap 9) and she never goes under 20: no deal
+22:54:47 --- tick 154 | cash 48 | cards 32 ---
+22:54:47 Abuela: a pack is worth 10.5 to us (cap 9) and she never goes under 20: no deal
+22:55:47 --- tick 155 | cash 48 | cards 32 ---
+22:55:47 Abuela: a pack is worth 10.5 to us (cap 9) and she never goes under 20: no deal
+22:55:50 LISTED spare LAT-01 (asset 442) at 5; the copy is worth 1.8 to us
+22:56:47 --- tick 156 | cash 48 | cards 32 ---
+22:56:47 Abuela: a pack is worth 10.5 to us (cap 9) and she never goes under 20: no deal
+22:57:47 --- tick 157 | cash 48 | cards 32 ---
+22:57:47 Abuela: a pack is worth 10.5 to us (cap 9) and she never goes under 20: no deal
+22:58:47 --- tick 158 | cash 48 | cards 32 ---
+22:58:47 Abuela: a pack is worth 10.5 to us (cap 9) and she never goes under 20: no deal
+22:59:47 --- tick 159 | cash 53 | cards 31 ---
+22:59:47 Abuela: a pack is worth 10.6 to us (cap 9) and she never goes under 20: no deal
+22:59:50 LISTED spare LAV-08 (asset 495) at 30; the copy is worth 10.0 to us
+23:01:10 api error: rate_limited at most 5 requests per second
+23:01:15 --- tick 159 | cash 53 | cards 31 ---
+23:01:15 Abuela: a pack is worth 10.6 to us (cap 9) and she never goes under 20: no deal
+23:35:37 api error: network GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>
+23:35:43 api error: network GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>
+09:38:01 --- tick 177 | cash 206 | cards 30 ---
+09:38:01 opened pack: ['RET-02', 'SAL-03', 'MAL-08']
+09:38:01 Abuela: a pack is worth 14.6 to us (cap 13) and she never goes under 20: no deal
+09:50:45 LISTED spare MAL-02 (asset 81) at 7; the copy is worth 1.2 to us
+09:50:45 LISTED spare MAL-04 (asset 323) at 10; the copy is worth 1.2 to us
+09:50:46 LISTED spare LAV-08 (asset 495) at 23; the copy is worth 10.0 to us
+09:51:14 --- tick 204 | cash 206 | cards 33 ---
+09:51:14 Abuela: a pack is worth 13.5 to us (cap 12) and she never goes under 20: no deal
+09:51:14 Chato: offering LAV-08 (worth 10.0 to us), floor 16, his list 26
+09:51:15 Chato thread 388: ours [] his [] floor 16 -> offer 26 (opening ask at his list price)
+09:52:01 LISTED spare LAT-04 (asset 494) at 8; the copy is worth 0.7 to us
+09:52:01 LISTED spare LAT-04 (asset 493) at 8; the copy is worth 0.7 to us
+09:52:01 LISTED spare SAL-03 (asset 599) at 8; the copy is worth 2.8 to us
+09:52:19 --- tick 206 | cash 218 | cards 32 ---
+09:52:19 Abuela: a pack is worth 14.3 to us (cap 12) and she never goes under 20: no deal
+09:52:19 Chato thread 388: ours [26] his [13] floor 16 -> offer 21 (he is yielding, gap 13, step 5 (k=0.35))
+10:14:04 --- tick 249 | cash 218 | cards 32 ---
+10:14:04 Abuela: a pack is worth 14.3 to us (cap 12) and she never goes under 20: no deal
+10:14:04 Chato negotiation 388 ended: closed  received None
+10:14:04 error TypeError: 'NoneType' object is not subscriptable
+10:31:19 --- tick 284 | cash 218 | cards 32 ---
+10:31:19 Abuela: a pack is worth 14.3 to us (cap 12) and she never goes under 20: no deal
+10:31:19 Chato: offering LAV-08 (worth 10.0 to us), floor 16, his list 26
+10:31:20 Chato thread 450: ours [] his [] floor 16 -> offer 26 (opening ask at his list price)
+10:31:21 LISTED spare MAL-02 (asset 81) at 7; the copy is worth 1.2 to us
+10:31:21 LISTED spare MAL-04 (asset 323) at 8; the copy is worth 1.2 to us
+10:31:21 LISTED spare LAT-04 (asset 494) at 6; the copy is worth 0.7 to us
+10:58:11 api error: network GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>
+11:16:56 api error: network GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>
+11:17:02 api error: network GET /api/clock: <urlopen error [Errno 8] nodename nor servname provided, or not known>
+11:17:07 --- tick 374 | cash 218 | cards 32 ---
+11:17:07 Abuela: a pack is worth 14.3 to us (cap 12) and she never goes under 20: no deal
+11:17:07 Chato negotiation 450 ended: closed  received None
+11:17:07 error TypeError: 'NoneType' object is not subscriptable
+11:17:12 --- tick 374 | cash 218 | cards 32 ---
+11:17:12 Abuela: a pack is worth 14.3 to us (cap 12) and she never goes under 20: no deal
+11:17:14 LISTED spare MAL-02 (asset 81) at 6; the copy is worth 1.2 to us
+11:17:14 LISTED spare MAL-04 (asset 323) at 8; the copy is worth 1.2 to us
+11:17:14 LISTED spare LAV-08 (asset 495) at 21; the copy is worth 10.0 to us
+11:17:18 --- tick 375 | cash 130 | cards 33 ---
+11:17:18 Abuela: a pack is worth 14.3 to us (cap 12) and she never goes under 20: no deal
+11:17:21 LISTED spare LAT-04 (asset 494) at 6; the copy is worth 0.7 to us
+11:17:22 LISTED spare LAT-04 (asset 493) at 6; the copy is worth 0.7 to us
+11:17:22 LISTED spare SAL-03 (asset 599) at 9; the copy is worth 2.8 to us
+11:19:38 --- tick 379 | cash 49 | cards 34 ---
+11:19:38 Abuela: a pack is worth 14.3 to us (cap 12) and she never goes under 20: no deal
+11:19:40 market opportunities: [{"kind": "sell", "offer": 5762, "ref": "MAL-04", "price": 8, "asset": 323, "value": 1.2, "gain": 4.8, "roi": 4.75}]
+11:19:40 market accept refused: wait_for_tick one acceptance per team per tick
+11:19:49 --- tick 380 | cash 64 | cards 33 ---
+11:19:49 Abuela: a pack is worth 14.4 to us (cap 12) and she never goes under 20: no deal
+11:19:53 market opportunities: [{"kind": "sell", "offer": 5762, "ref": "MAL-04", "price": 8, "asset": 323, "value": 1.2, "gain": 4.8, "roi": 4.75}]
+11:19:53 MARKET SELL MAL-04 at 8: value 1.2 gain 4.8 roi 4.75
+11:20:21 --- tick 381 | cash 70 | cards 32 ---
+11:20:21 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:20:49 --- tick 382 | cash 70 | cards 32 ---
+11:20:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:21:18 --- tick 383 | cash 70 | cards 32 ---
+11:21:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:21:49 --- tick 384 | cash 70 | cards 32 ---
+11:21:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:22:18 --- tick 385 | cash 70 | cards 32 ---
+11:22:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:22:49 --- tick 386 | cash 70 | cards 32 ---
+11:22:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:23:18 --- tick 387 | cash 70 | cards 32 ---
+11:23:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:23:47 --- tick 388 | cash 70 | cards 32 ---
+11:23:47 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:24:20 --- tick 389 | cash 70 | cards 32 ---
+11:24:20 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:24:44 smart_agent started (deterministic, no LLM)
+11:24:45 --- tick 389 | cash 70 | cards 32 ---
+11:24:45 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:24:52 BID 2 for MAL-05 on v07; worth 5.0 to us
+11:25:18 --- tick 391 | cash 70 | cards 32 ---
+11:25:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:25:48 --- tick 392 | cash 70 | cards 32 ---
+11:25:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:26:18 --- tick 393 | cash 70 | cards 32 ---
+11:26:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:26:48 --- tick 394 | cash 70 | cards 32 ---
+11:26:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:27:18 --- tick 395 | cash 70 | cards 32 ---
+11:27:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:27:23 LISTED spare LAV-08 (asset 495) at 19 on v07; the copy is worth 10.0 to us
+11:27:23 SWAP asset 81 (MAL-02) for LAV-12 on v02
+11:27:48 --- tick 396 | cash 70 | cards 32 ---
+11:27:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:27:52 LISTED spare LAT-04 (asset 494) at 5 on v07; the copy is worth 0.7 to us
+11:27:52 SWAP asset 493 (LAT-04) for SAL-12 on v02
+11:27:52 LISTED spare SAL-03 (asset 599) at 8 on v07; the copy is worth 2.8 to us
+11:28:18 --- tick 397 | cash 70 | cards 32 ---
+11:28:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:28:47 --- tick 398 | cash 70 | cards 32 ---
+11:28:47 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:29:18 --- tick 399 | cash 70 | cards 32 ---
+11:29:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:29:49 --- tick 400 | cash 70 | cards 32 ---
+11:29:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:30:19 --- tick 401 | cash 70 | cards 32 ---
+11:30:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:30:48 --- tick 402 | cash 70 | cards 32 ---
+11:30:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:30:55 BID 57 for RET-09 on v07; worth 63.0 to us
+11:30:55 BID 9 for MAL-06 on v07; worth 12.5 to us
+11:31:08 smart_agent started (deterministic, no LLM)
+11:31:08 --- tick 402 | cash 70 | cards 32 ---
+11:31:08 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:31:18 --- tick 403 | cash 70 | cards 32 ---
+11:31:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:31:50 --- tick 404 | cash 70 | cards 32 ---
+11:31:50 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:31:50 Chato: offering LAV-08 (worth 10.0 to us), floor 16, his list 26
+11:31:50 Chato thread 608: ours [] his [] floor 16 -> offer 26 (opening ask at his list price)
+11:32:19 --- tick 405 | cash 70 | cards 32 ---
+11:32:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:32:19 Chato thread 608: ours [26] his [] floor 16 -> wait None (no reply yet)
+11:32:50 --- tick 406 | cash 70 | cards 32 ---
+11:32:51 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:32:51 Chato thread 608: ours [26] his [13] floor 16 -> offer 21 (he is yielding, gap 13, step 5 (k=0.35))
+11:33:20 --- tick 407 | cash 70 | cards 32 ---
+11:33:20 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:33:20 Chato thread 608: ours [26, 21] his [13, 13] floor 16 -> offer 18 (he is firm, gap 8, step 3 (k=0.35))
+11:33:48 --- tick 408 | cash 70 | cards 32 ---
+11:33:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:33:50 Chato thread 608: ours [26, 21, 18] his [13, 13] floor 16 -> wait None (he has not answered our last ask)
+11:34:18 --- tick 409 | cash 70 | cards 32 ---
+11:34:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:34:21 Chato thread 608: ours [26, 21, 18] his [13, 13, 13] floor 16 -> offer 16 (he is firm, gap 5, step 2 (k=0.5))
+11:34:48 --- tick 410 | cash 70 | cards 32 ---
+11:34:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:34:50 Chato thread 608: ours [26, 21, 18, 16] his [13, 13, 13] floor 16 -> wait None (he has not answered our last ask)
+11:35:19 --- tick 411 | cash 70 | cards 32 ---
+11:35:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:35:20 Chato thread 608: ours [26, 21, 18, 16] his [13, 13, 13, 13] floor 16 -> walk None (at our floor 16, he bids 13)
+11:35:48 --- tick 412 | cash 70 | cards 32 ---
+11:35:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:35:49 Chato negotiation 608 ended: closed  received None
+11:36:18 --- tick 413 | cash 70 | cards 32 ---
+11:36:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:36:45 smart_agent started (deterministic, no LLM)
+11:36:45 --- tick 413 | cash 70 | cards 32 ---
+11:36:45 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:37:18 --- tick 415 | cash 70 | cards 32 ---
+11:37:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:37:48 --- tick 416 | cash 70 | cards 32 ---
+11:37:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:38:18 --- tick 417 | cash 70 | cards 32 ---
+11:38:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:38:48 --- tick 418 | cash 70 | cards 32 ---
+11:38:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:39:18 --- tick 419 | cash 70 | cards 32 ---
+11:39:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:39:51 --- tick 420 | cash 70 | cards 32 ---
+11:39:51 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:40:18 --- tick 421 | cash 70 | cards 32 ---
+11:40:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:40:48 --- tick 422 | cash 70 | cards 32 ---
+11:40:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:41:18 --- tick 423 | cash 70 | cards 32 ---
+11:41:18 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:41:48 --- tick 424 | cash 70 | cards 32 ---
+11:41:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:42:19 --- tick 425 | cash 70 | cards 32 ---
+11:42:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:42:49 --- tick 426 | cash 70 | cards 32 ---
+11:42:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:43:21 --- tick 427 | cash 70 | cards 32 ---
+11:43:21 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:43:49 --- tick 428 | cash 70 | cards 32 ---
+11:43:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:44:19 --- tick 429 | cash 70 | cards 32 ---
+11:44:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:44:48 --- tick 430 | cash 70 | cards 32 ---
+11:44:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:45:19 --- tick 431 | cash 70 | cards 32 ---
+11:45:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:45:49 --- tick 432 | cash 70 | cards 32 ---
+11:45:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:46:19 --- tick 433 | cash 70 | cards 32 ---
+11:46:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:46:49 --- tick 434 | cash 70 | cards 32 ---
+11:46:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:47:19 --- tick 435 | cash 70 | cards 32 ---
+11:47:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:47:48 --- tick 436 | cash 70 | cards 32 ---
+11:47:48 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:48:19 --- tick 437 | cash 70 | cards 32 ---
+11:48:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:48:49 --- tick 438 | cash 70 | cards 32 ---
+11:48:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:49:19 --- tick 439 | cash 70 | cards 32 ---
+11:49:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:49:49 --- tick 440 | cash 70 | cards 32 ---
+11:49:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:50:20 --- tick 441 | cash 70 | cards 32 ---
+11:50:20 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:50:49 --- tick 442 | cash 70 | cards 32 ---
+11:50:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:51:19 --- tick 443 | cash 70 | cards 32 ---
+11:51:19 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:51:49 --- tick 444 | cash 70 | cards 32 ---
+11:51:49 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:52:20 --- tick 445 | cash 70 | cards 32 ---
+11:52:20 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:52:51 --- tick 446 | cash 70 | cards 32 ---
+11:52:51 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:53:19 --- tick 447 | cash 70 | cards 33 ---
+11:53:24 Abuela thread 651: ours [11] hers [30] mood unknown cap 12 -> offer 12 (mood unknown, gap 19, step 5 (k=0.25))
+11:53:24 Chato: offering SAL-08 (worth 6.9 to us), floor 12, his list 26
+11:53:24 Chato thread 652: ours [] his [] floor 12 -> offer 26 (opening ask at his list price)
+11:53:50 --- tick 448 | cash 70 | cards 33 ---
+11:53:50 Abuela thread 651: ours [11, 12] hers [30] mood unknown cap 12 -> wait None (she has not answered our last offer)
+11:53:51 Chato thread 652: ours [26] his [] floor 12 -> wait None (no reply yet)
+11:54:19 --- tick 449 | cash 70 | cards 33 ---
+11:54:20 Abuela thread 651: ours [11, 12, 13] hers [30, 25] mood yielding cap 12 -> wait None (she has not answered our last offer)
+11:54:21 Chato thread 652: ours [26] his [13] floor 12 -> offer 21 (he is yielding, gap 13, step 5 (k=0.35))
+11:54:50 --- tick 450 | cash 70 | cards 33 ---
+11:54:50 Abuela thread 651: ours [11, 12, 13] hers [30, 25] mood yielding cap 12 -> wait None (she has not answered our last offer)
+11:54:51 Chato thread 652: ours [26, 21] his [13] floor 12 -> wait None (he has not answered our last ask)
+11:55:20 --- tick 451 | cash 70 | cards 33 ---
+11:55:20 Abuela thread 651: ours [11, 12, 13, 14] hers [30, 25, 23] mood yielding cap 12 -> wait None (she has not answered our last offer)
+11:55:21 Chato thread 652: ours [26, 21] his [13, 13] floor 12 -> offer 18 (he is firm, gap 8, step 3 (k=0.35))
+11:55:50 --- tick 452 | cash 70 | cards 33 ---
+11:55:50 Abuela thread 651: ours [11, 12, 13, 14] hers [30, 25, 23] mood yielding cap 12 -> wait None (she has not answered our last offer)
+11:55:51 Chato thread 652: ours [26, 21, 18] his [13, 13] floor 12 -> wait None (he has not answered our last ask)
+11:56:21 --- tick 453 | cash 70 | cards 33 ---
+11:56:21 Abuela thread 651: ours [11, 12, 13, 14] hers [30, 25, 23, 22] mood yielding cap 12 -> walk None (our standing offer 14 is above our cap 12 (inherited): start clean)
+11:56:22 Chato thread 652: ours [26, 21, 18] his [13, 13, 13] floor 12 -> accept 13 (he repeated 13 three times and it clears our soft floor 8)
+11:56:22 CHATO SELL SAL-08 at 13: it was worth 6.9 to us
+11:56:52 --- tick 454 | cash 83 | cards 32 ---
+11:56:52 negotiation 651 ended: closed  paid None
+11:56:52 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+11:56:52 Chato negotiation 652 ended: deal  received 13
+11:57:20 --- tick 455 | cash 83 | cards 32 ---
+11:57:20 Abuela thread 658: ours [11] hers [] mood unknown cap 13 -> wait None (no reply yet)
+11:57:50 --- tick 456 | cash 83 | cards 32 ---
+11:57:50 Abuela thread 658: ours [11, 16] hers [30] mood unknown cap 13 -> wait None (she has not answered our last offer)
+11:57:56 LISTED spare LAV-08 (asset 495) at 25 on v07; the copy is worth 10.0 to us
+11:57:56 SWAP asset 81 (MAL-02) for LAV-12 on v02
+11:58:20 --- tick 457 | cash 83 | cards 32 ---
+11:58:20 Abuela thread 658: ours [11, 16] hers [30] mood unknown cap 13 -> wait None (she has not answered our last offer)
+11:58:26 LISTED spare LAT-04 (asset 494) at 5 on v07; the copy is worth 0.7 to us
+11:58:26 SWAP asset 493 (LAT-04) for SAL-12 on v02
+11:58:26 LISTED spare SAL-03 (asset 599) at 9 on v07; the copy is worth 2.8 to us
+11:58:50 --- tick 458 | cash 83 | cards 32 ---
+11:58:53 Abuela thread 658: ours [11, 16, 17] hers [30, 26] mood yielding cap 13 -> wait None (she has not answered our last offer)
+11:59:20 --- tick 459 | cash 83 | cards 32 ---
+11:59:21 Abuela thread 658: ours [11, 16, 17] hers [30, 26] mood yielding cap 13 -> wait None (she has not answered our last offer)
+11:59:50 --- tick 460 | cash 83 | cards 32 ---
+11:59:50 Abuela thread 658: ours [11, 16, 17, 18] hers [30, 26, 25] mood yielding cap 13 -> wait None (she has not answered our last offer)
+12:00:22 --- tick 461 | cash 83 | cards 32 ---
+12:00:22 Abuela thread 658: ours [11, 16, 17, 18] hers [30, 26, 25] mood yielding cap 13 -> wait None (she has not answered our last offer)
+12:00:52 --- tick 462 | cash 83 | cards 32 ---
+12:00:52 Abuela thread 658: ours [11, 16, 17, 18, 19] hers [30, 26, 25, 24] mood yielding cap 13 -> wait None (she has not answered our last offer)
+12:01:24 --- tick 463 | cash 83 | cards 32 ---
+12:01:24 Abuela thread 658: ours [11, 16, 17, 18, 19] hers [30, 26, 25, 24, 23] mood yielding cap 13 -> walk None (our standing offer 19 is above our cap 13 (inherited): start clean)
+12:01:32 BID 9 for MAL-06 on v07; worth 12.5 to us
+12:01:32 BID 2 for MAL-05 on v07; worth 5.0 to us
+12:01:32 BID 4 for LAT-02 on v07; worth 7.0 to us
+12:01:50 --- tick 464 | cash 83 | cards 32 ---
+12:01:50 negotiation 658 ended: closed  paid None
+12:01:50 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:02:20 --- tick 465 | cash 83 | cards 32 ---
+12:02:20 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:02:30 BID 57 for RET-09 on v07; worth 63.0 to us
+12:02:31 BID 9 for MAL-07 on v07; worth 12.5 to us
+12:02:51 --- tick 466 | cash 83 | cards 32 ---
+12:02:51 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:03:22 --- tick 467 | cash 83 | cards 32 ---
+12:03:22 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:03:26 board v11 rate_limited
+12:03:52 --- tick 468 | cash 83 | cards 32 ---
+12:03:52 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:04:20 --- tick 469 | cash 83 | cards 32 ---
+12:04:20 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:04:51 --- tick 470 | cash 83 | cards 32 ---
+12:04:51 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:05:20 --- tick 471 | cash 83 | cards 32 ---
+12:05:20 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:05:51 --- tick 472 | cash 83 | cards 32 ---
+12:05:51 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:06:21 --- tick 473 | cash 83 | cards 32 ---
+12:06:21 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:06:53 --- tick 474 | cash 83 | cards 32 ---
+12:06:53 Abuela thread 681: ours [11] hers [] mood unknown cap 13 -> wait None (no reply yet)
+12:07:06 smart_agent started (deterministic, no LLM)
+12:07:06 --- tick 474 | cash 83 | cards 32 ---
+12:07:06 Abuela thread 681: ours [11] hers [30] mood unknown cap 13 -> offer 13 (mood unknown, gap 19, step 2 (k=0.1))
+12:07:21 --- tick 475 | cash 83 | cards 32 ---
+12:07:21 Abuela thread 681: ours [11, 13] hers [30] mood unknown cap 13 -> wait None (she has not answered our last offer)
+12:07:53 --- tick 476 | cash 83 | cards 32 ---
+12:07:54 Abuela thread 681: ours [11, 13, 14] hers [30, 27] mood yielding cap 13 -> wait None (she has not answered our last offer)
+12:08:21 --- tick 477 | cash 83 | cards 32 ---
+12:08:22 Abuela thread 681: ours [11, 13, 14] hers [30, 27] mood yielding cap 13 -> wait None (she has not answered our last offer)
+12:08:53 --- tick 478 | cash 83 | cards 32 ---
+12:08:54 Abuela thread 681: ours [11, 13, 14, 15] hers [30, 27, 26] mood yielding cap 13 -> wait None (she has not answered our last offer)
+12:09:21 --- tick 479 | cash 83 | cards 32 ---
+12:09:21 Abuela thread 681: ours [11, 13, 14, 15] hers [30, 27, 26] mood yielding cap 13 -> wait None (she has not answered our last offer)
+12:09:53 --- tick 480 | cash 83 | cards 32 ---
+12:09:53 Abuela thread 681: ours [11, 13, 14, 15, 16] hers [30, 27, 26, 25] mood yielding cap 13 -> wait None (she has not answered our last offer)
+12:10:22 --- tick 481 | cash 83 | cards 32 ---
+12:10:22 Abuela thread 681: ours [11, 13, 14, 15, 16] hers [30, 27, 26, 25] mood yielding cap 13 -> wait None (she has not answered our last offer)
+12:10:51 --- tick 482 | cash 83 | cards 32 ---
+12:10:51 Abuela thread 681: ours [11, 13, 14, 15, 16] hers [30, 27, 26, 25, 24] mood yielding cap 13 -> walk None (our standing offer 16 is above our cap 13 (inherited): start clean)
+12:10:52 Abuela step: deal_settling a deal in this thread settles next tick
+12:11:21 --- tick 483 | cash 59 | cards 32 ---
+12:11:21 negotiation 681 ended: deal  paid 24
+12:11:22 opened pack: ['MAL-01', 'RET-04', 'MAL-03']
+12:11:22 Abuela: a pack is worth 14.5 to us (cap 13) and she never goes under 20: no deal
+12:11:52 --- tick 484 | cash 59 | cards 35 ---
+12:11:53 Abuela thread 692: ours [11] hers [] mood unknown cap 12 -> wait None (no reply yet)
+12:11:58 LISTED spare MAL-03 (asset 745) at 11 on v07; the copy is worth 1.2 to us
+12:11:58 SWAP asset 743 (MAL-01) for RET-12 on v02
+12:12:21 --- tick 485 | cash 59 | cards 35 ---
+12:12:25 Abuela thread 692: ours [11] hers [30] mood unknown cap 12 -> offer 12 (mood unknown, gap 19, step 2 (k=0.1))
+12:12:51 --- tick 486 | cash 59 | cards 35 ---
+12:12:51 Abuela thread 692: ours [11, 12] hers [30] mood unknown cap 12 -> wait None (she has not answered our last offer)
+12:13:22 --- tick 487 | cash 59 | cards 35 ---
+12:13:23 Abuela thread 692: ours [11, 12, 13] hers [30, 25] mood yielding cap 12 -> wait None (she has not answered our last offer)
+12:13:53 --- tick 488 | cash 59 | cards 35 ---
+12:13:54 Abuela thread 692: ours [11, 12, 13] hers [30, 25] mood yielding cap 12 -> wait None (she has not answered our last offer)
+12:14:24 --- tick 489 | cash 59 | cards 35 ---
+12:14:24 Abuela thread 692: ours [11, 12, 13, 14] hers [30, 25, 24] mood yielding cap 12 -> wait None (she has not answered our last offer)
+12:14:53 --- tick 490 | cash 59 | cards 35 ---
+12:14:53 Abuela thread 692: ours [11, 12, 13, 14] hers [30, 25, 24] mood yielding cap 12 -> wait None (she has not answered our last offer)
+12:15:22 --- tick 491 | cash 59 | cards 35 ---
+12:15:22 Abuela thread 692: ours [11, 12, 13, 14] hers [30, 25, 24, 23] mood yielding cap 12 -> walk None (our standing offer 14 is above our cap 12 (inherited): start clean)
+12:15:22 Abuela step: deal_settling a deal in this thread settles next tick
+12:15:51 --- tick 492 | cash 36 | cards 35 ---
+12:15:52 negotiation 692 ended: deal  paid 23
+12:15:52 opened pack: ['LAV-01', 'LAV-02', 'MAL-01']
+12:15:52 Abuela: a pack is worth 13.6 to us (cap 12) and she never goes under 20: no deal
+12:16:22 --- tick 493 | cash 36 | cards 38 ---
+12:16:22 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:16:27 LISTED spare LAV-02 (asset 748) at 8 on v07; the copy is worth 4.0 to us
+12:16:28 SWAP asset 749 (MAL-01) for LAT-12 on v02
+12:16:28 LISTED spare LAV-01 (asset 747) at 7 on v07; the copy is worth 4.0 to us
+12:16:52 --- tick 494 | cash 36 | cards 38 ---
+12:16:52 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:17:22 --- tick 495 | cash 36 | cards 38 ---
+12:17:22 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:17:52 --- tick 496 | cash 36 | cards 38 ---
+12:17:52 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:18:22 --- tick 497 | cash 36 | cards 38 ---
+12:18:22 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:18:55 --- tick 498 | cash 36 | cards 38 ---
+12:18:55 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:19:22 --- tick 499 | cash 36 | cards 38 ---
+12:19:22 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:19:52 --- tick 500 | cash 36 | cards 38 ---
+12:19:52 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:20:22 --- tick 501 | cash 36 | cards 38 ---
+12:20:22 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:20:52 --- tick 502 | cash 36 | cards 38 ---
+12:20:52 opened pack: ['LAT-01', 'LAV-03', 'RET-06', 'LAV-08', 'RET-09']
+12:20:52 Abuela: a pack is worth 13.1 to us (cap 11) and she never goes under 20: no deal
+12:20:52 Chato: offering LAV-08 (worth 10.0 to us), floor 16, his list 26
+12:20:52 Chato thread 707: ours [] his [] floor 16 -> offer 26 (opening ask at his list price)
+12:20:53 Pilar: offering LAV-08 (worth 10.0 to us), floor 16, his list 25
+12:20:53 Pilar thread 708: ours [] his [] floor 16 -> offer 25 (opening ask at his list price)
+12:21:23 --- tick 503 | cash 36 | cards 43 ---
+12:21:24 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:21:24 Chato thread 707: ours [26] his [] floor 16 -> wait None (no reply yet)
+12:21:25 Pilar thread 708: ours [25] his [] floor 16 -> wait None (no reply yet)
+12:21:30 LISTED spare LAV-08 (asset 776) at 24 on v07; the copy is worth 4.0 to us
+12:21:30 SWAP asset 773 (LAT-01) for LAV-11 on v02
+12:21:30 LISTED spare LAV-03 (asset 774) at 7 on v07; the copy is worth 4.0 to us
+12:21:52 --- tick 504 | cash 120 | cards 42 ---
+12:21:53 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:21:53 Chato thread 707: ours [26] his [13] floor 16 -> offer 21 (he is yielding, gap 13, step 5 (k=0.35))
+12:21:54 Pilar thread 708: ours [25] his [16] floor 16 -> offer 22 (he is yielding, gap 9, step 3 (k=0.35))
+12:22:22 --- tick 505 | cash 120 | cards 42 ---
+12:22:26 Abuela thread 719: ours [11] hers [30] mood unknown cap 11 -> wait None (at our cap, letting her move)
+12:22:26 Chato thread 707: ours [26, 21] his [13, 13] floor 16 -> offer 18 (he is firm, gap 8, step 3 (k=0.35))
+12:22:27 Pilar thread 708: ours [25, 22] his [16, 16] floor 16 -> offer 20 (he is firm, gap 6, step 2 (k=0.35))
+12:22:54 --- tick 506 | cash 120 | cards 42 ---
+12:22:55 Abuela thread 719: ours [11, 16] hers [30] mood unknown cap 11 -> wait None (she has not answered our last offer)
+12:22:55 Chato thread 707: ours [26, 21, 18] his [13, 13, 13] floor 16 -> accept 13 (he repeated 13 three times and it clears our soft floor 11)
+12:22:55 CHATO SELL LAV-08 at 13: it was worth 10.0 to us
+12:22:56 Pilar thread 708: ours [25, 22, 20] his [16, 16, 17] floor 16 -> offer 19 (he is yielding, gap 3, step 1 (k=0.35))
+12:23:27 --- tick 507 | cash 133 | cards 41 ---
+12:23:27 Abuela thread 719: ours [11, 16] hers [30, 26] mood yielding cap 11 -> walk None (our standing offer 16 is above our cap 11 (inherited): start clean)
+12:23:28 Chato negotiation 707 ended: deal  received 97
+12:23:28 Chato: offering LAV-08 (worth 10.0 to us), floor 16, his list 26
+12:23:28 Chato thread 730: ours [] his [] floor 16 -> offer 26 (opening ask at his list price)
+12:23:28 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:23:28 Pilar step: asset_gone this offer wants asset 495, which you do not hold
+12:23:52 --- tick 508 | cash 133 | cards 41 ---
+12:23:55 negotiation 719 ended: closed  paid None
+12:23:55 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:23:56 Chato thread 730: ours [26] his [13] floor 16 -> offer 21 (he is yielding, gap 13, step 5 (k=0.35))
+12:23:56 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:23:56 Pilar step: asset_gone this offer wants asset 495, which you do not hold
+12:24:23 --- tick 509 | cash 133 | cards 41 ---
+12:24:24 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:24:25 Chato thread 730: ours [26, 21] his [13, 13] floor 16 -> offer 18 (he is firm, gap 8, step 3 (k=0.35))
+12:24:25 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:24:25 Pilar step: asset_gone this offer wants asset 495, which you do not hold
+12:24:54 --- tick 510 | cash 133 | cards 41 ---
+12:24:54 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:24:55 Chato thread 730: ours [26, 21, 18] his [13, 13, 13] floor 16 -> offer 16 (he is firm, gap 5, step 2 (k=0.5))
+12:24:55 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:24:56 Pilar step: asset_gone this offer wants asset 495, which you do not hold
+12:25:22 --- tick 511 | cash 133 | cards 41 ---
+12:25:23 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:25:27 Chato thread 730: ours [26, 21, 18, 16] his [13, 13, 13, 13] floor 16 -> walk None (at our floor 16, he bids 13)
+12:25:27 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:25:27 Pilar step: asset_gone this offer wants asset 495, which you do not hold
+12:25:53 --- tick 512 | cash 133 | cards 41 ---
+12:25:53 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:25:53 Chato negotiation 730 ended: closed  received None
+12:25:55 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:26:24 --- tick 513 | cash 133 | cards 41 ---
+12:26:25 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:26:25 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:26:53 --- tick 514 | cash 133 | cards 41 ---
+12:26:53 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:26:53 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:27:22 --- tick 515 | cash 133 | cards 41 ---
+12:27:23 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:27:23 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:27:52 --- tick 516 | cash 133 | cards 41 ---
+12:27:52 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:27:53 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:28:22 --- tick 517 | cash 133 | cards 41 ---
+12:28:22 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:28:23 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:28:29 SWAP asset 81 (MAL-02) for LAV-12 on v02
+12:28:53 --- tick 518 | cash 133 | cards 41 ---
+12:28:53 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:28:54 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:28:59 LISTED spare LAT-04 (asset 494) at 6 on v07; the copy is worth 0.7 to us
+12:28:59 SWAP asset 493 (LAT-04) for SAL-12 on v02
+12:28:59 LISTED spare SAL-03 (asset 599) at 8 on v07; the copy is worth 2.8 to us
+12:29:22 --- tick 519 | cash 133 | cards 41 ---
+12:29:23 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:29:23 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:29:53 --- tick 520 | cash 133 | cards 41 ---
+12:29:53 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:29:53 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:30:23 --- tick 521 | cash 133 | cards 41 ---
+12:30:23 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:30:23 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:30:53 --- tick 522 | cash 133 | cards 41 ---
+12:30:53 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:30:54 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:31:23 --- tick 523 | cash 133 | cards 41 ---
+12:31:23 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:31:23 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:31:53 --- tick 524 | cash 133 | cards 41 ---
+12:31:53 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:31:53 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:32:23 --- tick 525 | cash 133 | cards 41 ---
+12:32:24 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:32:24 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:32:53 --- tick 526 | cash 133 | cards 41 ---
+12:32:53 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:32:53 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:33:23 --- tick 527 | cash 133 | cards 41 ---
+12:33:23 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:33:23 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:33:53 --- tick 528 | cash 133 | cards 41 ---
+12:33:54 Abuela thread 756: ours [11] hers [] mood unknown cap 11 -> wait None (no reply yet)
+12:33:55 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:34:24 --- tick 529 | cash 133 | cards 41 ---
+12:34:24 Abuela thread 756: ours [11] hers [] mood unknown cap 11 -> wait None (no reply yet)
+12:34:25 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:34:53 --- tick 530 | cash 133 | cards 41 ---
+12:34:53 Abuela thread 756: ours [11, 16] hers [30] mood unknown cap 11 -> wait None (she has not answered our last offer)
+12:34:54 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:35:23 --- tick 531 | cash 133 | cards 41 ---
+12:35:26 Abuela thread 756: ours [11, 16] hers [30] mood unknown cap 11 -> wait None (she has not answered our last offer)
+12:35:26 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:35:53 --- tick 532 | cash 133 | cards 41 ---
+12:35:54 Abuela thread 756: ours [11, 16, 17] hers [30, 25] mood yielding cap 11 -> wait None (she has not answered our last offer)
+12:35:54 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:36:23 --- tick 533 | cash 133 | cards 41 ---
+12:36:25 Abuela thread 756: ours [11, 16, 17] hers [30, 25] mood yielding cap 11 -> wait None (she has not answered our last offer)
+12:36:26 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:36:53 --- tick 534 | cash 133 | cards 41 ---
+12:36:54 Abuela thread 756: ours [11, 16, 17, 18] hers [30, 25, 23] mood yielding cap 11 -> wait None (she has not answered our last offer)
+12:36:54 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:37:24 --- tick 535 | cash 133 | cards 41 ---
+12:37:25 Abuela thread 756: ours [11, 16, 17, 18] hers [30, 25, 23] mood yielding cap 11 -> wait None (she has not answered our last offer)
+12:37:25 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:37:53 --- tick 536 | cash 133 | cards 41 ---
+12:37:54 Abuela thread 756: ours [11, 16, 17, 18] hers [30, 25, 23, 22] mood yielding cap 11 -> walk None (our standing offer 18 is above our cap 11 (inherited): start clean)
+12:37:54 Abuela step: deal_settling a deal in this thread settles next tick
+12:37:55 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:38:23 --- tick 537 | cash 111 | cards 41 ---
+12:38:23 negotiation 756 ended: deal  paid 22
+12:38:24 opened pack: ['LAT-04', 'RET-01', 'SAL-03']
+12:38:24 Abuela: a pack is worth 12.4 to us (cap 11) and she never goes under 20: no deal
+12:38:24 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:38:53 --- tick 538 | cash 111 | cards 44 ---
+12:38:54 Abuela thread 762: ours [11] hers [] mood unknown cap 10 -> wait None (no reply yet)
+12:38:55 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:39:02 LISTED spare SAL-03 (asset 824) at 7 on v07; the copy is worth 1.1 to us
+12:39:02 SWAP asset 822 (LAT-04) for MAL-12 on v02
+12:39:25 --- tick 539 | cash 111 | cards 44 ---
+12:39:25 negotiation 762 ended: closed persona_quota paid None
+12:39:25 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:39:25 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:39:55 --- tick 540 | cash 111 | cards 44 ---
+12:39:55 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:39:55 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:40:23 --- tick 541 | cash 111 | cards 44 ---
+12:40:23 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:40:24 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:40:53 --- tick 542 | cash 111 | cards 44 ---
+12:40:53 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:40:54 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:41:23 --- tick 543 | cash 111 | cards 44 ---
+12:41:23 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:41:27 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:41:53 --- tick 544 | cash 111 | cards 44 ---
+12:41:53 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:41:54 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:42:23 --- tick 545 | cash 111 | cards 44 ---
+12:42:24 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:42:24 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:42:30 LISTED spare MAL-03 (asset 745) at 10 on v07; the copy is worth 1.2 to us
+12:42:30 SWAP asset 743 (MAL-01) for RET-12 on v02
+12:42:53 --- tick 546 | cash 111 | cards 44 ---
+12:42:53 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:42:54 Pilar thread 708: ours [25, 22, 20, 19] his [16, 16, 17, 18] floor 16 -> accept 18 (his bid is within reach of our ask)
+12:43:23 --- tick 547 | cash 111 | cards 44 ---
+12:43:23 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:43:23 Pilar negotiation 708 ended: closed  received None
+12:43:53 --- tick 548 | cash 111 | cards 44 ---
+12:43:53 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:44:23 --- tick 549 | cash 111 | cards 44 ---
+12:44:23 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:44:32 BID 31 for MAL-09 on v07; worth 35.0 to us
+12:44:32 BID 9 for MAL-06 on v07; worth 12.5 to us
+12:44:32 BID 2 for MAL-05 on v07; worth 5.0 to us
+12:44:53 --- tick 550 | cash 111 | cards 44 ---
+12:44:53 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:45:23 --- tick 551 | cash 111 | cards 44 ---
+12:45:23 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:45:55 --- tick 552 | cash 111 | cards 44 ---
+12:45:55 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:46:23 --- tick 553 | cash 111 | cards 44 ---
+12:46:23 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:46:53 --- tick 554 | cash 111 | cards 44 ---
+12:46:53 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:46:58 LISTED spare LAV-02 (asset 748) at 7 on v07; the copy is worth 4.0 to us
+12:46:59 SWAP asset 749 (MAL-01) for LAT-12 on v02
+12:46:59 LISTED spare LAV-01 (asset 747) at 7 on v07; the copy is worth 4.0 to us
+12:47:23 --- tick 555 | cash 111 | cards 44 ---
+12:47:23 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:47:54 --- tick 556 | cash 111 | cards 44 ---
+12:47:54 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:48:04 smart_agent started (deterministic, no LLM)
+12:48:05 --- tick 556 | cash 111 | cards 44 ---
+12:48:05 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:48:26 --- tick 557 | cash 111 | cards 44 ---
+12:48:26 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:48:40 smart_agent started (deterministic, no LLM)
+12:48:40 --- tick 557 | cash 111 | cards 44 ---
+12:48:40 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:48:54 --- tick 558 | cash 111 | cards 44 ---
+12:48:54 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:49:25 --- tick 559 | cash 111 | cards 44 ---
+12:49:25 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:49:53 --- tick 560 | cash 111 | cards 44 ---
+12:49:53 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:50:24 --- tick 561 | cash 111 | cards 44 ---
+12:50:24 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:50:54 --- tick 562 | cash 111 | cards 44 ---
+12:50:54 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:50:54 Pilar: cancelled listing 7389 of LAV-08 before offering it
+12:50:54 Pilar: offering LAV-08 (worth 10.0 to us), floor 16, his list 25
+12:50:55 Pilar thread 784: ours [] his [] floor 16 -> offer 25 (opening ask at his list price)
+12:51:26 --- tick 563 | cash 111 | cards 44 ---
+12:51:26 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:51:27 Pilar thread 784: ours [25] his [16] floor 16 -> offer 22 (he is yielding, gap 9, step 3 (k=0.35))
+12:51:54 --- tick 564 | cash 111 | cards 44 ---
+12:51:55 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:51:55 Pilar thread 784: ours [25, 22] his [16] floor 16 -> wait None (he has not answered our last ask)
+12:52:00 LISTED spare LAV-03 (asset 774) at 7 on v07; the copy is worth 4.0 to us
+12:52:01 SWAP asset 773 (LAT-01) for LAV-11 on v02
+12:52:24 --- tick 565 | cash 111 | cards 44 ---
+12:52:26 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:52:27 Pilar thread 784: ours [25, 22] his [16, 16] floor 16 -> offer 20 (he is firm, gap 6, step 2 (k=0.35))
+12:52:54 --- tick 566 | cash 111 | cards 44 ---
+12:52:54 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:52:56 Pilar thread 784: ours [25, 22, 20] his [16, 16, 17] floor 16 -> offer 19 (he is yielding, gap 3, step 1 (k=0.35))
+12:53:27 --- tick 567 | cash 111 | cards 44 ---
+12:53:27 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:53:27 Pilar thread 784: ours [25, 22, 20, 19] his [16, 16, 17] floor 16 -> wait None (he has not answered our last ask)
+12:53:53 --- tick 568 | cash 111 | cards 44 ---
+12:53:54 Abuela: a pack is worth 11.7 to us (cap 10) and she never goes under 20: no deal
+12:53:54 Pilar thread 784: ours [25, 22, 20, 19] his [16, 16, 17, 17] floor 16 -> accept 17 (his final is over our floor)
+12:53:55 PILAR SELL LAV-08 at 17: it was worth 10.0 to us
+12:54:28 --- tick 569 | cash 128 | cards 43 ---
+12:54:28 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:54:29 Pilar negotiation 784 ended: deal  received 17
+12:54:54 --- tick 570 | cash 128 | cards 43 ---
+12:54:54 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:55:03 BID 9 for MAL-07 on v07; worth 12.5 to us
+12:55:03 BID 4 for LAT-02 on v07; worth 7.0 to us
+12:55:03 BID 4 for LAT-03 on v07; worth 7.0 to us
+12:55:25 --- tick 571 | cash 128 | cards 43 ---
+12:55:25 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:55:54 --- tick 572 | cash 128 | cards 43 ---
+12:55:54 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:56:25 --- tick 573 | cash 128 | cards 43 ---
+12:56:25 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:56:55 --- tick 574 | cash 128 | cards 43 ---
+12:56:55 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:57:24 --- tick 575 | cash 128 | cards 43 ---
+12:57:24 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:57:54 --- tick 576 | cash 128 | cards 43 ---
+12:57:54 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:58:24 --- tick 577 | cash 128 | cards 43 ---
+12:58:24 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:58:55 --- tick 578 | cash 128 | cards 43 ---
+12:58:55 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:59:01 SWAP asset 81 (MAL-02) for LAV-12 on v02
+12:59:27 --- tick 579 | cash 128 | cards 43 ---
+12:59:27 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+12:59:35 LISTED spare LAT-04 (asset 494) at 6 on v07; the copy is worth 0.7 to us
+12:59:36 SWAP asset 493 (LAT-04) for SAL-12 on v02
+12:59:36 LISTED spare SAL-03 (asset 599) at 6 on v07; the copy is worth 1.1 to us
+12:59:55 --- tick 580 | cash 128 | cards 43 ---
+12:59:55 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:00:28 --- tick 581 | cash 128 | cards 43 ---
+13:00:28 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:00:35 smart_agent started (deterministic, no LLM)
+13:00:36 --- tick 581 | cash 128 | cards 43 ---
+13:00:36 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:00:39 Chato: buying LAV-09 (rare), worth 218 to us, cap 128, his list 77
+13:00:39 Chato buy 811 LAV-09: ours [] his [] cap 128 -> offer 38 (opening bid)
+13:00:57 --- tick 582 | cash 128 | cards 43 ---
+13:00:57 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:00:57 Chato buy 811 LAV-09: ours [38] his [97] cap 128 -> offer 53 (mood near_final, gap 59, step 15 (k=0.25))
+13:01:25 --- tick 583 | cash 128 | cards 43 ---
+13:01:26 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:01:26 Chato buy 811 LAV-09: ours [38, 53] his [97] cap 128 -> wait None (she has not answered our last offer)
+13:01:54 --- tick 584 | cash 128 | cards 43 ---
+13:01:54 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:01:55 Chato buy 811 LAV-09: ours [38, 53] his [97, 96] cap 128 -> offer 64 (mood yielding, gap 43, step 11 (k=0.25))
+13:02:26 smart_agent started (deterministic, no LLM)
+13:02:27 --- tick 585 | cash 128 | cards 43 ---
+13:02:30 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:02:30 Chato buy 811 LAV-09: ours [38, 53, 64] his [97, 96, 95] cap 128 -> offer 72 (mood yielding, gap 31, step 8 (k=0.25))
+13:02:55 --- tick 586 | cash 128 | cards 43 ---
+13:02:56 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:02:57 Chato buy 811 LAV-09: ours [38, 53, 64, 72] his [97, 96, 95, 92] cap 128 -> offer 77 (mood yielding, gap 20, step 5 (k=0.25))
+13:03:24 --- tick 587 | cash 128 | cards 43 ---
+13:03:25 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:03:25 Chato buy 811 LAV-09: ours [38, 53, 64, 72, 77] his [97, 96, 95, 92] cap 128 -> wait None (she has not answered our last offer)
+13:03:55 --- tick 588 | cash 128 | cards 43 ---
+13:03:56 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:03:56 Chato buy 811 LAV-09: ours [38, 53, 64, 72, 77] his [97, 96, 95, 92, 88] cap 128 -> offer 80 (mood yielding, gap 11, step 3 (k=0.25))
+13:04:24 --- tick 589 | cash 128 | cards 43 ---
+13:04:25 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:04:25 Chato buy 811 LAV-09: ours [38, 53, 64, 72, 77, 80] his [97, 96, 95, 92, 88] cap 128 -> wait None (she has not answered our last offer)
+13:04:58 --- tick 590 | cash 128 | cards 43 ---
+13:04:58 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:04:58 Chato buy 811 LAV-09: ours [38, 53, 64, 72, 77, 80] his [97, 96, 95, 92, 88, 85] cap 128 -> offer 81 (mood yielding, gap 5, step 1 (k=0.25, she out-conceded us, slow down))
+13:05:24 --- tick 591 | cash 128 | cards 43 ---
+13:05:24 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:05:25 Chato buy 811 LAV-09: ours [38, 53, 64, 72, 77, 80, 81] his [97, 96, 95, 92, 88, 85] cap 128 -> wait None (she has not answered our last offer)
+13:05:55 --- tick 592 | cash 128 | cards 43 ---
+13:05:56 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:05:56 Chato buy 811 LAV-09: ours [38, 53, 64, 72, 77, 80, 81] his [97, 96, 95, 92, 88, 85, 84] cap 128 -> accept 84 (her final is under our cap)
+13:05:56 CHATO BUY LAV-09 at 84: worth 218 to us (+134)
+13:06:27 --- tick 593 | cash 44 | cards 44 ---
+13:06:27 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:06:27 Chato card buy 811 (LAV-09) ended: deal  paid 84 (worth 218 to us)
+13:06:55 --- tick 594 | cash 44 | cards 44 ---
+13:06:55 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:07:29 --- tick 595 | cash 44 | cards 44 ---
+13:07:29 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:07:56 --- tick 596 | cash 44 | cards 44 ---
+13:07:56 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:08:26 --- tick 597 | cash 44 | cards 44 ---
+13:08:26 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:08:56 --- tick 598 | cash 44 | cards 44 ---
+13:08:56 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:09:27 --- tick 599 | cash 44 | cards 44 ---
+13:09:27 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:09:32 LISTED spare SAL-03 (asset 824) at 5 on v07; the copy is worth 1.1 to us
+13:09:32 SWAP asset 822 (LAT-04) for MAL-12 on v02
+13:09:58 --- tick 600 | cash 49 | cards 43 ---
+13:09:58 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:10:26 --- tick 601 | cash 49 | cards 43 ---
+13:10:26 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:10:57 --- tick 602 | cash 49 | cards 43 ---
+13:10:57 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:11:29 --- tick 603 | cash 49 | cards 43 ---
+13:11:29 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:11:46 smart_agent started (deterministic, no LLM)
+13:11:47 --- tick 603 | cash 49 | cards 43 ---
+13:11:47 Abuela: a pack is worth 11.8 to us (cap 10) and she never goes under 20: no deal
+13:11:48 Chato: buying RET-07 (uncommon), worth 22 to us, cap 21, his list 26
+13:11:48 Chato buy 842 RET-07: ours [] his [] cap 21 -> offer 13 (opening bid)
+13:11:48 Abuela: buying RET-07 (uncommon), worth 22 to us, cap 21, his list 25
+13:11:48 Abuela buy 843 RET-07: ours [] his [] cap 21 -> offer 12 (opening bid)
+13:11:57 --- tick 604 | cash 49 | cards 43 ---
+13:11:58 Chato buy 842 RET-07: ours [13] his [33] cap 21 -> offer 18 (mood near_final, gap 20, step 5 (k=0.25))
+13:12:00 Abuela buy 843 RET-07: ours [12] his [29] cap 21 -> offer 16 (mood unknown, gap 17, step 4 (k=0.25))
+13:12:28 --- tick 605 | cash 49 | cards 43 ---
+13:12:28 Chato buy 842 RET-07: ours [13, 18] his [33, 33] cap 21 -> offer 19 (mood firm, gap 15, step 1 (k=0.25, she is firm above cap, token step))
+13:12:29 Abuela buy 843 RET-07: ours [12, 16] his [29, 27] cap 21 -> offer 19 (mood yielding, gap 11, step 3 (k=0.25))
+13:12:56 --- tick 606 | cash 49 | cards 43 ---
+13:12:57 Chato buy 842 RET-07: ours [13, 18, 19] his [33, 33] cap 21 -> wait None (she has not answered our last offer)
+13:12:58 Abuela buy 843 RET-07: ours [12, 16, 19] his [29, 27, 26] cap 21 -> offer 21 (mood yielding, gap 7, step 2 (k=0.25))
+13:13:03 LISTED spare MAL-03 (asset 745) at 13 on v07; the copy is worth 1.2 to us
+13:13:03 SWAP asset 743 (MAL-01) for RET-12 on v02
+13:13:27 --- tick 607 | cash 49 | cards 43 ---
+13:13:28 Chato buy 842 RET-07: ours [13, 18, 19] his [33, 33, 33] cap 21 -> offer 20 (mood firm, gap 14, step 1 (k=0.25, she is firm above cap, token step))
+13:13:31 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:13:56 --- tick 608 | cash 49 | cards 43 ---
+13:13:57 Chato buy 842 RET-07: ours [13, 18, 19, 20] his [33, 33, 33] cap 21 -> wait None (she has not answered our last offer)
+13:13:58 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:14:27 --- tick 609 | cash 49 | cards 43 ---
+13:14:27 Chato buy 842 RET-07: ours [13, 18, 19, 20] his [33, 33, 33, 32] cap 21 -> offer 21 (mood yielding, gap 12, step 2 (k=0.25, she out-conceded us, slow down))
+13:14:30 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:14:55 --- tick 610 | cash 49 | cards 43 ---
+13:14:55 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32] cap 21 -> wait None (she has not answered our last offer)
+13:14:56 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:15:26 --- tick 611 | cash 49 | cards 43 ---
+13:15:26 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 31] cap 21 -> wait None (at our cap, letting her move)
+13:15:27 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:15:35 BID 9 for MAL-06 on v07; worth 12.5 to us
+13:15:35 BID 2 for MAL-05 on v07; worth 5.0 to us
+13:15:55 --- tick 612 | cash 49 | cards 43 ---
+13:15:55 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 31] cap 21 -> wait None (at our cap, letting her move)
+13:15:56 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:16:29 --- tick 613 | cash 49 | cards 43 ---
+13:16:29 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 31] cap 21 -> wait None (at our cap, letting her move)
+13:16:30 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:16:55 --- tick 614 | cash 49 | cards 43 ---
+13:16:55 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 31] cap 21 -> wait None (at our cap, letting her move)
+13:16:58 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:17:20 BID 14 for LAT-06 on v07; worth 17.5 to us
+13:17:20 BID 6 for RET-02 on v07; worth 9.0 to us
+13:17:26 --- tick 615 | cash 49 | cards 43 ---
+13:17:27 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 31] cap 21 -> wait None (at our cap, letting her move)
+13:17:27 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:17:31 LISTED spare LAV-02 (asset 748) at 10 on v07; the copy is worth 4.0 to us
+13:17:31 SWAP asset 749 (MAL-01) for LAT-12 on v02
+13:17:31 LISTED spare LAV-01 (asset 747) at 7 on v07; the copy is worth 4.0 to us
+13:17:58 --- tick 616 | cash 49 | cards 43 ---
+13:17:58 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 31] cap 21 -> wait None (at our cap, letting her move)
+13:17:59 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:18:25 --- tick 617 | cash 49 | cards 43 ---
+13:18:26 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 31] cap 21 -> wait None (at our cap, letting her move)
+13:18:26 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:18:56 --- tick 618 | cash 49 | cards 43 ---
+13:18:56 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 31] cap 21 -> wait None (at our cap, letting her move)
+13:18:57 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:19:00 smart_agent started (deterministic, no LLM)
+13:19:01 --- tick 618 | cash 49 | cards 43 ---
+13:19:01 Chato buy 842 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 31] cap 21 -> wait None (at our cap, letting her move)
+13:19:02 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:19:27 smart_agent started (deterministic, no LLM)
+13:19:31 --- tick 619 | cash 49 | cards 43 ---
+13:19:31 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:19:56 --- tick 620 | cash 49 | cards 43 ---
+13:19:56 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:20:26 --- tick 621 | cash 49 | cards 43 ---
+13:20:27 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:20:53 smart_agent started (deterministic, no LLM)
+13:20:53 --- tick 621 | cash 49 | cards 43 ---
+13:20:54 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:21:25 --- tick 623 | cash 49 | cards 43 ---
+13:21:28 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:21:56 --- tick 624 | cash 49 | cards 43 ---
+13:21:56 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:22:27 --- tick 625 | cash 49 | cards 43 ---
+13:22:28 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:22:33 LISTED spare LAV-03 (asset 774) at 6 on v07; the copy is worth 4.0 to us
+13:22:33 SWAP asset 773 (LAT-01) for LAV-11 on v02
+13:22:56 --- tick 626 | cash 49 | cards 43 ---
+13:22:57 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:23:10 smart_agent started (deterministic, no LLM)
+13:23:10 --- tick 626 | cash 49 | cards 43 ---
+13:23:11 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:23:27 --- tick 627 | cash 49 | cards 43 ---
+13:23:28 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:23:56 --- tick 628 | cash 49 | cards 43 ---
+13:23:57 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:24:28 --- tick 629 | cash 49 | cards 43 ---
+13:24:29 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+13:24:56 --- tick 630 | cash 49 | cards 43 ---
+13:24:57 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:29:19 --- tick 630 | cash 49 | cards 43 ---
+15:29:19 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:29:44 --- tick 631 | cash 49 | cards 43 ---
+15:29:45 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:29:52 BID 9 for MAL-07 on v07; worth 12.5 to us
+15:29:52 BID 4 for LAT-02 on v07; worth 7.0 to us
+15:29:52 BID 4 for LAT-03 on v07; worth 7.0 to us
+15:30:13 --- tick 632 | cash 49 | cards 43 ---
+15:30:13 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:30:43 --- tick 633 | cash 49 | cards 43 ---
+15:30:43 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:31:12 --- tick 634 | cash 49 | cards 43 ---
+15:31:14 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:31:43 --- tick 635 | cash 49 | cards 43 ---
+15:31:44 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:32:12 --- tick 636 | cash 49 | cards 43 ---
+15:32:13 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:32:43 --- tick 637 | cash 49 | cards 43 ---
+15:32:43 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:33:13 --- tick 638 | cash 49 | cards 43 ---
+15:33:13 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:33:43 --- tick 639 | cash 49 | cards 43 ---
+15:33:43 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:33:49 SWAP asset 81 (MAL-02) for LAV-12 on v02
+15:34:13 --- tick 640 | cash 49 | cards 43 ---
+15:34:13 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:34:18 LISTED spare LAT-04 (asset 494) at 5 on v07; the copy is worth 0.7 to us
+15:34:19 SWAP asset 493 (LAT-04) for SAL-12 on v02
+15:34:19 LISTED spare SAL-03 (asset 599) at 13 on v07; the copy is worth 2.8 to us
+15:34:43 --- tick 641 | cash 49 | cards 43 ---
+15:34:44 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:35:13 smart_agent started (deterministic, no LLM)
+15:35:14 --- tick 642 | cash 49 | cards 43 ---
+15:35:14 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:35:43 --- tick 643 | cash 49 | cards 43 ---
+15:35:44 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:36:13 --- tick 644 | cash 49 | cards 43 ---
+15:36:16 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:36:44 --- tick 645 | cash 49 | cards 43 ---
+15:36:45 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:37:15 --- tick 646 | cash 49 | cards 43 ---
+15:37:16 Abuela buy 843 RET-07: ours [12, 16, 19, 21] his [29, 27, 26, 25] cap 21 -> wait None (at our cap, letting her move)
+15:37:43 --- tick 647 | cash 49 | cards 43 ---
+15:37:43 Abuela card buy 843 (RET-07) ended: closed  paid None (worth 22 to us)
+15:38:13 --- tick 648 | cash 45 | cards 44 ---
+15:38:13 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:38:43 --- tick 649 | cash 45 | cards 44 ---
+15:38:43 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:39:13 --- tick 650 | cash 45 | cards 44 ---
+15:39:13 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:39:43 --- tick 651 | cash 45 | cards 44 ---
+15:39:43 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:40:13 --- tick 652 | cash 45 | cards 44 ---
+15:40:13 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:40:43 --- tick 653 | cash 45 | cards 44 ---
+15:40:43 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:41:13 --- tick 654 | cash 45 | cards 44 ---
+15:41:13 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:41:46 --- tick 655 | cash 45 | cards 44 ---
+15:41:46 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:42:13 --- tick 656 | cash 45 | cards 44 ---
+15:42:13 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:42:43 --- tick 657 | cash 45 | cards 44 ---
+15:42:43 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:43:13 --- tick 658 | cash 45 | cards 44 ---
+15:43:13 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:43:43 --- tick 659 | cash 45 | cards 44 ---
+15:43:43 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:44:14 --- tick 660 | cash 45 | cards 44 ---
+15:44:14 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:44:19 SWAP asset 822 (LAT-04) for MAL-12 on v02
+15:44:43 --- tick 661 | cash 45 | cards 44 ---
+15:44:43 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:45:13 --- tick 662 | cash 45 | cards 44 ---
+15:45:13 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:45:44 --- tick 663 | cash 45 | cards 44 ---
+15:45:44 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:46:15 --- tick 664 | cash 45 | cards 44 ---
+15:46:15 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:46:44 --- tick 665 | cash 45 | cards 44 ---
+15:46:44 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:47:15 --- tick 666 | cash 45 | cards 44 ---
+15:47:15 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:47:44 --- tick 667 | cash 45 | cards 44 ---
+15:47:44 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:47:50 LISTED spare MAL-03 (asset 745) at 11 on v07; the copy is worth 1.2 to us
+15:47:50 SWAP asset 743 (MAL-01) for RET-12 on v02
+15:48:15 --- tick 668 | cash 45 | cards 44 ---
+15:48:15 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:48:44 --- tick 669 | cash 45 | cards 44 ---
+15:48:44 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:49:29 --- tick 670 | cash 45 | cards 44 ---
+15:49:29 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:49:46 --- tick 671 | cash 45 | cards 44 ---
+15:49:46 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:50:14 --- tick 672 | cash 45 | cards 44 ---
+15:50:14 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:50:22 BID 9 for MAL-06 on v07; worth 12.5 to us
+15:50:22 BID 2 for MAL-05 on v07; worth 5.0 to us
+15:50:46 --- tick 673 | cash 45 | cards 44 ---
+15:50:46 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:51:14 --- tick 674 | cash 45 | cards 44 ---
+15:51:14 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:51:45 --- tick 675 | cash 45 | cards 44 ---
+15:51:45 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:51:53 BID 14 for LAT-06 on v07; worth 17.5 to us
+15:51:53 BID 6 for RET-02 on v07; worth 9.0 to us
+15:52:14 --- tick 676 | cash 45 | cards 44 ---
+15:52:14 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:52:21 LISTED spare LAV-02 (asset 748) at 6 on v07; the copy is worth 4.0 to us
+15:52:22 SWAP asset 749 (MAL-01) for LAT-12 on v02
+15:52:22 LISTED spare LAV-01 (asset 747) at 6 on v07; the copy is worth 4.0 to us
+15:52:46 --- tick 677 | cash 45 | cards 44 ---
+15:52:46 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:53:15 --- tick 678 | cash 45 | cards 44 ---
+15:53:15 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:53:45 --- tick 679 | cash 45 | cards 44 ---
+15:53:45 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:53:45 Chato: buying RET-07 (uncommon), worth 22 to us, cap 21, his list 26
+15:53:45 Chato buy 927 RET-07: ours [] his [] cap 21 -> offer 13 (opening bid)
+15:54:16 --- tick 680 | cash 45 | cards 44 ---
+15:54:16 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:54:16 Chato buy 927 RET-07: ours [13] his [33] cap 21 -> offer 18 (mood unknown, gap 20, step 5 (k=0.25))
+15:54:47 --- tick 681 | cash 45 | cards 44 ---
+15:54:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:54:48 Chato buy 927 RET-07: ours [13, 18] his [33, 33] cap 21 -> offer 19 (mood firm, gap 15, step 1 (k=0.25, she is firm above cap, token step))
+15:55:15 --- tick 682 | cash 45 | cards 44 ---
+15:55:15 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:55:16 Chato buy 927 RET-07: ours [13, 18, 19] his [33, 33, 33] cap 21 -> offer 20 (mood firm, gap 14, step 1 (k=0.25, she is firm above cap, token step))
+15:55:45 --- tick 683 | cash 45 | cards 44 ---
+15:55:45 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:55:46 Chato buy 927 RET-07: ours [13, 18, 19, 20] his [33, 33, 33] cap 21 -> wait None (she has not answered our last offer)
+15:56:16 --- tick 684 | cash 45 | cards 44 ---
+15:56:16 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:56:17 Chato buy 927 RET-07: ours [13, 18, 19, 20] his [33, 33, 33, 32] cap 21 -> offer 21 (mood yielding, gap 12, step 2 (k=0.25, she out-conceded us, slow down))
+15:56:48 --- tick 685 | cash 45 | cards 44 ---
+15:56:49 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+15:56:49 Chato buy 927 RET-07: ours [13, 18, 19, 20, 21] his [33, 33, 33, 32, 32] cap 21 -> walk None (at our cap 21, she asks 32)
+15:57:15 --- tick 686 | cash 71 | cards 43 ---
+15:57:15 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+15:57:15 Chato card buy 927 (RET-07) ended: closed  paid None (worth 22 to us)
+15:57:21 Abuela: buying RET-06 (uncommon), worth 22 to us, cap 21, his list 25
+15:57:21 Abuela buy 938 RET-06: ours [] his [] cap 21 -> offer 12 (opening bid)
+15:57:25 LISTED spare LAV-03 (asset 774) at 6 on v07; the copy is worth 4.0 to us
+15:57:25 SWAP asset 773 (LAT-01) for LAV-11 on v02
+15:57:46 --- tick 687 | cash 71 | cards 44 ---
+15:57:47 Abuela buy 938 RET-06: ours [12] his [] cap 21 -> wait None (no reply yet)
+15:57:48 Chato: offering LAV-08 (worth 10.0 to us), floor 16, his list 26
+15:57:48 Chato thread 939: ours [] his [] floor 16 -> offer 26 (opening ask at his list price)
+15:57:49 Pilar: cancelled listing 9984 of LAV-08 before offering it
+15:57:49 Pilar: offering LAV-08 (worth 10.0 to us), floor 16, his list 25
+15:57:50 Pilar thread 940: ours [] his [] floor 16 -> offer 25 (opening ask at his list price)
+15:58:15 --- tick 688 | cash 71 | cards 44 ---
+15:58:17 Abuela buy 938 RET-06: ours [12] his [29] cap 21 -> offer 16 (mood unknown, gap 17, step 4 (k=0.25))
+15:58:18 Chato thread 939: ours [26] his [13] floor 16 -> offer 21 (he is yielding, gap 13, step 5 (k=0.35))
+15:58:19 Pilar thread 940: ours [25] his [16] floor 16 -> offer 22 (he is yielding, gap 9, step 3 (k=0.35))
+15:58:45 --- tick 689 | cash 71 | cards 44 ---
+15:58:46 Abuela buy 938 RET-06: ours [12, 16] his [29] cap 21 -> wait None (she has not answered our last offer)
+15:58:47 Chato thread 939: ours [26, 21] his [13, 13] floor 16 -> offer 18 (he is firm, gap 8, step 3 (k=0.35))
+15:58:49 Pilar thread 940: ours [25, 22] his [16, 16] floor 16 -> offer 20 (he is firm, gap 6, step 2 (k=0.35))
+15:59:15 --- tick 690 | cash 71 | cards 44 ---
+15:59:16 Abuela buy 938 RET-06: ours [12, 16] his [29, 25] cap 21 -> offer 17 (mood yielding, gap 9, step 1 (k=0.25, she out-conceded us, slow down))
+15:59:17 Chato thread 939: ours [26, 21, 18] his [13, 13] floor 16 -> wait None (he has not answered our last ask)
+15:59:18 Pilar thread 940: ours [25, 22, 20] his [16, 16, 16] floor 16 -> accept 16 (he repeated 16 three times and it clears our soft floor 11)
+15:59:19 PILAR SELL LAV-08 at 16: it was worth 10.0 to us
+15:59:45 --- tick 691 | cash 87 | cards 43 ---
+15:59:46 Abuela buy 938 RET-06: ours [12, 16, 17] his [29, 25] cap 21 -> wait None (she has not answered our last offer)
+15:59:47 Chato thread 939: ours [26, 21, 18] his [13, 13, 13] floor 16 -> offer 16 (he is firm, gap 5, step 2 (k=0.5))
+15:59:48 Pilar negotiation 940 ended: deal  received 16
+16:00:17 --- tick 692 | cash 87 | cards 43 ---
+16:00:18 Abuela buy 938 RET-06: ours [12, 16, 17] his [29, 25, 24] cap 21 -> offer 18 (mood yielding, gap 7, step 1 (k=0.25, she out-conceded us, slow down))
+16:00:18 Chato negotiation 939 ended: closed not_owner received None
+16:00:47 --- tick 693 | cash 87 | cards 43 ---
+16:00:48 Abuela buy 938 RET-06: ours [12, 16, 17, 18] his [29, 25, 24] cap 21 -> wait None (she has not answered our last offer)
+16:01:15 --- tick 694 | cash 87 | cards 43 ---
+16:01:16 Abuela buy 938 RET-06: ours [12, 16, 17, 18] his [29, 25, 24, 23] cap 21 -> offer 19 (mood yielding, gap 5, step 1 (k=0.25, she out-conceded us, slow down))
+16:01:45 --- tick 695 | cash 87 | cards 43 ---
+16:01:52 Abuela buy 938 RET-06: ours [12, 16, 17, 18, 19] his [29, 25, 24, 23, 22] cap 21 -> offer 20 (mood yielding, gap 3, step 1 (k=0.25, she out-conceded us, slow down))
+16:02:15 --- tick 696 | cash 87 | cards 43 ---
+16:02:16 Abuela buy 938 RET-06: ours [12, 16, 17, 18, 19, 20] his [29, 25, 24, 23, 22] cap 21 -> wait None (she has not answered our last offer)
+16:02:46 --- tick 697 | cash 87 | cards 43 ---
+16:02:47 Abuela buy 938 RET-06: ours [12, 16, 17, 18, 19, 20] his [29, 25, 24, 23, 22, 21] cap 21 -> accept 21 (her final is under our cap)
+16:02:47 ABUELA BUY RET-06 at 21: worth 22 to us (+2)
+16:03:15 --- tick 698 | cash 66 | cards 44 ---
+16:03:16 Abuela card buy 938 (RET-06) ended: deal  paid 5 (worth 22 to us)
+16:03:46 --- tick 699 | cash 66 | cards 44 ---
+16:03:46 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:04:17 --- tick 700 | cash 66 | cards 44 ---
+16:04:17 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:04:24 SWAP asset 81 (MAL-02) for LAV-12 on v02
+16:04:45 --- tick 701 | cash 66 | cards 44 ---
+16:04:45 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:04:53 LISTED spare LAT-04 (asset 494) at 6 on v07; the copy is worth 0.7 to us
+16:04:53 SWAP asset 493 (LAT-04) for SAL-12 on v02
+16:04:54 LISTED spare SAL-03 (asset 599) at 13 on v07; the copy is worth 2.8 to us
+16:05:04 smart_agent started (deterministic, no LLM)
+16:05:04 --- tick 701 | cash 66 | cards 44 ---
+16:05:04 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:05:18 --- tick 702 | cash 66 | cards 44 ---
+16:05:18 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:05:45 --- tick 703 | cash 66 | cards 44 ---
+16:05:45 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:06:16 --- tick 704 | cash 66 | cards 44 ---
+16:06:16 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:06:51 --- tick 705 | cash 66 | cards 44 ---
+16:06:51 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:07:16 --- tick 706 | cash 66 | cards 44 ---
+16:07:16 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:07:16 Chato: buying SAL-09 (rare), worth 150 to us, cap 66, his list 77
+16:07:17 Chato buy 976 SAL-09: ours [] his [] cap 66 -> offer 38 (opening bid)
+16:07:46 --- tick 707 | cash 66 | cards 44 ---
+16:07:47 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:07:47 Chato buy 976 SAL-09: ours [38] his [] cap 66 -> wait None (no reply yet)
+16:07:51 Abuela: buying RET-07 (uncommon), worth 22 to us, cap 21, his list 25
+16:07:51 Abuela buy 979 RET-07: ours [] his [] cap 21 -> offer 12 (opening bid)
+16:08:15 --- tick 708 | cash 66 | cards 44 ---
+16:08:16 Chato buy 976 SAL-09: ours [38] his [97] cap 66 -> offer 53 (mood unknown, gap 59, step 15 (k=0.25))
+16:08:17 Abuela buy 979 RET-07: ours [12] his [] cap 21 -> wait None (no reply yet)
+16:08:46 --- tick 709 | cash 66 | cards 44 ---
+16:08:46 Chato buy 976 SAL-09: ours [38, 53] his [97] cap 66 -> wait None (she has not answered our last offer)
+16:08:47 Abuela buy 979 RET-07: ours [12] his [29] cap 21 -> offer 16 (mood unknown, gap 17, step 4 (k=0.25))
+16:09:16 --- tick 710 | cash 66 | cards 44 ---
+16:09:16 Chato buy 976 SAL-09: ours [38, 53] his [97, 97] cap 66 -> offer 54 (mood firm, gap 44, step 1 (k=0.25, she is firm above cap, token step))
+16:09:17 Abuela buy 979 RET-07: ours [12, 16] his [29] cap 21 -> wait None (she has not answered our last offer)
+16:09:47 --- tick 711 | cash 66 | cards 44 ---
+16:09:47 Chato buy 976 SAL-09: ours [38, 53, 54] his [97, 97] cap 66 -> wait None (she has not answered our last offer)
+16:09:48 Abuela buy 979 RET-07: ours [12, 16] his [29, 26] cap 21 -> offer 18 (mood yielding, gap 10, step 2 (k=0.25))
+16:10:17 --- tick 712 | cash 66 | cards 44 ---
+16:10:18 Chato buy 976 SAL-09: ours [38, 53, 54] his [97, 97, 96] cap 66 -> offer 59 (mood yielding, gap 42, step 5 (k=0.25, she out-conceded us, slow down))
+16:10:21 Abuela buy 979 RET-07: ours [12, 16, 18] his [29, 26, 25] cap 21 -> offer 20 (mood yielding, gap 7, step 2 (k=0.25))
+16:10:48 --- tick 713 | cash 66 | cards 44 ---
+16:10:52 Chato buy 976 SAL-09: ours [38, 53, 54, 59] his [97, 97, 96, 93] cap 66 -> offer 66 (mood yielding, gap 34, step 8 (k=0.25))
+16:10:53 Abuela buy 979 RET-07: ours [12, 16, 18, 20] his [29, 26, 25, 24] cap 21 -> offer 21 (mood yielding, gap 4, step 1 (k=0.25))
+16:10:57 market opportunities: [{"kind": "sell", "offer": 10571, "ref": "MAL-01", "price": 5, "asset": 749, "value": 0.5, "gain": 4.5, "roi": 4.5}]
+16:10:57 MARKET SELL MAL-01 at 5: value 0.5 gain 4.5 roi 4.5
+16:11:16 --- tick 714 | cash 71 | cards 43 ---
+16:11:16 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66] his [97, 97, 96, 93] cap 71 -> wait None (she has not answered our last offer)
+16:11:17 Abuela buy 979 RET-07: ours [12, 16, 18, 20, 21] his [29, 26, 25, 24] cap 21 -> wait None (she has not answered our last offer)
+16:11:46 --- tick 715 | cash 71 | cards 43 ---
+16:11:47 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66] his [97, 97, 96, 93, 89] cap 71 -> offer 71 (mood yielding, gap 23, step 6 (k=0.25))
+16:11:47 Abuela buy 979 RET-07: ours [12, 16, 18, 20, 21] his [29, 26, 25, 24, 24] cap 21 -> walk None (at our cap 21, she asks 24)
+16:12:15 --- tick 716 | cash 71 | cards 43 ---
+16:12:16 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89] cap 71 -> wait None (she has not answered our last offer)
+16:12:17 Abuela card buy 979 (RET-07) ended: closed  paid None (worth 22 to us)
+16:12:46 --- tick 717 | cash 71 | cards 43 ---
+16:12:47 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:12:47 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:13:17 --- tick 718 | cash 71 | cards 43 ---
+16:13:17 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:13:18 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:13:47 --- tick 719 | cash 71 | cards 43 ---
+16:13:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:13:48 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:14:16 --- tick 720 | cash 71 | cards 43 ---
+16:14:16 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:14:17 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:14:48 --- tick 721 | cash 71 | cards 43 ---
+16:14:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:14:49 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:14:55 SWAP asset 822 (LAT-04) for MAL-12 on v02
+16:15:16 --- tick 722 | cash 71 | cards 43 ---
+16:15:16 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:15:17 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:15:48 --- tick 723 | cash 71 | cards 43 ---
+16:15:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:15:49 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:16:17 --- tick 724 | cash 71 | cards 43 ---
+16:16:17 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:16:19 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:16:47 --- tick 725 | cash 71 | cards 43 ---
+16:16:47 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:16:47 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:17:18 --- tick 726 | cash 71 | cards 43 ---
+16:17:18 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:17:19 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:17:47 --- tick 727 | cash 71 | cards 43 ---
+16:17:47 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:17:47 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:18:17 --- tick 728 | cash 71 | cards 43 ---
+16:18:18 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:18:19 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:18:25 LISTED spare MAL-03 (asset 745) at 13 on v07; the copy is worth 1.2 to us
+16:18:25 SWAP asset 743 (MAL-01) for RET-12 on v02
+16:18:49 --- tick 729 | cash 71 | cards 43 ---
+16:18:49 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:18:50 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:19:17 --- tick 730 | cash 71 | cards 43 ---
+16:19:17 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:19:18 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:19:48 --- tick 731 | cash 71 | cards 43 ---
+16:19:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:19:48 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:20:17 --- tick 732 | cash 71 | cards 43 ---
+16:20:17 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:20:18 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:20:49 --- tick 733 | cash 71 | cards 43 ---
+16:20:49 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:20:50 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:21:18 --- tick 734 | cash 71 | cards 43 ---
+16:21:18 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:21:18 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:21:47 --- tick 735 | cash 71 | cards 43 ---
+16:21:50 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:21:50 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:22:17 --- tick 736 | cash 71 | cards 43 ---
+16:22:17 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:22:18 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:22:26 BID 2 for MAL-05 on v07; worth 5.0 to us
+16:22:50 --- tick 737 | cash 71 | cards 43 ---
+16:22:51 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:22:51 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:22:56 LISTED spare LAV-02 (asset 748) at 13 on v07; the copy is worth 4.0 to us
+16:22:56 SWAP asset 747 (LAV-01) for LAT-12 on v02
+16:23:18 --- tick 738 | cash 71 | cards 43 ---
+16:23:19 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:23:19 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:23:47 --- tick 739 | cash 71 | cards 43 ---
+16:23:47 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:23:48 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:24:19 --- tick 740 | cash 71 | cards 43 ---
+16:24:19 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:24:20 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:24:47 --- tick 741 | cash 71 | cards 43 ---
+16:24:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:24:48 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:24:56 BID 57 for RET-09 on v07; worth 63.0 to us
+16:24:56 BID 9 for MAL-06 on v07; worth 12.5 to us
+16:25:17 --- tick 742 | cash 71 | cards 43 ---
+16:25:19 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:25:20 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:25:47 --- tick 743 | cash 71 | cards 43 ---
+16:25:47 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:25:48 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:26:17 --- tick 744 | cash 71 | cards 43 ---
+16:26:17 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:26:18 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:26:48 --- tick 745 | cash 71 | cards 43 ---
+16:26:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:26:48 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:27:17 --- tick 746 | cash 71 | cards 43 ---
+16:27:17 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:27:18 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:27:48 --- tick 747 | cash 71 | cards 43 ---
+16:27:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:27:49 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:27:56 LISTED spare LAV-03 (asset 774) at 8 on v07; the copy is worth 4.0 to us
+16:27:56 SWAP asset 773 (LAT-01) for LAV-11 on v02
+16:28:20 --- tick 748 | cash 71 | cards 43 ---
+16:28:20 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:28:20 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:28:47 --- tick 749 | cash 71 | cards 43 ---
+16:28:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:28:48 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:29:18 --- tick 750 | cash 71 | cards 43 ---
+16:29:18 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:29:18 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:29:49 --- tick 751 | cash 71 | cards 43 ---
+16:29:50 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:29:51 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:30:17 --- tick 752 | cash 71 | cards 43 ---
+16:30:18 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:30:18 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:30:48 --- tick 753 | cash 71 | cards 43 ---
+16:30:48 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:30:49 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:31:18 --- tick 754 | cash 71 | cards 43 ---
+16:31:18 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:31:19 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:31:29 smart_agent started (deterministic, no LLM)
+16:31:30 --- tick 754 | cash 71 | cards 43 ---
+16:31:30 Abuela: a pack is worth 11.2 to us (cap 10) and she never goes under 20: no deal
+16:31:30 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:31:34 workshop: craft common -> uncommon with [('LAV-01', 0.24), ('LAV-02', 0.24), ('LAV-03', 0.24)] | E_out 5.36 surplus 4.64
+16:31:34 workshop: cancelled listing 11147 of asset 747
+16:31:35 workshop: cancelled listing 11146 of asset 748
+16:31:35 workshop: cancelled listing 11324 of asset 774
+16:31:35 WORKSHOP CRAFT common x3 -> RET-06
+16:31:48 --- tick 755 | cash 71 | cards 41 ---
+16:31:48 Abuela: a pack is worth 11.9 to us (cap 10) and she never goes under 20: no deal
+16:31:49 Chato buy 976 SAL-09: ours [38, 53, 54, 59, 66, 71] his [97, 97, 96, 93, 89, 84] cap 71 -> wait None (at our cap, letting her move)
+16:31:49 Pilar: offering RET-06 (worth 5.6 to us), floor 10, his list 27
+16:31:50 Pilar thread 1047: ours [] his [] floor 10 -> offer 27 (opening ask at his list price)
+16:32:18 --- tick 756 | cash 71 | cards 41 ---
+16:32:19 Abuela: a pack is worth 11.9 to us (cap 10) and she never goes under 20: no deal
+16:32:19 Chato card buy 976 (SAL-09) ended: closed  paid None (worth 150 to us)
+16:32:23 Chato: cancelled listing 11445 of RET-06 before offering it
+16:32:23 Chato: offering RET-06 (worth 5.6 to us), floor 10, his list 26
+16:32:23 Chato thread 1049: ours [] his [] floor 10 -> offer 26 (opening ask at his list price)
+16:32:23 Pilar thread 1047: ours [27] his [22] floor 10 -> offer 25 (he is yielding, gap 5, step 2 (k=0.35))
+16:32:48 --- tick 757 | cash 71 | cards 41 ---
+16:32:48 Abuela: a pack is worth 11.9 to us (cap 10) and she never goes under 20: no deal
+16:32:54 Chato thread 1049: ours [26] his [13] floor 10 -> offer 21 (he is yielding, gap 13, step 5 (k=0.35))
+16:32:55 Pilar thread 1047: ours [27, 25] his [22, 22] floor 10 -> offer 24 (he is firm, gap 3, step 1 (k=0.35))
+16:33:17 smart_agent started (deterministic, no LLM)
+16:33:18 dealer traits: {'abuela': 0.585, 'chato': 1.585, 'pilar': 1.28}
+16:33:18 --- tick 758 | cash 71 | cards 41 ---
+16:33:18 Abuela: a pack is worth 11.9 to us (cap 10) and she never goes under 20: no deal
+16:33:23 Chato thread 1049: ours [26, 21] his [13, 13] floor 10 -> offer 17 (he is firm, gap 8, step 4 (k=0.555))
+16:33:23 Pilar thread 1047: ours [27, 25, 24] his [22, 22, 22] floor 10 -> accept 22 (he repeated 22 three times and it clears our soft floor 7)
+16:33:24 PILAR SELL RET-06 at 22: it was worth 5.6 to us
+16:33:48 --- tick 759 | cash 93 | cards 40 ---
+16:33:48 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:33:49 Chato thread 1049: ours [26, 21, 17] his [13, 13] floor 10 -> wait None (he has not answered our last ask)
+16:33:49 Pilar negotiation 1047 ended: deal  received 22
+16:33:56 workshop: craft common -> uncommon with [('SAL-03', 0.66), ('LAT-01', 0.9), ('LAT-04', 0.9)] | E_out 6.1 surplus 3.64
+16:33:56 workshop: cancelled listing 10286 of asset 599
+16:33:56 workshop: cancelled listing 11325 of asset 773
+16:33:56 workshop: cancelled listing 10285 of asset 493
+16:33:56 WORKSHOP CRAFT common x3 -> RET-07
+16:34:20 --- tick 760 | cash 93 | cards 38 ---
+16:34:20 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:34:21 Abuela: buying RET-08 (uncommon), worth 22 to us, cap 21, his list 25
+16:34:21 Abuela buy 1055 RET-08: ours [] his [] cap 21 -> offer 4 (opening bid)
+16:34:22 Chato thread 1049: ours [26, 21, 17] his [13, 13, 13] floor 10 -> offer 15 (he is firm, gap 4, step 2 (k=0.555))
+16:34:49 --- tick 761 | cash 93 | cards 38 ---
+16:34:50 Abuela buy 1055 RET-08: ours [4] his [] cap 21 -> wait None (no reply yet)
+16:34:50 Chato negotiation 1049 ended: closed not_owner received None
+16:34:55 SWAP asset 81 (MAL-02) for LAV-12 on v02
+16:35:21 --- tick 762 | cash 93 | cards 38 ---
+16:35:22 Abuela buy 1055 RET-08: ours [4] his [29] cap 21 -> offer 8 (mood unknown, gap 25, step 4 (k=0.146))
+16:35:28 SWAP asset 494 (LAT-04) for SAL-12 on v02
+16:35:55 --- tick 763 | cash 93 | cards 38 ---
+16:35:56 Abuela buy 1055 RET-08: ours [4, 8] his [29, 25] cap 21 -> offer 9 (mood yielding, gap 17, step 1 (k=0.146, she out-conceded us, slow down))
+16:36:48 --- tick 765 | cash 93 | cards 38 ---
+16:36:49 Abuela buy 1055 RET-08: ours [4, 8, 9] his [29, 25, 23] cap 21 -> offer 10 (mood yielding, gap 14, step 1 (k=0.146, she out-conceded us, slow down))
+16:36:57 workshop: craft common -> uncommon with [('LAT-04', 0.71), ('MAL-01', 0.81), ('MAL-02', 0.81)] | E_out 6.48 surplus 4.15
+16:36:57 workshop: cancelled listing 11584 of asset 494
+16:36:57 workshop: cancelled listing 10971 of asset 743
+16:36:57 workshop: cancelled listing 11563 of asset 81
+16:36:57 WORKSHOP CRAFT common x3 -> SAL-07
+16:37:00 smart_agent started (deterministic, no LLM)
+16:37:01 --- tick 765 | cash 93 | cards 36 ---
+16:37:01 opened pack: ['RET-04', 'LAV-04', 'MAL-01']
+16:37:02 Abuela buy 1055 RET-08: ours [4, 8, 9, 10] his [29, 25, 23] cap 21 -> wait None (she has not answered our last offer)
+16:37:03 Pilar: offering SAL-07 (worth 6.9 to us), floor 12, his list 27
+16:37:03 Pilar thread 1065: ours [] his [] floor 12 -> offer 27 (opening ask at his list price)
+16:37:05 LISTED spare LAV-04 (asset 949) at 8 on v07; the copy is worth 4.0 to us
+16:37:05 SWAP asset 950 (MAL-01) for LAV-12 on v02
+16:37:06 LISTED spare RET-04 (asset 948) at 5 on v07; the copy is worth 2.2 to us
+16:37:19 --- tick 766 | cash 98 | cards 38 ---
+16:37:20 Abuela buy 1055 RET-08: ours [4, 8, 9, 10] his [29, 25, 23] cap 21 -> wait None (she has not answered our last offer)
+16:37:21 Pilar thread 1065: ours [27] his [22] floor 12 -> offer 25 (he is yielding, gap 5, step 2 (k=0.448))
+16:37:48 --- tick 767 | cash 98 | cards 38 ---
+16:37:49 Abuela buy 1055 RET-08: ours [4, 8, 9, 10] his [29, 25, 23, 22] cap 21 -> offer 11 (mood yielding, gap 12, step 1 (k=0.146, she out-conceded us, slow down))
+16:37:50 Pilar thread 1065: ours [27, 25] his [22] floor 12 -> wait None (he has not answered our last ask)
+16:38:18 --- tick 768 | cash 98 | cards 38 ---
+16:38:19 Abuela buy 1055 RET-08: ours [4, 8, 9, 10, 11] his [29, 25, 23, 22] cap 21 -> wait None (she has not answered our last offer)
+16:38:20 Pilar thread 1065: ours [27, 25] his [22, 22] floor 12 -> offer 24 (he is firm, gap 3, step 1 (k=0.448))
+16:38:48 --- tick 769 | cash 98 | cards 38 ---
+16:38:49 Abuela buy 1055 RET-08: ours [4, 8, 9, 10, 11] his [29, 25, 23, 22, 21] cap 21 -> accept 21 (her final is under our cap)
+16:38:50 ABUELA BUY RET-08 at 21: worth 22 to us (+2)
+16:38:50 Pilar thread 1065: ours [27, 25, 24] his [22, 22] floor 12 -> wait None (he has not answered our last ask)
+16:39:20 --- tick 770 | cash 77 | cards 39 ---
+16:39:21 Abuela card buy 1055 (RET-08) ended: deal  paid 16 (worth 22 to us)
+16:39:21 Pilar thread 1065: ours [27, 25, 24] his [22, 22, 23] floor 12 -> accept 23 (his bid is within reach of our ask)
+16:39:22 PILAR SELL SAL-07 at 23: it was worth 6.9 to us
+16:39:28 workshop: craft common -> uncommon with [('LAV-04', 0.12), ('LAT-04', 0.39), ('MAL-01', 0.45)] | E_out 7.04 surplus 6.08
+16:39:28 workshop: cancelled listing 11659 of asset 949
+16:39:29 workshop: cancelled listing 10799 of asset 822
+16:39:29 workshop: cancelled listing 11660 of asset 950
+16:39:29 WORKSHOP CRAFT common x3 -> MAL-08
+16:39:51 --- tick 771 | cash 100 | cards 36 ---
+16:39:51 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:39:52 Pilar negotiation 1065 ended: deal  received 7
+16:39:52 Pilar: offering MAL-08 (worth 3.1 to us), floor 7, his list 25
+16:39:52 Pilar thread 1077: ours [] his [] floor 7 -> offer 25 (opening ask at his list price)
+16:40:18 --- tick 772 | cash 100 | cards 36 ---
+16:40:18 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:40:19 Pilar thread 1077: ours [25] his [] floor 7 -> wait None (no reply yet)
+16:40:48 --- tick 773 | cash 100 | cards 36 ---
+16:40:49 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:40:49 Pilar thread 1077: ours [25] his [16] floor 7 -> offer 21 (he is yielding, gap 9, step 4 (k=0.448))
+16:41:18 --- tick 774 | cash 100 | cards 36 ---
+16:41:19 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:41:19 Pilar thread 1077: ours [25, 21] his [16] floor 7 -> wait None (he has not answered our last ask)
+16:41:34 smart_agent started (deterministic, no LLM)
+16:41:35 --- tick 774 | cash 100 | cards 36 ---
+16:41:35 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:41:36 Pilar thread 1077: ours [25, 21] his [16, 16] floor 7 -> offer 19 (he is firm, gap 5, step 2 (k=0.448))
+16:41:53 --- tick 775 | cash 100 | cards 36 ---
+16:41:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:41:54 Pilar thread 1077: ours [25, 21, 19] his [16, 16, 17] floor 7 -> offer 18 (he is yielding, gap 2, step 1 (k=0.448))
+16:41:59 workshop: no craft clears the margin 3.0 | market {"common": [5.0, 0.1], "uncommon": [18.5, 0.75], "rare": [68.5, 0.9], "epic": [184.8, 0.3]}
+16:42:19 --- tick 776 | cash 118 | cards 35 ---
+16:42:19 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:42:19 Pilar negotiation 1077 ended: deal  received 18
+16:42:28 smart_agent started (deterministic, no LLM)
+16:42:29 --- tick 776 | cash 118 | cards 35 ---
+16:42:29 learned parameters for abuela: tol_share 0.100 from 3 deals (median gap 0.308 of list)
+16:42:29 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:42:29 learned parameters for pilar: tol_share 0.100 from 4 deals (median gap 0.115 of list)
+16:42:48 --- tick 777 | cash 118 | cards 35 ---
+16:42:48 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:43:06 smart_agent started (deterministic, no LLM)
+16:43:06 --- tick 777 | cash 118 | cards 35 ---
+16:43:06 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:43:18 --- tick 778 | cash 118 | cards 35 ---
+16:43:18 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:43:49 --- tick 779 | cash 118 | cards 35 ---
+16:43:49 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:44:19 --- tick 780 | cash 118 | cards 35 ---
+16:44:19 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:44:31 workshop: no craft clears the margin 3.0 | market {"common": [5.0, 0.08], "uncommon": [18.0, 0.75], "rare": [68.5, 0.9], "epic": [184.8, 0.3]}
+16:44:49 --- tick 781 | cash 50 | cards 36 ---
+16:44:49 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:45:20 --- tick 782 | cash 50 | cards 36 ---
+16:45:20 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:45:51 --- tick 783 | cash 50 | cards 36 ---
+16:45:51 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:46:19 --- tick 784 | cash 50 | cards 36 ---
+16:46:19 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:46:49 --- tick 785 | cash 50 | cards 36 ---
+16:46:49 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:46:56 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.09], "uncommon": [18.5, 0.7], "rare": [68.0, 0.9], "epic": [190.8, 0.3]}
+16:47:19 --- tick 786 | cash 50 | cards 36 ---
+16:47:19 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:47:49 --- tick 787 | cash 50 | cards 36 ---
+16:47:49 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:48:20 --- tick 788 | cash 50 | cards 36 ---
+16:48:20 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:48:49 --- tick 789 | cash 50 | cards 36 ---
+16:48:49 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:48:55 SWAP asset 745 (MAL-03) for LAV-12 on v02
+16:49:20 --- tick 790 | cash 50 | cards 36 ---
+16:49:20 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:49:29 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.12], "uncommon": [18.0, 0.7], "rare": [67.5, 0.9], "epic": [190.8, 0.3]}
+16:49:50 --- tick 791 | cash 50 | cards 36 ---
+16:49:50 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:50:22 --- tick 792 | cash 50 | cards 36 ---
+16:50:22 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:50:50 --- tick 793 | cash 50 | cards 36 ---
+16:50:50 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:51:20 --- tick 794 | cash 50 | cards 36 ---
+16:51:20 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:51:51 --- tick 795 | cash 50 | cards 36 ---
+16:51:51 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:51:58 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.11], "uncommon": [18.0, 0.71], "rare": [67.5, 0.9], "epic": [189.0, 0.3]}
+16:52:19 --- tick 796 | cash 50 | cards 36 ---
+16:52:19 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:52:53 --- tick 797 | cash 50 | cards 36 ---
+16:52:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:53:20 --- tick 798 | cash 50 | cards 36 ---
+16:53:20 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:53:50 --- tick 799 | cash 50 | cards 36 ---
+16:53:50 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:54:20 --- tick 800 | cash 50 | cards 36 ---
+16:54:20 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:54:28 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.11], "uncommon": [18.5, 0.71], "rare": [67.0, 0.9], "epic": [189.0, 0.3]}
+16:54:51 --- tick 801 | cash 50 | cards 36 ---
+16:54:51 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:55:21 --- tick 802 | cash 50 | cards 36 ---
+16:55:21 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:55:30 BID 44 for LAT-09 on v07; worth 49.0 to us
+16:55:30 BID 2 for MAL-05 on v07; worth 5.0 to us
+16:55:30 BID 4 for LAT-03 on v07; worth 7.0 to us
+16:55:54 --- tick 803 | cash 50 | cards 36 ---
+16:55:54 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:56:20 --- tick 804 | cash 50 | cards 36 ---
+16:56:20 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:56:53 --- tick 805 | cash 50 | cards 36 ---
+16:56:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:57:00 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.13], "uncommon": [19.0, 0.61], "rare": [67.0, 0.9], "epic": [189.0, 0.3]}
+16:57:23 --- tick 806 | cash 50 | cards 36 ---
+16:57:23 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:57:51 --- tick 807 | cash 50 | cards 36 ---
+16:57:51 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:58:23 --- tick 808 | cash 50 | cards 36 ---
+16:58:23 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:58:51 --- tick 809 | cash 50 | cards 36 ---
+16:58:51 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:59:23 --- tick 810 | cash 50 | cards 36 ---
+16:59:23 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+16:59:31 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.1], "uncommon": [19.0, 0.62], "rare": [67.0, 0.9], "epic": [189.0, 0.3]}
+16:59:53 --- tick 811 | cash 50 | cards 36 ---
+16:59:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:00:22 --- tick 812 | cash 50 | cards 36 ---
+17:00:22 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:00:54 --- tick 813 | cash 50 | cards 36 ---
+17:00:54 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:01:22 --- tick 814 | cash 50 | cards 36 ---
+17:01:22 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:01:53 --- tick 815 | cash 50 | cards 36 ---
+17:01:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:02:01 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.1], "uncommon": [19.0, 0.62], "rare": [67.5, 0.9], "epic": [189.0, 0.3]}
+17:02:22 --- tick 816 | cash 50 | cards 36 ---
+17:02:22 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:02:52 --- tick 817 | cash 50 | cards 36 ---
+17:02:52 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:03:22 --- tick 818 | cash 50 | cards 36 ---
+17:03:22 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:03:53 --- tick 819 | cash 50 | cards 36 ---
+17:03:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:04:23 --- tick 820 | cash 50 | cards 36 ---
+17:04:23 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:04:34 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.17], "uncommon": [19.0, 0.63], "rare": [67.5, 0.9], "epic": [189.0, 0.3]}
+17:04:52 --- tick 821 | cash 50 | cards 36 ---
+17:04:52 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:05:23 --- tick 822 | cash 50 | cards 36 ---
+17:05:23 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:05:57 --- tick 823 | cash 50 | cards 36 ---
+17:05:57 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:06:23 --- tick 824 | cash 50 | cards 36 ---
+17:06:23 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:06:54 --- tick 825 | cash 50 | cards 36 ---
+17:06:54 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:07:02 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.14], "uncommon": [19.0, 0.65], "rare": [67.5, 0.9], "epic": [189.0, 0.3]}
+17:07:24 --- tick 826 | cash 50 | cards 36 ---
+17:07:24 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:07:53 --- tick 827 | cash 50 | cards 36 ---
+17:07:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:08:23 --- tick 828 | cash 50 | cards 36 ---
+17:08:23 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:08:55 --- tick 829 | cash 50 | cards 36 ---
+17:08:55 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:09:23 --- tick 830 | cash 50 | cards 36 ---
+17:09:23 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:09:31 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.13], "uncommon": [19.0, 0.64], "rare": [67.5, 0.9], "epic": [189.0, 0.3]}
+17:09:53 --- tick 831 | cash 50 | cards 36 ---
+17:09:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:10:23 --- tick 832 | cash 50 | cards 36 ---
+17:10:23 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:10:53 --- tick 833 | cash 50 | cards 36 ---
+17:10:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:11:26 --- tick 834 | cash 50 | cards 36 ---
+17:11:26 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:11:53 --- tick 835 | cash 50 | cards 36 ---
+17:11:53 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:12:01 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.15], "uncommon": [19.0, 0.74], "rare": [67.0, 0.9], "epic": [189.0, 0.3]}
+17:12:26 --- tick 836 | cash 50 | cards 36 ---
+17:12:26 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:12:55 --- tick 837 | cash 50 | cards 36 ---
+17:12:55 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:13:30 --- tick 838 | cash 50 | cards 36 ---
+17:13:30 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:13:54 --- tick 839 | cash 50 | cards 36 ---
+17:13:54 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:14:28 --- tick 840 | cash 50 | cards 36 ---
+17:14:28 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:14:37 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.11], "uncommon": [19.0, 0.8], "rare": [67.0, 0.9], "epic": [189.0, 0.3]}
+17:14:54 --- tick 841 | cash 50 | cards 36 ---
+17:14:54 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:15:27 --- tick 842 | cash 50 | cards 36 ---
+17:15:27 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:15:54 --- tick 843 | cash 50 | cards 36 ---
+17:15:54 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:16:24 --- tick 844 | cash 50 | cards 36 ---
+17:16:24 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:16:54 --- tick 845 | cash 50 | cards 36 ---
+17:16:54 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:17:04 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.17], "uncommon": [19.0, 0.82], "rare": [64.5, 0.9], "epic": [189.0, 0.3]}
+17:17:26 --- tick 846 | cash 50 | cards 36 ---
+17:17:26 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:17:54 --- tick 847 | cash 50 | cards 36 ---
+17:17:54 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:18:25 --- tick 848 | cash 50 | cards 36 ---
+17:18:25 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:18:55 --- tick 849 | cash 50 | cards 36 ---
+17:18:55 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:19:27 --- tick 850 | cash 50 | cards 36 ---
+17:19:27 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:19:32 SWAP asset 745 (MAL-03) for LAV-12 on v02
+17:19:34 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.15], "uncommon": [19.0, 0.78], "rare": [64.5, 0.9], "epic": [189.0, 0.3]}
+17:19:56 --- tick 851 | cash 50 | cards 36 ---
+17:19:56 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:20:25 --- tick 852 | cash 50 | cards 36 ---
+17:20:25 Abuela: a pack is worth 12.0 to us (cap 10) and she never goes under 20: no deal
+17:20:55 --- tick 853 | cash 66 | cards 35 ---
+17:20:55 Abuela: a pack is worth 12.1 to us (cap 10) and she never goes under 20: no deal
+17:21:02 BID 9 for MAL-06 on v07; worth 12.5 to us
+17:21:03 BID 6 for RET-02 on v07; worth 9.0 to us
+17:21:25 --- tick 854 | cash 66 | cards 35 ---
+17:21:25 Abuela: a pack is worth 12.1 to us (cap 10) and she never goes under 20: no deal
+17:21:55 --- tick 855 | cash 66 | cards 35 ---
+17:21:55 Abuela: a pack is worth 12.1 to us (cap 10) and she never goes under 20: no deal
+17:22:03 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.15], "uncommon": [19.0, 0.78], "rare": [62.0, 0.9], "epic": [189.0, 0.3]}
+17:22:18 smart_agent started (deterministic, no LLM)
+17:22:19 --- tick 855 | cash 66 | cards 35 ---
+17:22:19 Abuela: a pack is worth 12.1 to us (cap 10) and she never goes under 20: no deal
+17:22:19 learned parameters for pilar: tol_share 0.087 from 4 deals (median gap 0.058 of list)
+17:22:27 --- tick 856 | cash 66 | cards 35 ---
+17:22:27 Abuela: a pack is worth 12.1 to us (cap 10) and she never goes under 20: no deal
+17:22:55 --- tick 857 | cash 66 | cards 35 ---
+17:22:55 Abuela: a pack is worth 12.1 to us (cap 10) and she never goes under 20: no deal
+17:23:26 --- tick 858 | cash 66 | cards 35 ---
+17:23:26 Abuela: a pack is worth 12.1 to us (cap 10) and she never goes under 20: no deal
+17:23:55 --- tick 859 | cash 66 | cards 35 ---
+17:23:55 Abuela: a pack is worth 12.1 to us (cap 10) and she never goes under 20: no deal
+17:24:25 --- tick 860 | cash 66 | cards 35 ---
+17:24:25 Abuela: a pack is worth 12.1 to us (cap 10) and she never goes under 20: no deal
+17:24:34 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.18], "uncommon": [19.0, 0.75], "rare": [62.0, 0.9], "epic": [167.0, 0.3]}
+17:24:56 --- tick 861 | cash 60 | cards 36 ---
+17:24:56 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:25:25 --- tick 862 | cash 60 | cards 36 ---
+17:25:25 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:25:55 --- tick 863 | cash 60 | cards 36 ---
+17:25:55 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:26:02 BID 44 for LAT-09 on v07; worth 49.0 to us
+17:26:02 BID 2 for MAL-05 on v07; worth 5.0 to us
+17:26:03 BID 4 for LAT-03 on v07; worth 7.0 to us
+17:26:27 --- tick 864 | cash 60 | cards 36 ---
+17:26:27 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:26:55 --- tick 865 | cash 60 | cards 36 ---
+17:26:55 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:27:03 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.13], "uncommon": [19.0, 0.74], "rare": [62.5, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.75]}
+17:27:25 --- tick 866 | cash 60 | cards 36 ---
+17:27:25 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:27:56 --- tick 867 | cash 60 | cards 36 ---
+17:27:56 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:28:28 --- tick 868 | cash 60 | cards 36 ---
+17:28:28 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:28:57 --- tick 869 | cash 60 | cards 36 ---
+17:28:57 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:29:27 --- tick 870 | cash 60 | cards 36 ---
+17:29:27 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:29:34 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.14], "uncommon": [18.5, 0.71], "rare": [62.5, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.8]}
+17:29:58 --- tick 871 | cash 60 | cards 36 ---
+17:29:58 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:30:25 --- tick 872 | cash 60 | cards 36 ---
+17:30:25 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:30:56 --- tick 873 | cash 60 | cards 36 ---
+17:30:56 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:31:26 --- tick 874 | cash 60 | cards 36 ---
+17:31:26 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:31:56 --- tick 875 | cash 60 | cards 36 ---
+17:31:56 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:32:04 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.14], "uncommon": [18.5, 0.75], "rare": [62.5, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.75]}
+17:32:28 --- tick 876 | cash 60 | cards 36 ---
+17:32:28 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:32:56 --- tick 877 | cash 60 | cards 36 ---
+17:32:56 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:33:26 --- tick 878 | cash 60 | cards 36 ---
+17:33:26 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:33:56 --- tick 879 | cash 60 | cards 36 ---
+17:33:56 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:34:26 --- tick 880 | cash 60 | cards 36 ---
+17:34:26 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:34:36 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.17], "uncommon": [18.5, 0.75], "rare": [62.0, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.8]}
+17:35:00 --- tick 881 | cash 60 | cards 36 ---
+17:35:00 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:35:00 Picaros: buying RET-09 (rare), worth 63 to us, cap 59, his list 63
+17:35:00 Picaros buy 1263 RET-09: ours [] his [] cap 59 -> offer 32 (opening bid)
+17:35:26 --- tick 882 | cash 60 | cards 36 ---
+17:35:26 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:35:26 Picaros buy 1263 RET-09: ours [32] his [] cap 59 -> wait None (no reply yet)
+17:35:41 smart_agent started (deterministic, no LLM)
+17:35:41 --- tick 882 | cash 60 | cards 36 ---
+17:35:41 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:35:41 Picaros buy 1263 RET-09: ours [32] his [73] cap 59 -> offer 42 (mood unknown, gap 41, step 10 (k=0.25))
+17:35:56 --- tick 883 | cash 60 | cards 36 ---
+17:36:00 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:36:01 Picaros buy 1263 RET-09: ours [32, 42] his [73, 64] cap 59 -> offer 48 (mood yielding, gap 22, step 6 (k=0.25))
+17:36:27 --- tick 884 | cash 60 | cards 36 ---
+17:36:27 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:36:28 Picaros buy 1263 RET-09: ours [32, 42, 48] his [73, 64] cap 59 -> wait None (she has not answered our last offer)
+17:36:58 --- tick 885 | cash 60 | cards 36 ---
+17:36:58 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:36:59 Picaros buy 1263 RET-09: ours [32, 42, 48] his [73, 64, 59] cap 59 -> offer 51 (mood near_final, gap 11, step 3 (k=0.25))
+17:37:06 FLAG picaros message 8251 (thread 1263): asked for RET-09 (El Ángel Caído), the offer gives RET-06 (La Rosaleda)
+17:37:08 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.57], "uncommon": [18.5, 0.77], "rare": [62.0, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.8]}
+17:37:26 --- tick 886 | cash 60 | cards 36 ---
+17:37:26 Abuela: a pack is worth 11.4 to us (cap 10) and she never goes under 20: no deal
+17:37:30 Picaros buy 1263 RET-09: ours [32, 42, 48, 51] his [73, 64, 59, 54] cap 59 -> offer 52 (mood yielding, gap 3, step 1 (k=0.25, she out-conceded us, slow down))
+17:37:57 --- tick 887 | cash 8 | cards 37 ---
+17:37:57 Abuela: a pack is worth 11.4 to us (cap 8) and she never goes under 20: no deal
+17:37:58 Picaros card buy 1263 (RET-09) ended: deal  paid 52 (worth 63 to us)
+17:37:58 Picaros: cancelled listing 13002 of MAL-03 before offering it
+17:37:59 Picaros: offering MAL-03 (worth 1.2 to us), floor 4, his list 10
+17:38:00 Picaros thread 1277: ours [] his [] floor 4 -> offer 10 (opening ask at his list price)
+17:38:27 --- tick 888 | cash 8 | cards 37 ---
+17:38:27 Abuela: a pack is worth 11.4 to us (cap 8) and she never goes under 20: no deal
+17:38:32 Picaros thread 1277: ours [10] his [4] floor 4 -> offer 8 (he is yielding, gap 6, step 2 (k=0.35))
+17:38:56 --- tick 889 | cash 8 | cards 37 ---
+17:38:56 Abuela: a pack is worth 11.4 to us (cap 8) and she never goes under 20: no deal
+17:38:58 Picaros thread 1277: ours [10, 8] his [4] floor 4 -> wait None (he has not answered our last ask)
+17:39:04 FLAG picaros message 8290 (thread 1263): asked for RET-09 (El Ángel Caído), the offer gives RET-06 (La Rosaleda)
+17:39:28 --- tick 890 | cash 8 | cards 37 ---
+17:39:28 Abuela: a pack is worth 11.4 to us (cap 8) and she never goes under 20: no deal
+17:39:33 Picaros thread 1277: ours [10, 8] his [4, 4] floor 4 -> offer 7 (he is firm, gap 4, step 1 (k=0.35))
+17:39:39 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.59], "uncommon": [18.5, 0.86], "rare": [60.5, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.8]}
+17:39:56 --- tick 891 | cash 8 | cards 37 ---
+17:39:57 Abuela: a pack is worth 11.4 to us (cap 8) and she never goes under 20: no deal
+17:39:59 Picaros thread 1277: ours [10, 8, 7] his [4, 4] floor 4 -> wait None (he has not answered our last ask)
+17:40:29 --- tick 892 | cash 8 | cards 37 ---
+17:40:29 Abuela: a pack is worth 11.4 to us (cap 8) and she never goes under 20: no deal
+17:40:31 Picaros thread 1277: ours [10, 8, 7] his [4, 4, 4] floor 4 -> accept 4 (he repeated 4 three times and it clears our soft floor 3)
+17:40:32 PICAROS SELL MAL-03 at 4: it was worth 1.2 to us
+17:40:58 --- tick 893 | cash 12 | cards 36 ---
+17:40:58 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:40:59 Picaros negotiation 1277 ended: deal  received 4
+17:41:27 --- tick 894 | cash 12 | cards 36 ---
+17:41:27 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:41:56 --- tick 895 | cash 96 | cards 35 ---
+17:41:56 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:41:58 Picaros: buying RET-09 (rare), worth 63 to us, cap 59, his list 63
+17:41:58 Picaros buy 1293 RET-09: ours [] his [] cap 59 -> offer 32 (opening bid)
+17:42:04 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.59], "uncommon": [18.5, 0.86], "rare": [62.0, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.8]}
+17:42:26 --- tick 896 | cash 96 | cards 35 ---
+17:42:27 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:42:27 Picaros buy 1293 RET-09: ours [32] his [] cap 59 -> wait None (no reply yet)
+17:42:59 --- tick 897 | cash 96 | cards 35 ---
+17:42:59 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:43:00 Picaros buy 1293 RET-09: ours [32] his [73] cap 59 -> offer 42 (mood unknown, gap 41, step 10 (k=0.25))
+17:43:27 --- tick 898 | cash 96 | cards 35 ---
+17:43:28 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:43:28 Picaros buy 1293 RET-09: ours [32, 42] his [73] cap 59 -> wait None (she has not answered our last offer)
+17:43:56 --- tick 899 | cash 96 | cards 35 ---
+17:43:56 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:43:57 Picaros buy 1293 RET-09: ours [32, 42] his [73, 67] cap 59 -> offer 48 (mood yielding, gap 25, step 6 (k=0.25))
+17:44:26 --- tick 900 | cash 96 | cards 35 ---
+17:44:26 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:44:27 Picaros buy 1293 RET-09: ours [32, 42, 48] his [73, 67] cap 59 -> wait None (she has not answered our last offer)
+17:44:36 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.6], "uncommon": [18.0, 0.86], "rare": [62.0, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.75]}
+17:44:56 --- tick 901 | cash 96 | cards 35 ---
+17:44:57 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:44:57 Picaros buy 1293 RET-09: ours [32, 42, 48] his [73, 67, 63] cap 59 -> offer 52 (mood yielding, gap 15, step 4 (k=0.25))
+17:45:28 --- tick 902 | cash 96 | cards 35 ---
+17:45:28 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:45:29 Picaros buy 1293 RET-09: ours [32, 42, 48, 52] his [73, 67, 63] cap 59 -> wait None (she has not answered our last offer)
+17:45:57 --- tick 903 | cash 96 | cards 35 ---
+17:45:57 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:45:57 Picaros buy 1293 RET-09: ours [32, 42, 48, 52] his [73, 67, 63, 60] cap 59 -> walk None (her final 60 is above our cap 59)
+17:46:07 BID 31 for MAL-09 on v07; worth 35.0 to us
+17:46:08 BID 6 for RET-03 on v07; worth 9.0 to us
+17:46:27 --- tick 904 | cash 96 | cards 35 ---
+17:46:27 Abuela: a pack is worth 11.5 to us (cap 10) and she never goes under 20: no deal
+17:46:27 Picaros card buy 1293 (RET-09) ended: closed  paid None (worth 63 to us)
+17:46:59 --- tick 905 | cash 90 | cards 36 ---
+17:46:59 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:47:07 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.63], "uncommon": [18.0, 0.83], "rare": [62.0, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.75]}
+17:47:27 --- tick 906 | cash 90 | cards 36 ---
+17:47:27 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:47:58 --- tick 907 | cash 90 | cards 36 ---
+17:47:58 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:48:28 --- tick 908 | cash 90 | cards 36 ---
+17:48:28 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:48:57 --- tick 909 | cash 90 | cards 36 ---
+17:48:57 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:49:28 --- tick 910 | cash 90 | cards 36 ---
+17:49:28 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:49:36 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.67], "uncommon": [18.0, 0.72], "rare": [63.0, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.75]}
+17:49:57 --- tick 911 | cash 90 | cards 36 ---
+17:49:57 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:50:27 --- tick 912 | cash 90 | cards 36 ---
+17:50:27 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:50:57 --- tick 913 | cash 90 | cards 36 ---
+17:50:57 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:51:27 --- tick 914 | cash 90 | cards 36 ---
+17:51:27 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:51:34 BID 9 for MAL-06 on v07; worth 12.5 to us
+17:51:57 --- tick 915 | cash 90 | cards 36 ---
+17:51:57 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:52:04 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.65], "uncommon": [18.5, 0.72], "rare": [63.0, 0.9], "epic": [167.0, 0.3], "legendary": [1, 0.8]}
+17:52:28 --- tick 916 | cash 90 | cards 36 ---
+17:52:28 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:52:58 --- tick 917 | cash 90 | cards 36 ---
+17:52:58 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:53:28 --- tick 918 | cash 90 | cards 36 ---
+17:53:28 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
