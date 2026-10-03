@@ -5,7 +5,8 @@
 
 Phase 1  market   buy cards that are worth more to us than they cost (value - price - fee), fill bids and swaps
                   that gain at our own values, and sell surplus copies (floors from OUR value of the copy, never
-                  `book * k`). New asks, bids and swaps are posted on El Duende (v02, no fee) for 120 ticks.
+                  `book * k`). Cash asks and bids go to Team 10 (v07, 0 fee, midpoint match) for 120 ticks.
+                  Swaps stay on El Duende (v02): v07's broker crosses a bid with an ask, not card for card.
 Phase 2  Abuela   adaptive haggling. Every round we ask: how did she answer our last concession?
                   - her move per our move (response ratio) sizes the next step;
                   - she stopped moving -> we stop paying for nothing;  `final` -> take it under our cap or walk.
@@ -33,8 +34,9 @@ SELL_MIN_GAIN = 2         # primas over what the copy is worth to us to sell it
 LISTINGS_PER_TICK = 3
 MAX_VALUE_CHECKS = 12     # b.value() calls per tick (rate limit friendly)
 BOARD_TTL = 120           # board offers; an offer inside a thread dies after 2 ticks
-DUENDE = "v02"            # El Duende: 0% and 0 P per card
+DUENDE = "v02"            # El Duende: 0% and 0 P per card; swaps live here
 TRECE = "v03"             # Mercado Trece: 1% , 0 P per card (swaps are free)
+FAIR = "v07"              # Team 10: 0% and 0 P per card; broker crosses bid/ask at the midpoint
 
 
 # ---------------------------------------------------------------- memory: observed vs inferred
@@ -516,29 +518,40 @@ def fees_for(vid, table):
         return {"venue": DUENDE, "fee_bps": 0, "fee_per_card": 0}
     if vid == TRECE:
         return {"venue": TRECE, "fee_bps": 100, "fee_per_card": 0}
+    if vid == FAIR:
+        return {"venue": FAIR, "fee_bps": 0, "fee_per_card": 0}
     return {"venue": vid or "rastro", "fee_bps": 500, "fee_per_card": 1}
 
 
 def boards_to_scan(table, me_id):
-    """Every market we can trade on, plus v02 and v03 even if the venue list is stale. Never our own stall."""
+    """Every market we can trade on, plus v02, v03 and v07 even if the venue list is stale. Never our own stall."""
     scan = [vid for vid, v in table.items() if v.get("owner") != me_id]
-    for vid in (DUENDE, TRECE, "rastro"):
+    for vid in (DUENDE, TRECE, FAIR, "rastro"):
         if vid not in scan and table.get(vid, {}).get("owner") != me_id:
             scan.append(vid)
     return scan
 
 
+def _has_cash(side):
+    return bool((side or {}).get("cash"))
+
+
 def place_board(b, give, want, to=None):
-    """Post on El Duende. El Rastro only if v02 refuses because it is our own stall or not live yet."""
-    try:
-        b.list_offer(give, want, venue=DUENDE, to=to, expires_in_ticks=BOARD_TTL)
-        return DUENDE
-    except BazaarError as e:
-        if e.code not in ("self_venue", "venue_not_live"):
-            raise
-        log(f"v02 post refused ({e.code}); posting on El Rastro instead")
-        b.list_offer(give, want, venue="rastro", to=to, expires_in_ticks=BOARD_TTL)
-        return "rastro"
+    """Cash bids and asks go to Team 10 (v07). Their broker matches a bid above an ask at the midpoint, any copy, every tick.
+    Swaps stay on El Duende: that match is bid against ask, not card for card. One venue only — a refusal falls through,
+    the same offer is never posted on two boards."""
+    order = (FAIR, DUENDE, "rastro") if (_has_cash(give) or _has_cash(want)) else (DUENDE, "rastro")
+    last = None
+    for vid in order:
+        try:
+            b.list_offer(give, want, venue=vid, to=to, expires_in_ticks=BOARD_TTL)
+            return vid
+        except BazaarError as e:
+            last = e
+            if e.code not in ("self_venue", "venue_not_live"):
+                raise
+            log(f"{vid} post refused ({e.code})")
+    raise last
 
 
 def phase_market(b, me, catalog, can_accept):
@@ -633,16 +646,16 @@ def phase_market(b, me, catalog, can_accept):
             try:
                 if item[0] == "ask":
                     _, asset, ask, ref, lost = item
-                    place_board(b, {"assets": [asset]}, {"cash": ask})
-                    log(f"LISTED spare {ref} (asset {asset}) at {ask} on {DUENDE}; the copy is worth {lost} to us")
+                    where = place_board(b, {"assets": [asset]}, {"cash": ask})
+                    log(f"LISTED spare {ref} (asset {asset}) at {ask} on {where}; the copy is worth {lost} to us")
                 elif item[0] == "bid":
                     _, ref, price, v, holder = item
-                    place_board(b, {"cash": price}, {"cards": [ref]}, to=holder)
-                    log(f"BID {price} for {ref} on {DUENDE}" + (f" to {holder}" if holder else "") + f"; worth {v} to us")
+                    where = place_board(b, {"cash": price}, {"cards": [ref]}, to=holder)
+                    log(f"BID {price} for {ref} on {where}" + (f" to {holder}" if holder else "") + f"; worth {v} to us")
                 else:
                     _, asset, gref, wref, holder = item
-                    place_board(b, {"assets": [asset]}, {"cards": [wref]}, to=holder)
-                    log(f"SWAP asset {asset} ({gref}) for {wref} on {DUENDE}" + (f" to {holder}" if holder else ""))
+                    where = place_board(b, {"assets": [asset]}, {"cards": [wref]}, to=holder)
+                    log(f"SWAP asset {asset} ({gref}) for {wref} on {where}" + (f" to {holder}" if holder else ""))
                 posted += 1
             except BazaarError as e:
                 log("listing refused:", e.code, e.message)
@@ -1046,26 +1059,30 @@ def selftest():
     mkt = _Mkt()
     assert phase_market(mkt, mkt_me, mkt_cat, True) is True
     assert mkt.accepted == [(8, None)], mkt.accepted          # one accept, and it is the ask that gains at our value
-    assert "v01" not in mkt.boards and "v02" in mkt.boards and "v03" in mkt.boards
-    assert mkt.posts and all(p[2] == "v02" and p[4] == 120 for p in mkt.posts), mkt.posts
+    assert "v01" not in mkt.boards and {"v02", "v03", "v07"} <= set(mkt.boards)
     asks = [p for p in mkt.posts if p[0].get("assets") and "cash" in p[1]]
     bids = [p for p in mkt.posts if p[0].get("cash")]
     swaps = [p for p in mkt.posts if p[0].get("assets") and p[1].get("cards")]
-    assert asks and asks[0][0]["assets"] == [4] and asks[0][1] == {"cash": 10}, asks
-    assert swaps and swaps[0][0] == {"assets": [2]} and swaps[0][1] == {"cards": ["LAV-03"]} and swaps[0][3] == "t03", swaps
-    assert bids and bids[0][1] == {"cards": ["LAV-01"]} and bids[0][3] is None, bids
+    assert asks and asks[0][0]["assets"] == [4] and asks[0][1] == {"cash": 10} and asks[0][2] == "v07" and asks[0][4] == 120, asks
+    assert swaps and swaps[0][0] == {"assets": [2]} and swaps[0][1] == {"cards": ["LAV-03"]} and swaps[0][2] == "v02" and swaps[0][3] == "t03", swaps
+    assert bids and bids[0][1] == {"cards": ["LAV-01"]} and bids[0][2] == "v07" and bids[0][3] is None and bids[0][4] == 120, bids
+    assert len({p[1]["cards"][0] for p in bids}) == len(bids), "the same bid is not posted twice"
     assert phase_market(mkt, mkt_me, mkt_cat, False) is False and len(mkt.accepted) == 1, "a second call must not take the accept"
+    assert fees_for("v07", {})["fee_bps"] == 0 and fees_for("v07", {})["fee_per_card"] == 0
+    assert "v07" in boards_to_scan({}, "t06") and "v07" not in boards_to_scan({"v07": {"owner": "t06"}}, "t06")
 
-    class _Own:
+    class _Book:
+        def __init__(self, refuse=()):
+            self.calls, self.refuse = [], set(refuse)
         def list_offer(self, give, want, venue=None, to=None, expires_in_ticks=40):
-            self.calls.append((venue, expires_in_ticks))
-            if venue == "v02":
-                raise BazaarError("self_venue", "own market", 400)
+            self.calls.append(venue)
+            if venue in self.refuse:
+                raise BazaarError("venue_not_live" if venue == "v07" else "self_venue", "no", 400)
             return {"ok": True}
-        calls = []
-    own = _Own()
-    assert place_board(own, {"cash": 5}, {"cards": ["LAT-04"]}) == "rastro"
-    assert own.calls == [("v02", 120), ("rastro", 120)]
+    cash, swap, down = _Book(), _Book(), _Book(("v07",))
+    assert place_board(cash, {"cash": 5}, {"cards": ["LAT-04"]}) == "v07" and cash.calls == ["v07"]
+    assert place_board(swap, {"assets": [2]}, {"cards": ["LAV-03"]}) == "v02" and swap.calls == ["v02"]
+    assert place_board(down, {"cash": 5}, {"cards": ["LAT-04"]}) == "v02" and down.calls == ["v07", "v02"]
     print("selftest OK")
 
 
