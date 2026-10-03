@@ -2,11 +2,15 @@
 
 Revisar antes de la ronda del domingo (09:00). Base: RULES.md y los decks de la organización ("Duels" y "Payday").
 
-## NORMA CLAVE del organizador (sábado ~21:50): no perder, ganar dinero
+## NORMA CLAVE del organizador (vale para todo el juego): no perder dinero, ganarlo
 
-1. **Ningún trato puede perder valor:** se compra por debajo de nuestro `your_value` y se vende por encima.
-2. **Hay que terminar con más caja de la que teníamos entonces (541 P).** Esos 541 P no se gastan nunca (`CASH_RESERVE=541` por defecto en `smart_agent` y `page_hunter`, y también en el Taller). Solo se puede comprar con lo ganado por encima (ventas por encima de nuestro valor, el +150 del domingo), y cualquier compra debe seguir siendo por debajo de nuestro valor. Las pujas abiertas cuentan como caja comprometida.
-3. Por eso la compra de la legendaria de Ernesto (~470–541) queda fuera mientras no ganemos esa caja por encima del suelo, y se cancelaron las 10 pujas abiertas (639 P comprometidos).
+Comprar está bien, incluso es lo esperado. Lo que no se permite es **un movimiento o una estrategia que pierda dinero a la larga**. Por ejemplo, la vuelta de épicas compraba a 143 y vendía a 120 una y otra vez. Se aplica donde se mueve el dinero:
+- se compra siempre por debajo de nuestro `your_value`;
+- se vende siempre por encima del valor del servidor (con el bonus de página);
+- nada de reventa de dealer a dealer con pérdida ni de primas de escalera;
+- las pujas abiertas cuentan como caja comprometida.
+
+No hay suelo de caja por defecto (`CASH_RESERVE=0`). El sábado a las ~21:50 se puso un suelo de 541 P por un malentendido y se quitó minutos después.
 
 ## La regla que lo decide todo (deck "Payday")
 

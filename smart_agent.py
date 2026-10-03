@@ -33,10 +33,11 @@ import workshop
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 MEMORY_FILE = os.environ.get("AGENT_MEMORY", "memory.json")
-# Organiser's rule (Sat 2026-10-03 ~21:50, the key one): never lose, make money. Every deal must gain value AND we must
-# end with more cash than the 541 P we held then. So 541 P are never spent: only what we earn above them (sales over
-# our value, Sunday's +150) can buy, and a buy must still be under our value.
-CASH_RESERVE = int(os.environ.get("CASH_RESERVE", "541"))  # primas never spent
+# Organiser's key rule (it applies to the whole game): never lose, make money. Buying is fine, even expected; what is
+# not allowed is a move or a strategy that loses money over time (the epic loop bought at 143 and sold at 120, again and
+# again). Enforced where the money moves: buys under our value, sales over the server's value (page bonus included), no
+# dealer-to-dealer resale at a loss, no ladder premiums, open bids count as committed cash. No cash floor by default.
+CASH_RESERVE = int(os.environ.get("CASH_RESERVE", "0"))  # primas never spent (e.g. 270 for a venue bond)
 DEFAULT_K = dparams.SPEC["default_k"][0]      # kept for compatibility; the strategy reads dparams.static("default_k")
 MIN_SAMPLES = 3           # observations per step-size bucket before we trust a response ratio (was 5: we have so little data
                           # that nothing was ever inferred; the choice it drives, k in {0.1, 0.25, 0.5}, is bounded anyway)

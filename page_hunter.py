@@ -28,8 +28,9 @@ from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.p
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 FOCUS_AFF = float(os.environ.get("FOCUS_AFF", "1.0"))   # sets with affinity >= this are the ones we build
 BID_FRAC = 0.6
-# Organiser's rule (Sat 2026-10-03 ~21:50): never lose, make money; we must end with more than the 541 P held then.
-CASH_RESERVE = int(os.environ.get("CASH_RESERVE", "541"))
+# Organiser's key rule: never lose money over time. Buys stay under our value and our open bids count as committed cash,
+# so we never promise more than we hold. No cash floor by default.
+CASH_RESERVE = int(os.environ.get("CASH_RESERVE", "0"))
 
 
 def spendable(me, mine):
