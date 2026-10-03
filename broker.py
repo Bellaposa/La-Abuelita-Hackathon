@@ -279,7 +279,8 @@ def main():
         try:
             clock = broker.clock()
             tick, book = clock["tick"], broker.book()
-            maybe_announce(broker, clock, announce_state)
+            if team is None:                                      # with the promoter on, its targeted text (which carries
+                maybe_announce(broker, clock, announce_state)     # the 0 % pitch) gets the one announcement per 20 ticks
             if not logged_keys:
                 log("book keys:", sorted(book.keys()))
                 logged_keys = True

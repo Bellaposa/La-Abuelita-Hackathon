@@ -21,7 +21,9 @@ import sys
 import team_profiles
 
 VENUE = "v01"
-EVERY_TICKS = 3            # at most one targeted announcement every this many ticks
+ANNOUNCE_GAP = 20          # the server allows one announcement per venue every 20 ticks: each one carries the best pairs
+READ_EVERY = 5             # read boards + feed this often, so the profiles miss nothing of the feed's ~25-tick window
+RETRY_TICKS = 3            # after a refused announcement
 REPEAT_TICKS = 30          # the same pair is not announced again for this long
 PULL_TTL = 80              # ticks a pulled card still counts as "just pulled"
 MAX_ITEMS = 3
@@ -140,11 +142,13 @@ def gather(read, me_id, my_offer_ids=(), alias=None, profiles=None):
 
 
 def step(broker, team, state, tick, log, public=None):
-    """Announce at most once every EVERY_TICKS ticks, only when there is a fresh concrete item. Never raises.
-    public(path) reads the public routes without a key (60/s per address) so the team key's 5/s stay with the agents."""
-    if tick - state.get("last_tick", -10 ** 9) < EVERY_TICKS:
+    """Read every READ_EVERY ticks (profiles); announce when ANNOUNCE_GAP ticks passed since the last accepted one and
+    there is a fresh concrete item. Never raises. public(path) reads the public routes without a key (60/s per address)
+    so the team key's 5/s stay with the agents."""
+    due = tick - state.get("last_ok", -10 ** 9) >= ANNOUNCE_GAP and tick - state.get("last_try", -10 ** 9) >= RETRY_TICKS
+    if not due and tick - state.get("last_read", -10 ** 9) < READ_EVERY:
         return False
-    state["last_tick"] = tick
+    state["last_read"] = tick
     try:
         me_id = state.get("me") or team.me()["id"]
         state["me"] = me_id
@@ -165,9 +169,11 @@ def step(broker, team, state, tick, log, public=None):
         items.sort(key=lambda x: -x[0])
         state["last_items"] = len(items)
         text, keys = compose(items, state.setdefault("sent", {}), tick)
-        if not text:
+        if not text or not due:
             return False
+        state["last_try"] = tick
         broker.announce(text)
+        state["last_ok"] = tick
         for k in keys:
             state["sent"][k] = tick
         log(f"promoted ({len(items)} pairs seen on other venues): {text[len(HEAD) + 1:][:300]}")
