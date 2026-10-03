@@ -268,11 +268,22 @@ def ladder_open(mem, dealer, rarity, hers=None, fallback=None):
     return opens.get(f"{dealer}|{rarity}", fallback)
 
 
+def range_hints(mem, dealer, side, rarity, setid=None, ref=None):
+    """feed_intel hints for the ladder range; with fewer than its MIN_DEALS deals, the raw real deals of this
+    dealer/side/rarity still bound the range better than a guess from the list (Don Ernesto: 2 deals on Saturday)."""
+    fh = feed_intel.hints(mem, dealer, side, rarity, setid, ref)
+    if fh:
+        return fh
+    ps = [r["price"] for r in ((mem.get("feed_intel") or {}).get("deals") or {}).get(f"{dealer}|{side}|{rarity}", [])
+          if isinstance(r, dict) and isinstance(r.get("price"), (int, float))]
+    return {"n_deals": len(ps), "deal_min": min(ps), "deal_max": max(ps), "level": "raw"} if ps else {}
+
+
 def ladder_record(mem, dealer, thread, rarity, setid, ref, hers, price, buy):
     """A finished deal enters this round's ladder book with the share it captured (opening = its first quote)."""
     if not hers or price is None or ladder_round(mem) is None:
         return
-    fh = feed_intel.hints(mem, dealer, "sells" if buy else "buys", rarity, setid, ref)
+    fh = range_hints(mem, dealer, "sells" if buy else "buys", rarity, setid, ref)
     open_ = hers[0][0]
     s = ladder.record_deal(mem, ladder_round(mem), dealer, thread, open_, ladder.limit_estimate(fh, open_, buy), price, buy)
     if s is not None:
@@ -288,8 +299,9 @@ def buy_cap_with_ladder(mem, me, dealer, rarity, lp, fh, value_cap, hers, ref):
     open_ = ladder_open(mem, dealer, rarity, hers, fallback=round(lp * 1.25) if lp else None)
     limit = ladder.limit_estimate(fh, open_, True, lp)
     free = me["cash"] - CASH_RESERVE
-    cap, pts, prem = ladder.ladder_cap(mem, rnd, dealer, open_, limit, value_cap, free)
-    cap = min(free, cap)
+    premium_free = max(0, free - EPIC_LOOP_RESERVE)       # ladder premiums never spend Sunday's reserve either
+    cap, pts, prem = ladder.ladder_cap(mem, rnd, dealer, open_, limit, value_cap, premium_free)
+    cap = min(free, max(value_cap, cap))
     if cap > value_cap and hers is not None:
         log(f"ladder: {dealer} {ref} cap {value_cap} -> {cap} (+{cap - value_cap} P for ~{pts:.2f} pts; "
             f"range {open_}->{limit}, S {ladder.slope(mem):.1f})")
@@ -1160,7 +1172,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     """One step with a card buyer (El Chato by default, Doña Pilar via phase_pilar): sell him a card worth little to us.
     Returns True if we accepted something. Memory keys are per dealer (chato_*, pilar_*)."""
     candidate_fn = candidate_fn or chato_candidate
-    name = dealer.title()
+    name = DEALER_NAMES.get(dealer, dealer.title())
     if dealer not in me.get("unlocked", []):
         return False
     if mem.get(f"{dealer}_block_until", -1) > me["tick"]:
@@ -1185,7 +1197,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
             mem.setdefault(f"{dealer}_tried", {})[act["ref"]] = me["tick"]
         mem[f"active_{dealer}"], act = None, None
     if tid is None:
-        on_tables = {aid for d in ("chato", "pilar", "picaros") if d != dealer        # a card is on ONE dealer's table at a time
+        on_tables = {aid for d in ("chato", "pilar", "picaros", "banco") if d != dealer        # a card is on ONE dealer's table at a time
                      for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
         cand = candidate_fn(dict(me, assets=[a for a in me["assets"] if a.get("id") not in on_tables]), catalog,
                             menu_rarity_prices(mem, dealer))
@@ -1228,10 +1240,10 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     if t["status"] != "open":
         return False
     ours, hers = read_thread(t, me["id"], dealer, sell=True)
-    soft = None if mem.get(f"{dealer}_soft_done") else math.ceil(act["lost"] + dparams.static("soft_add"))     # one firm-bid deal per dealer, for the ladder
-    fh = feed_intel.hints(mem, dealer, "buys", act.get("rarity"), act["ref"].split("-")[0], act["ref"])
+    soft = None if (mem.get(f"{dealer}_soft_done") or dealer == "banco") else math.ceil(act["lost"] + dparams.static("soft_add"))     # one firm-bid deal per dealer, for the ladder
+    fh = range_hints(mem, dealer, "buys", act.get("rarity"), act["ref"].split("-")[0], act["ref"])
     floor = sell_floor_with_ladder(mem, me, dealer, act.get("rarity"), fh, act["floor"], hers, act["ref"])
-    action, price, why = next_offer_sell(floor, act["lp"], ours, hers, inferred, soft_floor=soft, hold=(dealer == "pilar"))
+    action, price, why = next_offer_sell(floor, act["lp"], ours, hers, inferred, soft_floor=soft, hold=(dealer in ("pilar", "banco")))
     log(f"{name} thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {floor} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
         assets = ((act["topic"] or {}).get("sell") or {}).get("assets") or []
@@ -1308,6 +1320,135 @@ def picaros_candidate(me, catalog, menu=None):
             if best is None or score > best[0]:
                 best = (score, ref, a, floor, lp, lost)
     return best
+
+
+# ---------------------------------------------------------------- the epic loop (Don Ernesto's ladder level)
+#
+# STRATEGY NOTE, Sat 2026-10-03 ~20:45, right after the 400 P payday. REVIEW BEFORE SUNDAY'S ROUND, do not leave it on
+# by default forever. Why it is on: Don Ernesto (banco, level 5, the heaviest ladder level) only buys epics/legendaries
+# and only sells gold packs (opens 546, never moved in 4 talks) and legendaries; we had no epic and level 5 was empty.
+# Buying an epic from Los Pícaros (~128-147 in real deals) and selling it to Ernesto (opens 113, "final" 115, real
+# deals 116-120) costs ~20-30 P a loop for ~0.35-1.2 score points (cards and cash never score; only deals do).
+# It stops by itself once Ernesto's three best deals of the round are good (EPIC_LOOP_FULL) or cash would fall under
+# EPIC_LOOP_RESERVE (kept for Sunday's new round). Things to recheck on Sunday: Ernesto's real epic prices (feed_intel
+# banco|buys|epic), whether he now sells gold packs under 546 (then a pack may beat the loop), the Pícaros' epic prices,
+# whether Pilar (pays 179-199 for SAL-11) is the better buyer for SAL/RET epics, and whether there was another payday.
+EPIC_LOOP = os.environ.get("EPIC_LOOP", "1") == "1"
+EPIC_LOOP_RESERVE = int(os.environ.get("EPIC_LOOP_RESERVE", "250"))   # primas kept for Sunday's round
+EPIC_LOOP_CAP = int(os.environ.get("EPIC_LOOP_CAP", "150"))           # most we pay Los Pícaros for an epic (deals 128-147)
+EPIC_LOOP_FULL = 0.9                                                  # Ernesto's worst-of-best-three share that ends the loop
+EPIC_REFS = ("SAL-11", "RET-11", "LAV-11", "LAT-11", "MAL-11")        # SAL/RET first: Pilar is a fallback buyer for them
+EPIC_LIST = 162                                                       # Los Pícaros' epic list price
+BANCO_FLOOR, BANCO_ASK = 114, 132     # never at his opening 113 (it would not count); open high, then one prima a round
+DEALER_NAMES = {"banco": "Don Ernesto", "picaros": "Pícaros"}
+
+
+def epic_loop_held(me, mem):
+    """Epics the loop bought that we still hold (asset dicts)."""
+    ids = set((mem.get("epic_loop") or {}).get("held", []))
+    return [a for a in me["assets"] if a.get("id") in ids and a.get("kind") == "card"]
+
+
+def epic_loop_wants_one(me, mem):
+    """(True, why) when the loop should buy another epic now."""
+    rnd = ladder_round(mem)
+    if not EPIC_LOOP or rnd is None:
+        return False, "off"
+    if ladder.worst_of_best3(mem, rnd, "banco") >= EPIC_LOOP_FULL:
+        return False, "Ernesto's level is full this round"
+    if epic_loop_held(me, mem):
+        return False, "an epic is already waiting for Ernesto"
+    if me["cash"] - EPIC_LOOP_CAP < EPIC_LOOP_RESERVE:
+        return False, f"cash {me['cash']} would fall under the reserve {EPIC_LOOP_RESERVE}"
+    return True, "level 5 has room"
+
+
+def phase_epic_buy(b, me, catalog, mem, can_accept):
+    """Buy one epic from Los Pícaros for the loop. Their talk is shared with the page-card buys and sales: one thread at a
+    time. Every accept is re-checked against the exact card (they switch cards). Returns (accepted, busy)."""
+    dealer, key = "picaros", "active_epic_buy"
+    if dealer not in me.get("unlocked", []):
+        return False, False
+    act = mem.get(key)
+    tid = next((t for t in me.get("open_threads", []) if b.thread(t).get("with") == dealer), None)
+    loop = mem.setdefault("epic_loop", {"held": [], "tried": {}})
+    if act and (tid is None or act["thread"] != tid):                     # our buy ended: record it
+        t = b.thread(act["thread"])
+        ours, hers = read_thread(t, me["id"], dealer)
+        paid = deal_price(t, me["id"]) if t["status"] == "deal" else None
+        log(f"epic loop: Pícaros buy {t['id']} ({act['ref']}) ended: {t['status']} {t.get('closed_reason') or ''} paid {paid}")
+        if t["status"] == "deal":
+            ladder_record(mem, dealer, t["id"], "epic", act["ref"].split("-")[0], act["ref"], hers, paid, True)
+            got = [a for a in me["assets"] if a.get("ref") == act["ref"] and a.get("id") not in loop["held"]]
+            if got:
+                loop["held"].append(max(got, key=lambda a: a["id"])["id"])
+            loop["pending_ref"] = act["ref"] if not got else None          # settles next tick: pick it up then
+        else:
+            loop["tried"][act["ref"]] = me["tick"]
+        mem[key], act = None, None
+    if loop.get("pending_ref"):                                           # the bought epic arrived after settlement
+        got = [a for a in me["assets"] if a.get("ref") == loop["pending_ref"] and a.get("id") not in loop["held"]]
+        if got:
+            loop["held"].append(max(got, key=lambda a: a["id"])["id"])
+            loop["pending_ref"] = None
+    if tid is not None and act is None:
+        return False, True
+    if tid is None:
+        want, why = epic_loop_wants_one(me, mem)
+        if not want or loop.get("pending_ref"):
+            return False, False
+        ref = next((r for r in EPIC_REFS if me["tick"] - loop["tried"].get(r, -999) >= dparams.static("buy_retry")), None)
+        if ref is None:
+            return False, False
+        try:
+            th = b.open_thread(dealer, topic={"buy": {"card": ref}})
+        except BazaarError as e:
+            log(f"epic loop: Pícaros unavailable: {e.code} {e.message}")
+            loop["tried"][ref] = me["tick"]
+            return False, False
+        tid = th["id"]
+        act = mem[key] = {"thread": tid, "ref": ref}
+        log(f"epic loop: buying {ref} from Los Pícaros for Don Ernesto, cap {EPIC_LOOP_CAP} ({why})")
+    t = b.thread(tid)
+    if t["status"] != "open":
+        return False, True
+    cap = min(EPIC_LOOP_CAP, me["cash"] - EPIC_LOOP_RESERVE)
+    ours, hers = read_thread(t, me["id"], dealer)
+    action, price, why = next_offer(cap, EPIC_LIST, ours, hers, {})        # no learned profile: theirs is from rares
+    log(f"epic loop: Pícaros {tid} {act['ref']}: ours {ours} theirs {[h[0] for h in hers]} cap {cap} -> {action} {price} ({why})")
+    if action == "accept" and can_accept:
+        if price is None or price > cap:
+            return False, True
+        offer_id, why = fresh_accept_target(b, tid, dealer, me["id"], _key(types=[f"card:{act['ref']}"]), _key(cash=price),
+                                            ("item", "price"))
+        if offer_id is None:
+            log(f"epic loop: accept blocked: {why} (decided {price})")
+            return False, True
+        if not try_reserve(me["tick"]):
+            return False, True
+        b.accept(offer_id)
+        log(f"EPIC LOOP BUY {act['ref']} at {price} from Los Pícaros")
+        return True, True
+    if action == "walk":
+        b.close_thread(tid)
+    elif action == "offer":
+        b.say(tid, chato_text("buy", price, len(ours), act["ref"], "amigos"), price=price)
+    return False, True
+
+
+def banco_candidate(me, catalog, menu=None, mem=None):
+    """The loop's epic for Don Ernesto: (score, ref, asset, floor, opening ask, value lost)."""
+    held = epic_loop_held(me, mem or {})
+    if not held:
+        return None
+    a = held[0]
+    return (1.0, a["ref"], a, BANCO_FLOOR, BANCO_ASK, 0.0)
+
+
+def phase_banco(b, me, catalog, mem, can_accept):
+    """Sell the loop's epic to Don Ernesto: one prima a round from BANCO_ASK, his `final` taken over BANCO_FLOOR."""
+    return phase_chato(b, me, catalog, mem, can_accept, dealer="banco",
+                       candidate_fn=lambda me_, cat_, menu=None: banco_candidate(me_, cat_, menu, mem))
 
 
 def phase_picaros(b, me, catalog, mem, can_accept):
@@ -1541,6 +1682,11 @@ def run_agent():
             except BazaarError as e:
                 log("Abuela step:", e.code, e.message)
             busy = {}
+            try:                                                           # the epic loop first: it holds Los Pícaros' one thread
+                got, _busy = phase_epic_buy(b, me, catalog, mem, not accepted)
+                accepted = got or accepted
+            except BazaarError as e:
+                log("epic loop step:", e.code, e.message)
             for d in ("picaros", "chato", "abuela"):                       # priority cards first (Abuela: only when no pack talk)
                 if d == "abuela" and mem.get("active"):
                     continue
@@ -1559,11 +1705,15 @@ def run_agent():
             except BazaarError as e:
                 log("Pilar step:", e.code, e.message)
             try:
+                accepted = phase_banco(b, me, catalog, mem, can_accept=not accepted) or accepted
+            except BazaarError as e:
+                log("Don Ernesto step:", e.code, e.message)
+            try:
                 if not busy.get("picaros") or mem.get("active_picaros"):
                     accepted = phase_picaros(b, me, catalog, mem, can_accept=not accepted) or accepted
             except BazaarError as e:
                 log("Picaros step:", e.code, e.message)
-            reserved = {aid for d in ("chato", "pilar", "picaros")       # cards on the table with a dealer: the market must not sell them
+            reserved = {aid for d in ("chato", "pilar", "picaros", "banco")       # cards on the table with a dealer: the market must not sell them
                         for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
             me_market = dict(me, assets=[a for a in me["assets"] if a.get("id") not in reserved]) if reserved else me
             if legacy_should_trade():
@@ -1650,8 +1800,26 @@ def _test_ladder_open_cap():
     assert next_offer(26, 26, [], [], inf)[1] == 26, "without open_cap the old behaviour stands"
 
 
+def _test_epic_loop():
+    mem = {"ladder": {"round": 2, "deals": []}, "epic_loop": {"held": [], "tried": {}},
+           "feed_intel": {"deals": {"banco|buys|epic": [{"price": 116.0}, {"price": 120.0}]}}}
+    me = {"cash": 461, "assets": [{"id": 9, "kind": "card", "ref": "SAL-11", "rarity": "epic"}]}
+    assert epic_loop_wants_one(me, mem)[0], "level 5 empty, cash over reserve + cap"
+    assert not epic_loop_wants_one(dict(me, cash=EPIC_LOOP_RESERVE + EPIC_LOOP_CAP - 1), mem)[0], "keep Sunday's reserve"
+    mem["epic_loop"]["held"] = [9]
+    assert not epic_loop_wants_one(me, mem)[0], "one epic at a time"
+    cand = banco_candidate(me, {}, None, mem)
+    assert cand[1] == "SAL-11" and cand[3] == BANCO_FLOOR > 113 and cand[4] == BANCO_ASK
+    assert range_hints(mem, "banco", "buys", "epic")["deal_max"] == 120.0, "two real deals bound the range"
+    mem["epic_loop"]["held"] = []
+    for t in (1, 2, 3):
+        ladder.record_deal(mem, 2, "banco", t, 113, 120, 120, False)
+    assert not epic_loop_wants_one(me, mem)[0], "Ernesto's level full: the loop stops"
+
+
 def selftest():
     _test_ladder_open_cap()
+    _test_epic_loop()
     _test_pilar_one_prima()
     _test_candidates_take_menu()
     _test_behaviour_flags()
