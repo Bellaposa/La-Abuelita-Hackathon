@@ -28,6 +28,7 @@ from bz.dealers import params as dparams          # every dealer-negotiation num
 from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.py is the only trading authority
 from flags import is_item_lie, is_lie, is_switch
 import feed_intel
+import ladder
 import workshop
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
@@ -252,6 +253,102 @@ def read_thread(t, me_id, dealer="abuela", sell=False):
         elif m["sender"] == dealer:
             hers.append((o[theirs]["cash"], bool(o.get("final")), m.get("text", "")))
     return ours, hers
+
+
+def ladder_round(mem):
+    return (mem.get("ladder") or {}).get("round")
+
+
+def ladder_open(mem, dealer, rarity, hers=None, fallback=None):
+    """The dealer's opening price in this talk (its first quote), else the last opening it gave us for this rarity."""
+    opens = mem.setdefault("ladder", {}).setdefault("opens", {})
+    if hers:
+        opens[f"{dealer}|{rarity}"] = hers[0][0]
+        return hers[0][0]
+    return opens.get(f"{dealer}|{rarity}", fallback)
+
+
+def ladder_record(mem, dealer, thread, rarity, setid, ref, hers, price, buy):
+    """A finished deal enters this round's ladder book with the share it captured (opening = its first quote)."""
+    if not hers or price is None or ladder_round(mem) is None:
+        return
+    fh = feed_intel.hints(mem, dealer, "sells" if buy else "buys", rarity, setid, ref)
+    open_ = hers[0][0]
+    s = ladder.record_deal(mem, ladder_round(mem), dealer, thread, open_, ladder.limit_estimate(fh, open_, buy), price, buy)
+    if s is not None:
+        log(f"ladder: {dealer} deal at {price} (opened {open_}) captured {s:.2f} of its range; "
+            f"worst of our best three now {ladder.worst_of_best3(mem, ladder_round(mem), dealer):.2f}")
+
+
+def buy_cap_with_ladder(mem, me, dealer, rarity, lp, fh, value_cap, hers, ref):
+    """Our private-value cap, lifted while the ladder gain at that price still covers the premium (no fixed limit)."""
+    rnd = ladder_round(mem)
+    if rnd is None:
+        return value_cap
+    open_ = ladder_open(mem, dealer, rarity, hers, fallback=round(lp * 1.25) if lp else None)
+    limit = ladder.limit_estimate(fh, open_, True, lp)
+    free = me["cash"] - CASH_RESERVE
+    cap, pts, prem = ladder.ladder_cap(mem, rnd, dealer, open_, limit, value_cap, free)
+    cap = min(free, cap)
+    if cap > value_cap and hers is not None:
+        log(f"ladder: {dealer} {ref} cap {value_cap} -> {cap} (+{cap - value_cap} P for ~{pts:.2f} pts; "
+            f"range {open_}->{limit}, S {ladder.slope(mem):.1f})")
+    return cap
+
+
+def sell_floor_with_ladder(mem, me, dealer, rarity, fh, value_floor, hers, ref):
+    """Our private-value floor, lowered while the ladder gain at that price still covers what we give up."""
+    rnd = ladder_round(mem)
+    if rnd is None or not hers:
+        return value_floor
+    open_ = ladder_open(mem, dealer, rarity, hers)
+    limit = ladder.limit_estimate(fh, open_, False)
+    fl, pts, prem = ladder.ladder_floor(mem, rnd, dealer, open_, limit, value_floor, me["cash"] - CASH_RESERVE)
+    if fl < value_floor:
+        log(f"ladder: {dealer} {ref} floor {value_floor} -> {fl} (-{value_floor - fl} P for ~{pts:.2f} pts; "
+            f"range {open_}->{limit}, S {ladder.slope(mem):.1f})")
+    return fl
+
+
+def round_start_tick(clock, seen_change, history_file=os.path.join("dashboard", "history.json")):
+    """First tick of today's round. Seen live (the round changed under us): this tick. Started mid-round: the first
+    dashboard sample at or after today's opening time (it can only be late, which drops a few early deals, never adds
+    yesterday's). Unknown: this tick."""
+    if seen_change:
+        return clock["tick"]
+    import datetime
+    day = next((d for d in clock.get("days", []) if d.get("day") == clock.get("today")), None)
+    try:
+        opens = datetime.datetime.fromisoformat(day["opens"]).timestamp()
+        with open(history_file) as f:
+            return min(p["tick"] for p in json.load(f) if p.get("ts", 0) >= opens and p.get("tick") is not None)
+    except (TypeError, KeyError, OSError, ValueError):
+        return clock["tick"]
+
+
+def ladder_backfill(b, mem, me_id, rarity_of, start_tick):
+    """Once per round: our dealer deals already done in it (threads since start_tick) enter the ladder book."""
+    lad = mem.setdefault("ladder", {})
+    if lad.get("backfilled") == lad.get("round"):
+        return
+    for t in b.my_threads().get("threads", []):
+        d = t.get("with")
+        if t.get("status") != "deal" or d not in ladder.LEVEL or t.get("created_tick", 0) < start_tick:
+            continue
+        topic = t.get("topic") or {}
+        buy = "buy" in topic
+        if buy:
+            ref = (topic["buy"] or {}).get("card")
+            rarity = rarity_of(ref) if ref else None
+        else:
+            asset = next((o["give"]["assets"][0] for m in t.get("messages", []) for o in [m.get("offer") or {}]
+                          if o.get("maker") == me_id and (o.get("give") or {}).get("assets")), None)
+            ref, rarity = (asset.get("ref"), asset.get("rarity")) if isinstance(asset, dict) else (None, None)
+        _ours, hers = read_thread(t, me_id, d, sell=not buy)
+        if not ref and not (buy and (topic["buy"] or {}).get("pack")):
+            continue
+        ladder_record(mem, d, t["id"], rarity, ref.split("-")[0] if ref else None, ref, hers, deal_price(t, me_id), buy)
+    lad["backfilled"] = lad.get("round")
 
 
 def rounds_of(ours, hers):
@@ -1080,6 +1177,8 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
                                                 "rounds": rounds_of(ours, hers)})
         reason = t.get("closed_reason")
         log(f"{name} negotiation {t['id']} ended: {t['status']} {reason or ''} received {got}")
+        if t["status"] == "deal":
+            ladder_record(mem, dealer, t["id"], act.get("rarity"), act["ref"].split("-")[0], act["ref"], hers, got, False)
         if t["status"] != "deal":
             mem[f"{dealer}_block_until"] = me["tick"] + learned_block(mem, dealer)            # any ending but a deal: do not pester him, he remembers
             mem.setdefault(f"{dealer}_tried", {})[act["ref"]] = me["tick"]
@@ -1119,7 +1218,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
             return False
         tid = th["id"]
         mem[f"active_{dealer}"] = {"thread": tid, "topic": {"sell": {"assets": [asset["id"]]}}, "cash_start": me["cash"],
-                               "ref": ref, "floor": floor, "lp": lp, "lost": round(lost, 1)}
+                               "ref": ref, "floor": floor, "lp": lp, "lost": round(lost, 1), "rarity": asset.get("rarity")}
         log(f"{name}: offering {ref} (worth {lost:.1f} to us), floor {floor}, his list {lp}")
     elif mem.get(f"active_{dealer}") is None:
         return False                                              # a thread we did not open: leave it alone
@@ -1129,11 +1228,13 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
         return False
     ours, hers = read_thread(t, me["id"], dealer, sell=True)
     soft = None if mem.get(f"{dealer}_soft_done") else math.ceil(act["lost"] + dparams.static("soft_add"))     # one firm-bid deal per dealer, for the ladder
-    action, price, why = next_offer_sell(act["floor"], act["lp"], ours, hers, inferred, soft_floor=soft, hold=(dealer == "pilar"))
-    log(f"{name} thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {act['floor']} -> {action} {price} ({why})")
+    fh = feed_intel.hints(mem, dealer, "buys", act.get("rarity"), act["ref"].split("-")[0], act["ref"])
+    floor = sell_floor_with_ladder(mem, me, dealer, act.get("rarity"), fh, act["floor"], hers, act["ref"])
+    action, price, why = next_offer_sell(floor, act["lp"], ours, hers, inferred, soft_floor=soft, hold=(dealer == "pilar"))
+    log(f"{name} thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {floor} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
         assets = ((act["topic"] or {}).get("sell") or {}).get("assets") or []
-        least = act["floor"] if soft is None else min(act["floor"], soft)     # the soft floor may close one deal under the floor
+        least = floor if soft is None else min(floor, soft)     # the soft floor may close one deal under the floor
         if len(assets) != 1 or price is None or price < least:
             log(f"{name} thread {tid}: accept blocked: topic or price not verifiable (topic {act['topic']}, price {price}, floor {least})")
             return False
@@ -1282,6 +1383,8 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
                                                 "paid": paid, "rounds": rounds_of(ours, hers)})
         log(f"{name} card buy {t['id']} ({act['ref']}) ended: {t['status']} {t.get('closed_reason') or ''} paid {paid} "
             f"(worth {act['value']:.0f} to us)")
+        if t["status"] == "deal":
+            ladder_record(mem, dealer, t["id"], act.get("rarity"), act["ref"].split("-")[0], act["ref"], hers, paid, True)
         if t["status"] != "deal":
             mem.setdefault(f"{dealer}_buy_tried", {})[act["ref"]] = me["tick"]
             mem[f"{dealer}_buy_block_until"] = me["tick"] + dparams.static("buy_block")
@@ -1300,6 +1403,7 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
                 continue                                                  # one dealer per card: never buy it twice
             cap = min(me["cash"] - CASH_RESERVE, min(int(dparams.static("card_edge") * value), int(value) - dparams.static("card_margin")), MAX_PAY.get(ref, 10 ** 9))
             fh = feed_intel.hints(mem, dealer, "sells", rarity, ref.split("-")[0], ref)
+            cap = buy_cap_with_ladder(mem, me, dealer, rarity, lp, fh, cap, None, ref)
             if feed_intel.buy_is_futile(fh, cap):                      # every team paid more: this talk cannot end in a deal
                 if mem.setdefault("feed_futile_logged", {}).get(f"{dealer}|{ref}") != cap:
                     mem["feed_futile_logged"][f"{dealer}|{ref}"] = cap
@@ -1320,13 +1424,17 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
             mem[f"{dealer}_buy_block_until"] = me["tick"] + dparams.static("buy_block")
             return False, False
         tid = th["id"]
-        act = mem[key] = {"thread": tid, "topic": topic, "cash_start": me["cash"], "ref": ref, "value": value, "lp": lp}
+        act = mem[key] = {"thread": tid, "topic": topic, "cash_start": me["cash"], "ref": ref, "value": value, "lp": lp,
+                          "rarity": rarity}
         log(f"{name}: buying {ref} ({rarity}), worth {value:.0f} to us, cap {cap}, his list {lp}")
     t = b.thread(tid)
     if t["status"] != "open":
         return False, True
     cap = min(me["cash"] - CASH_RESERVE, min(int(dparams.static("card_edge") * act["value"]), int(act["value"]) - dparams.static("card_margin")), MAX_PAY.get(act["ref"], 10 ** 9))
     ours, hers = read_thread(t, me["id"], dealer)
+    rarity = act.get("rarity") or {c["id"]: c["rarity"] for st in catalog["sets"] for c in st["cards"]}.get(act["ref"])
+    fh = feed_intel.hints(mem, dealer, "sells", rarity, act["ref"].split("-")[0], act["ref"])
+    cap = buy_cap_with_ladder(mem, me, dealer, rarity, act["lp"], fh, cap, hers, act["ref"])
     action, price, why = next_offer(cap, act["lp"], ours, hers, learned(mem, f"{dealer}_buy"))
     log(f"{name} buy {tid} {act['ref']}: ours {ours} his {[h[0] for h in hers]} cap {cap} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
@@ -1403,11 +1511,22 @@ def run_agent():
     log("smart_agent started (deterministic, no LLM)")
     while True:
         try:
-            if b.clock().get("paused"):
+            clock = b.clock()
+            if clock.get("paused"):
                 time.sleep(10)
                 continue
             me, catalog = b.me(), b.catalog()
             refresh_traits(b, mem, me["tick"])
+            try:                                                           # the ladder book of this round (a day = a round)
+                lad = mem.setdefault("ladder", {})
+                if clock.get("round") is not None and lad.get("round") != clock["round"]:
+                    lad["round_start"] = round_start_tick(clock, seen_change=lad.get("round") is not None)
+                    lad["round"] = clock["round"]
+                ladder.learn_slope(mem, me.get("score"))
+                ladder_backfill(b, mem, me["id"], {c["id"]: c["rarity"] for st in catalog["sets"] for c in st["cards"]}.get,
+                                lad.get("round_start") or 0)
+            except Exception as e:
+                log(f"ladder: {type(e).__name__}: {e}")
             log(f"--- tick {me['tick']} | cash {me['cash']} | cards {sum(a['kind'] == 'card' for a in me['assets'])} ---")
             accepted = False
             try:
