@@ -78,7 +78,7 @@ class FakeDealerAPI:
 
     `server_price_at_accept` is what the SERVER would charge at the moment accept() arrives."""
 
-    def __init__(self, thread, offer_id=None, drift=None):
+    def __init__(self, thread, offer_id=None, drift=None, fail_after_reads=None):
         self._thread = thread
         self.reads = 0
         self.calls = []
@@ -86,11 +86,14 @@ class FakeDealerAPI:
         self.closed = []
         self.said = []
         self.offer_id = offer_id
-        self.drift = drift                # {"after_reads": int, "new_cash": int, "field": "want"|"give"}
+        self.drift = drift                # {"after_reads": int, "new_cash": int, "field": "want"|"give"} or {"after_reads": int, "remove": True}
+        self.fail_after_reads = fail_after_reads   # thread() raises a network BazaarError from the read after this many
 
     def _current(self, drifted=False):
         t = copy.deepcopy(self._thread)
         if self.drift and drifted:
+            if self.drift.get("remove"):
+                t["standing_offers"] = [o for o in t["standing_offers"] if o["id"] != self.offer_id]
             for o in t["standing_offers"]:
                 if o["id"] == self.offer_id:
                     o[self.drift["field"]]["cash"] = self.drift["new_cash"]
@@ -99,6 +102,8 @@ class FakeDealerAPI:
     def thread(self, tid):
         self.reads += 1
         self.calls.append(("thread", tid))
+        if self.fail_after_reads is not None and self.reads > self.fail_after_reads:
+            raise prod("bazaar_sdk").BazaarError("network", "simulated read failure", 0)
         return self._current(drifted=self.reads > self.drift["after_reads"] if self.drift else False)
 
     def accept(self, offer_id, assets=None):
@@ -106,7 +111,7 @@ class FakeDealerAPI:
         # the dealer moves right after the agent's `after_reads`-th read, so by now (accept time) it has moved
         t = self._current(drifted=self.reads >= self.drift["after_reads"] if self.drift else False)
         o = next(o for o in t["standing_offers"] if o["id"] == offer_id)
-        field = self.drift["field"] if self.drift else ("want" if t["topic"].get("buy") else "give")
+        field = self.drift["field"] if self.drift and "field" in self.drift else ("want" if t["topic"].get("buy") else "give")
         self.accepts.append((offer_id, o[field]["cash"]))
         return {"ok": True}
 

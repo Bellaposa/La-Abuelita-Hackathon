@@ -692,6 +692,49 @@ def pack_cap(me, catalog):
     return max(0, min(me["cash"] - CASH_RESERVE, int(PACK_EDGE * pack_private_value(me, catalog))))
 
 
+def _key(cash=0, assets=(), types=()):
+    """Comparable form of one side (give/want) of an offer: (cash, asset ids, types)."""
+    return (cash, tuple(sorted(str(a) for a in assets)), tuple(sorted(types)))
+
+
+def _side_key(side):
+    """_key() of a real offer side, or None when it has keys we have not observed (unknown shape: never accept)."""
+    if not isinstance(side, dict) or set(side) - {"cash", "assets", "types"}:
+        return None
+    return _key(side.get("cash", 0), [a.get("id") for a in side.get("assets") or []], side.get("types") or [])
+
+
+def fresh_accept_target(b, tid, dealer, me_id, expect_give, expect_want, labels):
+    """Hotfix 1.3. Right before an accept, re-read the thread ONCE and find the standing offer we decided on.
+    expect_give / expect_want: _key() of what the dealer gives / wants in the offer the strategy evaluated.
+    Returns (offer_id, None) only if exactly ONE open offer of `dealer` has exactly that structure; otherwise (None, reason).
+    Fail closed: a failed read, a closed thread, no match or several matches all mean NO accept. One extra GET, no retry."""
+    try:
+        t = b.thread(tid)
+    except BazaarError as e:
+        return None, f"fresh read failed ({e.code})"
+    if t.get("status") != "open":
+        return None, f"thread is {t.get('status')}"
+    mine = [o for o in t.get("standing_offers") or []
+            if o.get("maker") == dealer and o.get("status") == "open" and o.get("to") in (None, me_id)]
+    if not mine:
+        return None, "no open standing offer"
+    hits, why = [], []
+    for o in mine:
+        g, w = _side_key(o.get("give")), _side_key(o.get("want"))
+        if g is None or w is None:
+            why.append("unknown offer shape")
+        elif g != expect_give:
+            why.append(f"{labels[0]} mismatch")
+        elif w != expect_want:
+            why.append(f"{labels[1]} mismatch")
+        else:
+            hits.append(o)
+    if len(hits) == 1:
+        return hits[0]["id"], None
+    return None, (f"{len(hits)} standing offers match the evaluated one" if hits else "; ".join(why))
+
+
 def phase_abuela(b, me, catalog, mem):
     """One step of the Abuela negotiation. Returns True if we accepted something this tick."""
     inferred = mem["inferred"] = infer(mem)
@@ -741,11 +784,16 @@ def phase_abuela(b, me, catalog, mem):
     if hers:
         log_chat(f"👵 Abuela pide: {hers[-1][0]} P{' (final)' if hers[-1][1] else ''}")
     if action == "accept":
-        offer = next((o for o in reversed(t["standing_offers"]) if o["maker"] == "abuela" and o["status"] == "open"), None)
-        if offer is None:                                   # already accepted (it settles next tick): nothing to do
-            log(f"Abuela thread {tid}: no open offer of hers left, already accepted?")
-            return True
-        b.accept(offer["id"])
+        buy = (mem["active"]["topic"] or {}).get("buy") or {}
+        item = [f"{k}:{buy[k]}" for k in ("pack", "card") if k in buy]
+        if len(buy) != 1 or len(item) != 1 or price is None or price > cap:
+            log(f"Abuela thread {tid}: accept blocked: topic or price not verifiable (topic {mem['active']['topic']}, price {price}, cap {cap})")
+            return False
+        offer_id, why = fresh_accept_target(b, tid, "abuela", me["id"], _key(types=item), _key(cash=price), ("item", "price"))
+        if offer_id is None:
+            log(f"Abuela thread {tid}: accept blocked: {why} (decided {price})")
+            return why == "no open standing offer"          # legacy: nothing open = probably already accepted, settles next tick
+        b.accept(offer_id)
         log_chat(f"🤝 aceptado a {price} P")
         return True
     if action == "walk":
@@ -831,10 +879,15 @@ def phase_chato(b, me, catalog, mem, can_accept):
     action, price, why = next_offer_sell(act["floor"], act["lp"], ours, hers, inferred)
     log(f"Chato thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {act['floor']} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
-        offer = next((o for o in reversed(t["standing_offers"]) if o["maker"] == "chato" and o["status"] == "open"), None)
-        if offer is None:
-            return True
-        b.accept(offer["id"])
+        assets = ((act["topic"] or {}).get("sell") or {}).get("assets") or []
+        if len(assets) != 1 or price is None or price < act["floor"]:
+            log(f"Chato thread {tid}: accept blocked: topic or price not verifiable (topic {act['topic']}, price {price}, floor {act['floor']})")
+            return False
+        offer_id, why = fresh_accept_target(b, tid, "chato", me["id"], _key(cash=price), _key(assets=assets), ("price", "item"))
+        if offer_id is None:
+            log(f"Chato thread {tid}: accept blocked: {why} (decided {price})")
+            return why == "no open standing offer"
+        b.accept(offer_id)
         log(f"CHATO SELL {act['ref']} at {price}: it was worth {act['lost']} to us")
         return True
     if action == "walk":
