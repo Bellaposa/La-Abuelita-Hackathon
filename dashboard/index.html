@@ -136,6 +136,7 @@
     <div class="card c12"><h2>Noticias</h2><div class="cap">Boletín = oficial · Radio = mezcla verdad y ambiente · Tablón = rumores. Ninguna se cree sin comprobarla en datos reales</div><div id="news"></div></div>
     <div class="card c12"><h2>Prioridad de compra</h2><div class="cap">Valor para NOSOTROS (servidor, bonus de página incluido). Pagamos como máximo el 60 % de ese valor</div><div id="prio"></div></div>
     <div class="card c12"><h2>Nuestro mercado</h2><div class="cap">Venue v01: libro en vivo (broker), operaciones entre otros equipos y comparación con los demás mercados</div><div id="venue"></div></div>
+    <div class="card c12"><div class="head"><div><h2>Lo que hemos aprendido</h2><div class="cap">Dealers, rivales de duelo y vendedores del mercado. Cada cifra lleva su <b>n</b>: con pocos datos casi todo sigue en el valor por defecto, y aquí se ve.</div></div></div><div id="learning"></div></div>
     <div class="card c12"><h2>Conversaciones con los dealers</h2><div class="cap">Mensajes reales de la conversación abierta o la última</div><div class="tabs" id="dealer-tabs"></div><div id="dealers"></div></div>
     <div class="card c7"><h2>Actividad de los agentes</h2><div class="cap">Últimos eventos de los logs, los más recientes arriba</div><div class="feed scroll" id="feed"></div></div>
     <div class="card c5"><h2>Agentes en ejecución</h2><div class="cap">Una sola copia por agente: dos se pisan entre sí</div><div id="procs"></div></div>
@@ -419,6 +420,49 @@ function drawDealers(s) {
   chat.scrollTop = chat.scrollHeight;
 }
 
+function drawLearning(s) {
+  const L = s.learning; if (!L) return replace("learning", el("div", { class: "empty", text: "Sin datos de aprendizaje todavía." }));
+  const pc = (x, d = 1) => x == null ? "–" : `${fmt(x * 100, d)} %`;
+  const blocks = [];
+  blocks.push(el("div", { class: "cap", text: L.learning_enabled ? "Aprendizaje de parámetros: activado (se apaga con DEALER_LEARN=0)." : "Aprendizaje de parámetros: APAGADO (DEALER_LEARN=0)." }));
+  const ov = Object.entries(L.overrides || {});
+  if (ov.length) blocks.push(el("div", { class: "cap", text: "Parámetros cambiados a mano (DEALER_PARAMS): " + ov.map(([k, v]) => `${k}=${v}`).join(", ") }));
+  /* dealers */
+  const dl = L.dealers || [];
+  if (!dl.length) blocks.push(el("div", { class: "empty", text: "Aún no hay negociaciones con dealers guardadas." }));
+  else {
+    blocks.push(el("h2", { text: "Dealers" }), table(["Dealer", "Conversaciones", "Tratos", "Cierres (n · mín–máx)", "Rechazado hasta", "Apertura sugerida", "Techo blando", "Prior de paso"],
+      dl.map((d) => [d.name, `${d.negotiations} (${d.rounds} rondas)`, d.deals, d.settle.settle_n ? `${d.settle.settle_n} · ${d.settle.settle_min}–${d.settle.settle_max}` : "n < 2: sin datos",
+        d.rejected ?? "–", d.suggested.open_bid ?? d.suggested.open_ask ?? "por defecto", d.suggested.soft_cap ?? "–", d.prior_mult != null ? `×${d.prior_mult}` : "–"])));
+    const rows = [];
+    dl.forEach((d) => d.params.forEach((p) => rows.push([d.name, p.name, fmt(p.value, 3), fmt(p.default, 3), `${fmt(p.lo, 2)}–${fmt(p.hi, 2)}`, `${p.n}/${p.need}`, p.learned ? "aprendido" : "por defecto"])));
+    blocks.push(el("h2", { style: "margin-top:12px", text: "Parámetros aprendidos" }), el("div", { class: "cap", text: "Se recalculan de las negociaciones guardadas y nunca salen de su rango. n/necesarias = evidencia reunida frente a la mínima." }),
+      table(["Dealer", "Parámetro", "Valor", "Defecto", "Rango", "n", "Estado"], rows));
+    const notes = dl.filter((d) => d.notes.length);
+    if (notes.length) blocks.push(el("div", { class: "cap", text: notes.map((d) => `${d.name}: ${d.notes.join("; ")}`).join(" · ") }));
+  }
+  /* duels */
+  const D = L.duels;
+  if (D) {
+    const roleName = { seller: "Nosotros vendemos", buyer: "Nosotros compramos" };
+    blocks.push(el("h2", { style: "margin-top:12px", text: "Rivales en duelos" }),
+      el("div", { class: "cap", text: `${D.total} duelos guardados, ${D.with_alias} con alias del rival (antes no se guardaba). El prior se usa con ${D.thresholds.alias_moves} movimientos contra el mismo alias o ${D.thresholds.role_moves} del rol.` }),
+      table(["Rol", "Duelos", "Movimientos", "Movimiento medio (% de nuestro límite)", "Se queda quieto", "Calla", "Prior"],
+        Object.entries(D.roles).map(([r, p]) => [roleName[r] || r, p.duels, p.moves, pc(p.move_frac), pc(p.firm_share, 0), pc(p.silent_share, 0),
+          p.prior ? `${p.prior.firm ? "rival firme" : "rival que cede"} (${p.prior.source})` : "aún no"])));
+    if (D.aliases.length) blocks.push(table(["Alias", "Duelos", "Movimientos", "Mov. medio", "Se queda quieto"], D.aliases.map((a) => [a.alias, a.duels, a.moves, pc(a.move_frac), pc(a.firm_share, 0)])));
+  }
+  /* market */
+  const M = L.market;
+  if (M) {
+    blocks.push(el("h2", { style: "margin-top:12px", text: "Mercado entre equipos (trading V2)" }),
+      el("div", { class: "cap", text: `Tick ${M.tick}: ${M.makers} vendedores/compradores vistos (seudónimos), ${M.cards_with_bids} cartas con pujas. Liquidez y "constructor" son inferencias.` }),
+      M.liquid.length ? table(["Carta", "Liquidez", "Pujas vistas", "Desaparecidas", "Estimación comprador"], M.liquid.map((c) => [c.ref, fmt(c.liquidity, 2), c.bids, c.gone, c.estimate != null ? fmt(c.estimate, 0) : "–"])) : "",
+      Object.keys(M.builders).length ? el("div", { class: "cap", text: "Posibles constructores: " + Object.entries(M.builders).map(([k, v]) => `${k}: ${v.join(", ")}`).join(" · ") }) : "");
+  } else blocks.push(el("div", { class: "cap", style: "margin-top:12px", text: "Mercado entre equipos: sin datos todavía. trading_v2.py los acumula (modo shadow, por defecto) cuando está en marcha." }));
+  replace("learning", ...blocks.filter((b) => b !== ""));
+}
+
 function drawPrio(s) {
   const p = s.priorities; if (!p) return;
   const sets = table(["Barrio", "Multiplicador", "Página", "Prioridad"], p.sets.map((x, i) => [`${i + 1}. ${x.name}`, `×${x.affinity}`, `${x.have}/${x.of}`, fmt(x.score, 2)]));
@@ -520,7 +564,7 @@ function render() {
   const el0 = (Date.now() - fetchedAt) / 1000;
   replace("sched", s.schedule.length ? table(["Evento", "En"], s.schedule.map((e) => [ACTION[e.action] || e.action, clock(e.eta_s - el0)])) : el("div", { class: "empty", text: "No hay eventos en el calendario." }));
 
-  drawDealers(s); drawBench(s); drawDuels(s); drawPrio(s);
+  drawDealers(s); drawBench(s); drawDuels(s); drawPrio(s); drawLearning(s);
   const TRUST = { boletin: "oficial", radio: "a veces", tablon: "rumor" };
   replace("news", (s.news || []).length ? table(["Tick", "Fuente", "Fiabilidad", "Noticia"], s.news.map((n) => [n.tick, n.source_name || n.source,
     TRUST[n.source] || "?", `${n.headline}${n.body ? " — " + n.body : ""}`])) : el("div", { class: "empty", text: "Sin noticias." }));

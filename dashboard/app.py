@@ -21,6 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 from bazaar_sdk import Bazaar, BazaarError  # noqa: E402
+from bz.observe.learning import learning_view  # noqa: E402  (read-only: what the agents have learned)
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 PORT = int(os.environ.get("DASH_PORT", "5051"))
@@ -236,6 +237,15 @@ def priorities_view(me, catalog):
             "flags_checked": len(mem.get("flags_seen", []))}
 
 
+def read_json(name):
+    """A JSON file next to the agents (memory, intel). Missing or corrupt means None: the panel just shows less."""
+    try:
+        with open(os.path.join(ROOT, name), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
+
+
 def duel_memory():
     try:
         with open(os.path.join(ROOT, "duels_memory.json"), encoding="utf-8") as f:
@@ -337,6 +347,7 @@ def poll_once(b):
         "dealers": threads_view(me, threads), "duels": duels_view(duels, clock["tick"]),
         "venue": my_v, "schedule": schedule_view(sched, clock), "bench": bench_view(), "priorities": priorities_view(me, catalog),
         "market": market_view(venues, my_v, s),
+        "learning": learning_view(agent_memory(), read_json("duels_memory.json"), read_json("market_intel.json")),
         "news": [{k: n.get(k) for k in ("id", "tick", "source", "source_name", "headline", "body")} for n in news[:15]],
         "processes": processes(), "activity": activity(),
     }

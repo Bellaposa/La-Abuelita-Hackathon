@@ -119,9 +119,9 @@ def _recent(mem, key, n=10):
 def derive(mem, key, list_price=None):
     """{'values': {name: value}, 'notes': [str]} with the learned parameters for dealer `key`. Only names that moved away from the
     default appear in `values`. Evidence needed: `min_evidence` observations; every value is clamped to its bounds."""
-    values, notes = {}, []
+    values, notes, evidence = {}, [], {"tol_share": 0, "open_scale": 0, "block_after_fail": 0}
     if not learning_enabled():
-        return {"values": values, "notes": ["learning disabled (DEALER_LEARN=0)"]}
+        return {"values": values, "notes": ["learning disabled (DEALER_LEARN=0)"], "evidence": evidence}
     negs = _recent(mem, key)
     sale = any("received" in n for n in negs)
     lp = list_price or static("fallback_list")
@@ -140,6 +140,7 @@ def derive(mem, key, list_price=None):
             continue
         gap = (last["our"] - amount) if sale else (amount - last["our"])
         shares.append(max(0.0, gap) / lp)
+    evidence["tol_share"] = len(shares)
     if len(shares) >= static("min_evidence"):
         values["tol_share"] = clamp("tol_share", 1.5 * statistics.median(shares))
         notes.append(f"tol_share {values['tol_share']:.3f} from {len(shares)} deals (median gap {statistics.median(shares):.3f} of list)")
@@ -158,6 +159,7 @@ def derive(mem, key, list_price=None):
             quick += 1
         elif len(rounds) >= 6 and far > 0.3 * amount:
             slow += 1
+    evidence["open_scale"] = quick + slow
     if quick or slow:
         up = (quick - 0.75 * slow) if sale else (0.75 * slow - quick)           # +: ask more / bid more
         scale = clamp("open_scale", 1.0 + 0.04 * up)
@@ -167,10 +169,11 @@ def derive(mem, key, list_price=None):
 
     # block_after_fail: every recent cooloff doubles our patience a little.
     cool = sum(1 for n in negs if n.get("closed_reason") == "cooloff")
+    evidence["block_after_fail"] = cool
     if cool:
         values["block_after_fail"] = clamp("block_after_fail", SPEC["block_after_fail"][0] * (1 + 0.5 * cool))
         notes.append(f"block_after_fail {values['block_after_fail']} after {cool} cooloffs")
-    return {"values": values, "notes": notes}
+    return {"values": values, "notes": notes, "evidence": evidence}
 
 
 def learned_params(mem, key, list_price=None):
