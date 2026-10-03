@@ -237,15 +237,16 @@ def new_duel_mem():
     return {"duels": {}, "finished": {}, "raw_samples": []}
 
 
-def run_duel(role, limit, rival, start_tick=100, total=16, issues=("price",), w=None, rival_days=None):
+def run_duel(role, limit, rival, start_tick=100, total=16, issues=("price",), w=None, rival_days=None, mem=None, alias=None):
     """Play one duel tick by tick against a scripted rival through the real `smart_duels.act`.
     rival: list of rival prices per tick (None = silent). Returns (said, accepted_rival_price, mem)."""
     sd = prod("smart_duels")
-    b, mem, accepted_price = FakeDuelAPI(), new_duel_mem(), None
+    b, accepted_price = FakeDuelAPI(), None
+    mem = new_duel_mem() if mem is None else mem
     for k, rp in enumerate(rival):
         tick = start_tick + k
         duel = {"duel": 1, "session": 1, "status": "live", "role": role, "your_limit": limit, "issues": list(issues),
-                "your_days_weight": w, "deadline_tick": start_tick + total, "decay_per_round": 0.06,
+                "your_days_weight": w, "deadline_tick": start_tick + total, "decay_per_round": 0.06, "rival": alias,
                 "rival_offer": None if rp is None else ({"price": rp, "days": rival_days} if rival_days is not None else {"price": rp})}
         n_acc = len(b.accepted)
         sd.act(b, duel, tick, mem)

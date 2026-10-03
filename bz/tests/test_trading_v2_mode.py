@@ -1,6 +1,7 @@
 """TRADING_V2 mode switch and its wiring into the legacy trading code.
 
-Default is `off`: nothing changes in production until somebody writes `shadow` or `on`. In `on` the legacy market code
+Default is `shadow` (changed from `off` on request): trading_v2 only observes and logs, it never writes. Nothing trades differently
+until somebody writes `on`. In `on` the legacy market code
 (smart_agent.phase_market, page_hunter) must step aside so exactly one agent trades.
 """
 import os
@@ -20,8 +21,8 @@ def mode_env(monkeypatch, tmp_path):
     return f
 
 
-def test_default_is_off_and_legacy_trades(mode_env):
-    assert mode.get_mode() == "off" and mode.legacy_should_trade() is True
+def test_default_is_shadow_and_legacy_keeps_trading(mode_env):
+    assert mode.get_mode() == "shadow" and mode.legacy_should_trade() is True
 
 
 @pytest.mark.parametrize("word, expected, legacy", [("off", "off", True), ("shadow", "shadow", True), ("on", "on", False),

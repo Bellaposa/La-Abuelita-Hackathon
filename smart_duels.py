@@ -180,6 +180,41 @@ def rival_stats(history, limit):
     return {"n": len(moves), "rate": sum(recent) / len(recent), "firm": all(abs(m) <= eps for m in moves[-2:])}
 
 
+def rival_profile(mem, alias=None, role=None):
+    """What we have SEEN of rivals across duels (observed facts): how far they move per round (as a share of OUR limit, so duels of
+    different size are comparable), how often they do not move, how often they are silent. `role` is the role WE played;
+    `alias` restricts to one rival (duels recorded before the alias was stored have none, so they only count at role level)."""
+    rows = [rec["observed"] for rec in mem["duels"].values()
+            if (role is None or rec["observed"].get("role") == role) and (alias is None or rec["observed"].get("rival") == alias)]
+    moves, rounds, silent = [], 0, 0
+    for o in rows:
+        lim = o.get("limit") or 0
+        for h in o.get("history", []):
+            rounds += 1
+            silent += h.get("rival_price") is None
+            if h.get("rival_move") is not None and lim:
+                moves.append(h["rival_move"] / lim)
+    firm = sum(1 for m in moves if abs(m) <= 0.005)
+    return {"duels": len(rows), "moves": len(moves), "move_frac": (sum(moves) / len(moves)) if moves else None,
+            "firm_share": (firm / len(moves)) if moves else None, "silent_share": (silent / rounds) if rounds else None}
+
+
+PRIOR_ALIAS_MOVES, PRIOR_ROLE_MOVES = 6, 12      # observed rival moves needed before a prior is used (alias / whole role)
+
+
+def rival_prior(mem, alias, role, limit):
+    """stats-shaped prior ({n, rate, firm, source}) for plan_price BEFORE this duel has shown us two rival moves, or None.
+    The rival's own alias wins when we have enough moves against it; otherwise everything we have seen at this role.
+    It only tilts the price curve (plan_price); the accept decision keeps requiring live evidence (should_accept)."""
+    for who, a, need in (("alias", alias, PRIOR_ALIAS_MOVES), ("role", None, PRIOR_ROLE_MOVES)):
+        if who == "alias" and not a:
+            continue
+        p = rival_profile(mem, alias=a, role=role)
+        if p["moves"] >= need and p["move_frac"] is not None:
+            return {"n": p["moves"], "rate": p["move_frac"] * limit, "firm": p["firm_share"] >= 0.7, "source": who}
+    return None
+
+
 def reservation(side, limit):
     """Worst price we will ever offer: OFFER_KEEP of the limit (at least MIN_MARGIN) on the right side of it."""
     return limit + side * max(MIN_MARGIN, round(OFFER_KEEP * limit))
@@ -305,6 +340,8 @@ def act(b, duel, tick, mem):
                                                      "history": []},
                                         "inferred": {}})
     obs = rec["observed"]
+    if duel.get("rival") and not obs.get("rival"):
+        obs["rival"] = duel["rival"]               # the alias: lets the next duel against the same rival start informed
     st = rec.setdefault("state", {"rounds": 0, "our_last": None, "anchor": None, "rival_last": None,
                                   "last_tick": None, "done": False, "total": None})
     if st["done"] or st["last_tick"] == tick:
@@ -330,10 +367,11 @@ def act(b, duel, tick, mem):
     rival_days_hist = [h["rival_days"] for h in hist if h.get("rival_days") is not None]
     if rival_days is not None:
         rival_days_hist.append(rival_days)
-    next_price, info = plan_price(side, limit, st, stats, rival_price, elapsed, total)
+    price_stats = stats or rival_prior(mem, obs.get("rival"), role, limit)      # live evidence first; else what past duels taught us
+    next_price, info = plan_price(side, limit, st, price_stats, rival_price, elapsed, total)
     next_days, price_mult = plan_days(duel, limit, info["frac"], rival_days_hist, rival_days)
     if price_mult != 1.0:                                           # days given away: hold price a bit longer
-        next_price, _ = plan_price(side, limit, st, stats, rival_price, elapsed * price_mult, total)
+        next_price, _ = plan_price(side, limit, st, price_stats, rival_price, elapsed * price_mult, total)
     # the last round is our last shot: go to the reservation so a deal inside the margin remains possible
     next_price = endgame_price(side, limit, st["our_last"], rival_price, remaining, next_price)
     next_price = jitter_price(side, limit, st["our_last"], next_price, did, tick, remaining)
