@@ -1,0 +1,14 @@
+{
+ "_note": "ARTIFICIAL: same keys as the real clock['limits'] (fixtures/clock.json, tick 346) with different numbers, to prove that code reads the values instead of hard-coding them. Not captured from the server.",
+ "tick": 777,
+ "tick_seconds": 15.0,
+ "paused": false,
+ "next_tick_in": 4.2,
+ "limits": {
+  "accepts_per_team_per_tick": 2,
+  "messages_per_side_per_tick": 3,
+  "max_open_threads_per_team": 1,
+  "max_open_offers_per_team": 50,
+  "offers_per_team_per_tick": 5
+ }
+}
