@@ -291,10 +291,17 @@ def ladder_record(mem, dealer, thread, rarity, setid, ref, hers, price, buy):
             f"worst of our best three now {ladder.worst_of_best3(mem, ladder_round(mem), dealer):.2f}")
 
 
+# Organisers' Payday deck (Sat 2026-10-03): "a deal = value it adds to your collection - price paid + price received;
+# DEAL WITH A DEALER: a gain counts on the ladder, a loss counts in full; dealer to dealer: buying gains nothing, selling
+# below value costs; never sell below your value". So a ladder premium (paying over our value, selling under it) is a
+# loss counted in full: off by default. LADDER_PREMIUM=1 brings the old behaviour back.
+LADDER_PREMIUM = os.environ.get("LADDER_PREMIUM", "0") == "1"
+
+
 def buy_cap_with_ladder(mem, me, dealer, rarity, lp, fh, value_cap, hers, ref):
-    """Our private-value cap, lifted while the ladder gain at that price still covers the premium (no fixed limit)."""
+    """Our private-value cap; with LADDER_PREMIUM, lifted while the ladder gain at that price covers the premium."""
     rnd = ladder_round(mem)
-    if rnd is None:
+    if rnd is None or not LADDER_PREMIUM:
         return value_cap
     open_ = ladder_open(mem, dealer, rarity, hers, fallback=round(lp * 1.25) if lp else None)
     limit = ladder.limit_estimate(fh, open_, True, lp)
@@ -309,9 +316,9 @@ def buy_cap_with_ladder(mem, me, dealer, rarity, lp, fh, value_cap, hers, ref):
 
 
 def sell_floor_with_ladder(mem, me, dealer, rarity, fh, value_floor, hers, ref):
-    """Our private-value floor, lowered while the ladder gain at that price still covers what we give up."""
+    """Our private-value floor; with LADDER_PREMIUM, lowered while the ladder gain covers what we give up."""
     rnd = ladder_round(mem)
-    if rnd is None or not hers:
+    if rnd is None or not hers or not LADDER_PREMIUM:
         return value_floor
     open_ = ladder_open(mem, dealer, rarity, hers)
     limit = ladder.limit_estimate(fh, open_, False)
@@ -1324,16 +1331,16 @@ def picaros_candidate(me, catalog, menu=None):
 
 # ---------------------------------------------------------------- the epic loop (Don Ernesto's ladder level)
 #
-# STRATEGY NOTE, Sat 2026-10-03 ~20:45, right after the 400 P payday. REVIEW BEFORE SUNDAY'S ROUND, do not leave it on
-# by default forever. Why it is on: Don Ernesto (banco, level 5, the heaviest ladder level) only buys epics/legendaries
-# and only sells gold packs (opens 546, never moved in 4 talks) and legendaries; we had no epic and level 5 was empty.
-# Buying an epic from Los Pícaros (~128-147 in real deals) and selling it to Ernesto (opens 113, "final" 115, real
-# deals 116-120) costs ~20-30 P a loop for ~0.35-1.2 score points (cards and cash never score; only deals do).
-# It stops by itself once Ernesto's three best deals of the round are good (EPIC_LOOP_FULL) or cash would fall under
-# EPIC_LOOP_RESERVE (kept for Sunday's new round). Things to recheck on Sunday: Ernesto's real epic prices (feed_intel
-# banco|buys|epic), whether he now sells gold packs under 546 (then a pack may beat the loop), the Pícaros' epic prices,
-# whether Pilar (pays 179-199 for SAL-11) is the better buyer for SAL/RET epics, and whether there was another payday.
-EPIC_LOOP = os.environ.get("EPIC_LOOP", "1") == "1"
+# STRATEGY NOTE, Sat 2026-10-03. OFF BY DEFAULT since ~21:30. REVIEW BEFORE TURNING IT BACK ON.
+# Turned on at ~20:45 after the 400 P payday on a wrong premise ("cards never score, only the ladder"). The organisers'
+# Payday deck says a dealer deal scores value added - price paid + price received, a loss counts in full, and selling
+# below value costs: SAL-11 bought at 143 (worth 198 to us) and sold to Ernesto at 120 cost ~-78. Ernesto pays ~113-120
+# for epics our value puts at 160-200, so he is never a buyer for them (banco_candidate now demands our value).
+# What did work: RET-11 bought from Los Pícaros at 137 (worth 162) and sold by page_hunter to a team at 216 (team-trade
+# gains count up to 50). If turned back on, buys are capped under our value and the epic waits for a team buyer.
+# Sunday 09:00 (deck): +150 P and a new round; Ernesto's vault legendary (~470) is worth buying only under our value
+# (LAV-12 was 720 to us on Saturday).
+EPIC_LOOP = os.environ.get("EPIC_LOOP", "0") == "1"
 EPIC_LOOP_RESERVE = int(os.environ.get("EPIC_LOOP_RESERVE", "250"))   # primas kept for Sunday's round
 EPIC_LOOP_CAP = int(os.environ.get("EPIC_LOOP_CAP", "150"))           # most we pay Los Pícaros for an epic (deals 128-147)
 EPIC_LOOP_FULL = 0.9                                                  # Ernesto's worst-of-best-three share that ends the loop
@@ -1412,7 +1419,11 @@ def phase_epic_buy(b, me, catalog, mem, can_accept):
     t = b.thread(tid)
     if t["status"] != "open":
         return False, True
-    cap = min(EPIC_LOOP_CAP, me["cash"] - EPIC_LOOP_RESERVE)
+    try:                                                  # never pay our value or more (a dealer-deal loss counts in full)
+        value = float(b.value(act["ref"]).get("your_value") or 0)
+    except BazaarError:
+        value = 0.0
+    cap = min(EPIC_LOOP_CAP, me["cash"] - EPIC_LOOP_RESERVE, math.floor(value) - 1)
     ours, hers = read_thread(t, me["id"], dealer)
     action, price, why = next_offer(cap, EPIC_LIST, ours, hers, {})        # no learned profile: theirs is from rares
     log(f"epic loop: Pícaros {tid} {act['ref']}: ours {ours} theirs {[h[0] for h in hers]} cap {cap} -> {action} {price} ({why})")
@@ -1442,7 +1453,11 @@ def banco_candidate(me, catalog, menu=None, mem=None):
     if not held:
         return None
     a = held[0]
-    return (1.0, a["ref"], a, BANCO_FLOOR, BANCO_ASK, 0.0)
+    value = float(a.get("your_value") or 0)
+    floor = max(BANCO_FLOOR, math.ceil(value) + 1)        # never under our value: a dealer-deal loss counts in full
+    if floor > BANCO_ASK:
+        return None                                       # Ernesto pays ~113-120: he cannot be the buyer for this one
+    return (1.0, a["ref"], a, floor, BANCO_ASK, value)
 
 
 def phase_banco(b, me, catalog, mem, can_accept):
@@ -1801,6 +1816,20 @@ def _test_ladder_open_cap():
 
 
 def _test_epic_loop():
+    global EPIC_LOOP
+    assert not EPIC_LOOP or os.environ.get("EPIC_LOOP") == "1", "off by default since the Payday deck"
+    m0 = {"ladder": {"round": 2, "deals": []}, "epic_loop": {"held": [9], "tried": {}}}
+    me0 = {"cash": 461, "assets": [{"id": 9, "kind": "card", "ref": "RET-11", "rarity": "epic", "your_value": 162}]}
+    assert banco_candidate(me0, {}, None, m0) is None, "Ernesto never gets an epic under our value"
+    assert not LADDER_PREMIUM or os.environ.get("LADDER_PREMIUM") == "1", "no ladder premium by default"
+    saved, EPIC_LOOP = EPIC_LOOP, True
+    try:
+        _test_epic_loop_on()
+    finally:
+        EPIC_LOOP = saved
+
+
+def _test_epic_loop_on():
     mem = {"ladder": {"round": 2, "deals": []}, "epic_loop": {"held": [], "tried": {}},
            "feed_intel": {"deals": {"banco|buys|epic": [{"price": 116.0}, {"price": 120.0}]}}}
     me = {"cash": 461, "assets": [{"id": 9, "kind": "card", "ref": "SAL-11", "rarity": "epic"}]}
