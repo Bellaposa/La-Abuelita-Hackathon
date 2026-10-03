@@ -135,8 +135,8 @@
     <div class="card c12"><h2>Duelos</h2><div class="cap">Regla de oro: nunca cruzar nuestro límite. Sin trato, los dos equipos quedan a 0. El valor del trato baja en cada ronda</div><div id="duels"></div></div>
     <div class="card c12"><h2>Noticias</h2><div class="cap">Boletín = oficial · Radio = mezcla verdad y ambiente · Tablón = rumores. Ninguna se cree sin comprobarla en datos reales</div><div id="news"></div></div>
     <div class="card c12"><h2>Prioridad de compra</h2><div class="cap">Valor para NOSOTROS (servidor, bonus de página incluido). Pagamos como máximo el 60 % de ese valor</div><div id="prio"></div></div>
-    <div class="card c7"><h2>Conversaciones con los dealers</h2><div class="cap">Mensajes reales de la conversación abierta o la última</div><div class="tabs" id="dealer-tabs"></div><div id="dealers"></div></div>
-    <div class="card c5"><h2>Nuestro mercado</h2><div class="cap">Venue donde comercian los otros equipos</div><div id="venue"></div></div>
+    <div class="card c12"><h2>Nuestro mercado</h2><div class="cap">Venue v01: libro en vivo (broker), operaciones entre otros equipos y comparación con los demás mercados</div><div id="venue"></div></div>
+    <div class="card c12"><h2>Conversaciones con los dealers</h2><div class="cap">Mensajes reales de la conversación abierta o la última</div><div class="tabs" id="dealer-tabs"></div><div id="dealers"></div></div>
     <div class="card c7"><h2>Actividad de los agentes</h2><div class="cap">Últimos eventos de los logs, los más recientes arriba</div><div class="feed scroll" id="feed"></div></div>
     <div class="card c5"><h2>Agentes en ejecución</h2><div class="cap">Una sola copia por agente: dos se pisan entre sí</div><div id="procs"></div></div>
     <div class="card c12"><h2>Cartas en mano</h2><div class="cap">Valor = lo que valen para nosotros (privado). “Repetida” = copia de más</div><div class="scroll" id="cards"></div></div>
@@ -432,6 +432,36 @@ function drawPrio(s) {
     el("div", { class: "c7" }, [el("h2", { text: "Cartas que faltan, por valor" }), cards, el("h2", { style: "margin-top:12px", text: "Flags" }), fl])]));
 }
 
+function drawMarket(s) {
+  const v = s.venue, m = s.market;
+  if (!v || !m) return replace("venue", el("div", { class: "empty", text: "No tenemos un mercado abierto." }));
+  const tile = (l, val, d) => el("div", { class: "tile" }, [el("div", { class: "l", text: l }), el("div", { class: "v", text: val }), el("div", { class: "d", text: d || "" })]);
+  const p = m.points || {};
+  const tiles = el("div", { class: "kpis" }, [
+    tile("Puntos de mercado", `${fmt(p.market, 1)} / 30`, `Market Test ${fmt(p.bench_points, 3)} · mercado ${fmt(p.mm_points, 1)}`),
+    tile("Eficiencia Market Test", p.bench_efficiency != null ? fmt(p.bench_efficiency * 100, 1) + " %" : "–", m.bench_live ? `● sesión ${m.bench_run} en curso (${m.bench_live} ofertas)` : "sin sesión en curso"),
+    tile("Puesto entre mercados", m.our_rank ? `${m.our_rank}.º de ${m.venues.length}` : "–", "por operaciones"),
+    tile("Operaciones", String(v.trades ?? 0), `${v.traders ?? 0} traders · ${v.pairs ?? 0} parejas`),
+    tile("Volumen", `${fmt(v.volume, 0)} P`, `comisión ${v.fee_bps / 100} % · ${v.rules?.mechanism ?? ""}`),
+    tile("Valor creado", v.value_created != null ? fmt(v.value_created, 1) : "–", "entre otros equipos (puntúa)")]);
+  const book = m.offers.length ? table(["Lado", "Cartas", "Precio", "Quién"], m.offers.map((o) => [o.side, o.cards, o.price ?? "–", o.maker ?? "–"]))
+    : el("div", { class: "empty", text: "Libro vacío: ninguna oferta de otros equipos ahora mismo." });
+  const rec = m.recent.length ? table(["Tick", "Entre", "Cartas", "Precio", "Comisión"], m.recent.slice().reverse().map((r) => [r.tick, (r.parties || []).join(" → "), r.cards.join(", ") || "—", r.price ?? "–", r.fee ?? 0]))
+    : el("div", { class: "empty", text: "Aún no hay operaciones liquidadas." });
+  const t = el("table"), hr = el("tr");
+  ["#", "Mercado", "Dueño", "Comisión", "Mecanismo", "Operaciones", "Traders", "Volumen"].forEach((x, i) => hr.appendChild(el("th", { class: i > 2 ? "n" : "", text: x })));
+  t.appendChild(el("thead", {}, [hr]));
+  const tb = el("tbody");
+  m.venues.forEach((x, i) => { const row = el("tr", {}, [i + 1, `${x.venue} · ${x.name}`, x.owner, `${(x.fee_bps || 0) / 100} %`, x.mechanism || "–", x.trades, x.traders, x.volume]
+    .map((c, j) => el("td", { class: j > 2 ? "n" : "", text: String(c) })));
+    if (x.us) row.style.fontWeight = "650"; tb.appendChild(row); });
+  t.appendChild(tb);
+  const house = m.house ? el("div", { class: "cap", style: "margin-top:6px", text: `El Rastro (la casa, 5 % + 1 P/carta): ${m.house.trades} operaciones · ${m.house.traders} traders · ${m.house.volume} P` }) : "";
+  replace("venue", tiles, el("div", { class: "grid", style: "margin-top:14px" }, [
+    el("div", { class: "c5" }, [el("h2", { text: "Libro en vivo" }), book, el("h2", { style: "margin-top:12px", text: "Últimas operaciones en nuestro mercado" }), rec]),
+    el("div", { class: "c7" }, [el("h2", { text: "Todos los mercados" }), el("div", { class: "scroll" }, [t]), house])]));
+}
+
 /* ---------- panels ---------- */
 const RARITY = { common: "común", uncommon: "poco común", rare: "rara", epic: "épica", legendary: "legendaria" };
 const ACTION = { duels: "Duelos", bench: "Market Test", persona_opens: "Se abre un dealer", round: "Nueva ronda", set_release: "Sale un set", persona_announce: "Anuncio de dealer" };
@@ -496,10 +526,7 @@ function render() {
     TRUST[n.source] || "?", `${n.headline}${n.body ? " — " + n.body : ""}`])) : el("div", { class: "empty", text: "Sin noticias." }));
 
   /* venue */
-  const v = s.venue;
-  replace("venue", v ? el("div", {}, [el("div", { class: "kpis" }, [tile("Operaciones", String(v.trades ?? 0), `${v.traders ?? 0} traders`), tile("Volumen", fmt(v.volume, 0), `comisiones ${fmt(v.fees, 0)}`),
-    tile("Valor creado", fmt(v.value_created, 1), "entre otros equipos")]),
-    el("div", { class: "cap", style: "margin-top:10px", text: `${v.name} · comisión ${v.fee_bps / 100} % · ${v.rules?.mechanism ?? ""} · ${v.status}` })]) : el("div", { class: "empty", text: "No tenemos un mercado abierto." }));
+  drawMarket(s);
 
   /* processes */
   const dups = s.processes.duplicates, w = $("warn");

@@ -171,6 +171,37 @@ def bench_view():
     return out[-8:]
 
 
+def broker_book():
+    """Live book of OUR venue through the broker key kept locally in .broker_key (read-only: never matches)."""
+    try:
+        key = open(os.path.join(ROOT, ".broker_key")).read().strip()
+    except OSError:
+        return None
+    return Bazaar(URL, key, wait_on_tick=False, retries=1).broker(key).book()
+
+
+def market_view(venues, my_v, s):
+    book = cached("book", 8, broker_book) or {}
+    def side(o):
+        g, w = o.get("give") or {}, o.get("want") or {}
+        refs = [a.get("ref") for a in g.get("assets") or []] or [t.split(":", 1)[-1] for t in w.get("types") or []]
+        return ("vende" if w.get("cash") else "compra"), ", ".join(r for r in refs if r) or "—", w.get("cash") or g.get("cash")
+    offers = [dict(zip(("side", "cards", "price"), side(o)), id=o.get("id"), maker=o.get("maker")) for o in book.get("offers") or []]
+    bench = book.get("bench_offers") or []
+    recent = [{"tick": r.get("tick"), "parties": r.get("parties"), "price": r.get("price"), "fee": r.get("fee"),
+               "cards": [i.get("ref") for i in r.get("items") or [] if i.get("kind") == "card"]}
+              for r in (book.get("recent") or [])][-15:]
+    rank = sorted((v for v in venues.get("venues", []) if not v.get("house")), key=lambda v: (-(v.get("trades") or 0), -(v.get("volume") or 0)))
+    table = [{"venue": v["venue"], "name": v.get("name"), "owner": v.get("owner_name"), "fee_bps": v.get("fee_bps"),
+              "mechanism": (v.get("rules") or {}).get("mechanism"), "trades": v.get("trades") or 0, "traders": v.get("traders") or 0,
+              "volume": v.get("volume") or 0, "value_created": v.get("value_created"), "us": v is my_v} for v in rank]
+    house = next((v for v in venues.get("venues", []) if v.get("house")), None)
+    return {"offers": offers, "bench_live": len(bench), "bench_run": bench[0]["id"].split("-")[0] if bench else None,
+            "recent": recent, "venues": table, "our_rank": next((i + 1 for i, v in enumerate(table) if v["us"]), None),
+            "house": house and {"trades": house.get("trades"), "volume": house.get("volume"), "traders": house.get("traders")},
+            "points": {k: s.get(k) for k in ("market", "mm_points", "bench_points", "bench_efficiency")}}
+
+
 def agent_memory():
     try:
         with open(os.path.join(ROOT, "memory.json"), encoding="utf-8") as f:
@@ -305,6 +336,7 @@ def poll_once(b):
         "offers_open": len([o for o in offers if o["maker"] == me["id"]]),
         "dealers": threads_view(me, threads), "duels": duels_view(duels, clock["tick"]),
         "venue": my_v, "schedule": schedule_view(sched, clock), "bench": bench_view(), "priorities": priorities_view(me, catalog),
+        "market": market_view(venues, my_v, s),
         "news": [{k: n.get(k) for k in ("id", "tick", "source", "source_name", "headline", "body")} for n in news[:15]],
         "processes": processes(), "activity": activity(),
     }
