@@ -211,6 +211,25 @@ def step(b, me, catalog, venue):
                 log(f"CANCEL bid {o['id']} for {refs}: we already hold it")
             except BazaarError as e:
                 log("cancel refused:", e.code, e.message)
+    # Saturday 22:4x: RET-06 was listed at 30 when it was worth 22.5; the page then completed (RET-03 and RET-05 bought),
+    # its value jumped to ~82, the stale listing filled and broke the page (-55). So every tick: never offer a card of a
+    # complete page, and cancel any of our sell offers that is now under the copy's current value.
+    complete = {p["set"] for p in (me.get("album") or {}).get("pages", []) if p.get("complete")}
+    worth = {a["id"]: float(a.get("your_value") or 0) for a in me["assets"]}
+    for o in list(mine):
+        ga = o["give"].get("assets") or []
+        if len(ga) != 1 or not o["want"].get("cash") or o.get("status", "open") != "open":
+            continue
+        stale = o["want"]["cash"] < math.ceil(worth.get(ga[0]["id"], 0) * SELL_MARGIN + 1)
+        if stale or ga[0].get("ref", "").split("-")[0] in complete:
+            try:
+                b.cancel(o["id"])
+                mine.remove(o)
+                listed.discard(ga[0]["id"])
+                log(f"CANCEL sell {o['id']} {ga[0].get('ref')}: " + ("under its value now" if stale else "its page is complete"))
+            except BazaarError as e:
+                log("cancel refused:", e.code, e.message)
+    me = dict(me, assets=[a for a in me["assets"] if a.get("ref", "").split("-")[0] not in complete])  # never sold
     targets = page_targets(catalog, me["affinity"], have)
     comp = {}
     for o in offers:
