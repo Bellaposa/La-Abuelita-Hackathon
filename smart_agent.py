@@ -339,8 +339,23 @@ def next_offer(cap, list_price, ours, hers, inferred):
     return "offer", new, f"mood {mood}, gap {gap}, step {step} (" + ", ".join(why) + ")"
 
 
-def next_offer_sell(floor, list_price, ours, hers, inferred, k0=None, soft_floor=None):
-    """Mirror of next_offer for selling to a dealer: we ask, they bid. (action, price, reason); never below floor."""
+def deal_price(t, me_id):
+    """Price of a dealer thread that ended in a deal, from the thread itself: the last priced offer was the one accepted
+    (the dealer's when we accepted it, ours when the dealer accepted). Never a cash difference, which other trades in the
+    same ticks would pollute. None when the thread has no priced offer."""
+    last = None
+    for m in t.get("messages", []):
+        o = m.get("offer") or {}
+        p = (o.get("give") or {}).get("cash") or (o.get("want") or {}).get("cash")
+        if p:
+            last = p
+    return last
+
+
+def next_offer_sell(floor, list_price, ours, hers, inferred, k0=None, soft_floor=None, hold=False):
+    """Mirror of next_offer for selling to a dealer: we ask, they bid. (action, price, reason); never below floor.
+    hold=True (Doña Pilar): no tolerance and no soft floor: accept only her `final` or a bid that meets our ask, since she
+    keeps raising when we keep conceding (16 -> 18 seen) and closing early captured ~0 of her range."""
     ask0 = min(list_price, inferred["open_ask"]) if inferred.get("open_ask") else list_price      # open_ask: profile_hints
     if inferred.get("open_ask"):
         ask0 = min(list_price, round(ask0 * (inferred.get("params") or {}).get("open_scale", 1.0)))
@@ -352,7 +367,9 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=None, soft_floor
         return "wait", None, "he has not answered our last ask"
     bid, final, _ = hers[-1]
     last = ours[-1] if ours else None
-    tol = max(1, int((inferred.get("params") or {}).get("tol_share", dparams.static("tol_share")) * list_price))
+    tol = 0 if hold else max(1, int((inferred.get("params") or {}).get("tol_share", dparams.static("tol_share")) * list_price))
+    if hold:
+        soft_floor = None
     if last is None and not (bid >= floor and final):
         return "offer", max(floor, ask0), "opening ask (he spoke first)"
     if soft_floor is not None and bid >= soft_floor and len(hers) >= dparams.static("firm_rounds") and len({h[0] for h in hers[-dparams.static("firm_rounds"):]}) == 1:
@@ -930,7 +947,7 @@ def phase_abuela(b, me, catalog, mem):
     if act and (tid is None or act["thread"] != tid):                   # our negotiation ended: record the outcome
         t = b.thread(act["thread"])
         outcome = t["status"]
-        paid = act["cash_start"] - me["cash"] if outcome == "deal" else None
+        paid = deal_price(t, me["id"]) if outcome == "deal" else None
         ours, hers = read_thread(t, me["id"])
         rec = {"dealer": "abuela", "thread": act["thread"], "topic": act["topic"], "outcome": outcome, "closed_reason": t.get("closed_reason"),
                "paid": paid, "rounds": rounds_of(ours, hers)}
@@ -1043,7 +1060,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     if act and (tid is None or act["thread"] != tid):
         t = b.thread(act["thread"])
         ours, hers = read_thread(t, me["id"], dealer, sell=True)
-        got = me["cash"] - act["cash_start"] if t["status"] == "deal" else None
+        got = deal_price(t, me["id"]) if t["status"] == "deal" else None
         mem["observed"]["negotiations"].append({"dealer": dealer, "thread": act["thread"], "topic": act["topic"], "outcome": t["status"],
                                                 "closed_reason": t.get("closed_reason"), "paid": None, "received": got,
                                                 "rounds": rounds_of(ours, hers)})
@@ -1054,7 +1071,10 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
             mem.setdefault(f"{dealer}_tried", {})[act["ref"]] = me["tick"]
         mem[f"active_{dealer}"], act = None, None
     if tid is None:
-        cand = candidate_fn(me, catalog, menu_rarity_prices(mem, dealer))
+        on_tables = {aid for d in ("chato", "pilar", "picaros") if d != dealer        # a card is on ONE dealer's table at a time
+                     for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
+        cand = candidate_fn(dict(me, assets=[a for a in me["assets"] if a.get("id") not in on_tables]), catalog,
+                            menu_rarity_prices(mem, dealer))
         if not cand:
             return False
         _, ref, asset, floor, lp, lost = cand
@@ -1087,7 +1107,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
         return False
     ours, hers = read_thread(t, me["id"], dealer, sell=True)
     soft = None if mem.get(f"{dealer}_soft_done") else math.ceil(act["lost"] + dparams.static("soft_add"))     # one firm-bid deal per dealer, for the ladder
-    action, price, why = next_offer_sell(act["floor"], act["lp"], ours, hers, inferred, soft_floor=soft)
+    action, price, why = next_offer_sell(act["floor"], act["lp"], ours, hers, inferred, soft_floor=soft, hold=(dealer == "pilar"))
     log(f"{name} thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {act['floor']} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
         assets = ((act["topic"] or {}).get("sell") or {}).get("assets") or []
@@ -1146,7 +1166,7 @@ def phase_pilar(b, me, catalog, mem, can_accept):
     return phase_chato(b, me, catalog, mem, can_accept, dealer="pilar", candidate_fn=pilar_candidate)
 
 
-def picaros_candidate(me, catalog):
+def picaros_candidate(me, catalog, menu=None):
     """Los Pícaros buy commons and uncommons of released sets: the outlet our spare commons lack (the boards are flooded).
     Spares only (never our only copy); their price list is not published, so we ask book and let the floor protect us."""
     counts, ids = card_counts(me)
@@ -1156,7 +1176,7 @@ def picaros_candidate(me, catalog):
         a = ids[ref][-1]
         if a["rarity"] not in ("common", "uncommon") or ref not in book or n < 2:
             continue
-        lp = int(book[ref]["book"])
+        lp = int((menu or {}).get(a["rarity"]) or book[ref]["book"])           # published menu price if any, else book
         lost = marginal_value(ref, n, catalog, me["affinity"])
         floor = math.ceil(lost * 1.4 + SELL_MIN_GAIN)
         if floor <= 0.85 * lp:
@@ -1234,7 +1254,7 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
     if act and (tid is None or act["thread"] != tid):                     # our buy ended: record it
         t = b.thread(act["thread"])
         ours, hers = read_thread(t, me["id"], dealer)
-        paid = act["cash_start"] - me["cash"] if t["status"] == "deal" else None
+        paid = deal_price(t, me["id"]) if t["status"] == "deal" else None
         mem["observed"]["negotiations"].append({"dealer": f"{dealer}_buy", "thread": act["thread"], "topic": act["topic"],
                                                 "outcome": t["status"], "closed_reason": t.get("closed_reason"),
                                                 "paid": paid, "rounds": rounds_of(ours, hers)})
@@ -1418,7 +1438,36 @@ def run_agent():
 
 # ---------------------------------------------------------------- offline checks
 
+def _test_candidates_take_menu():
+    cat = {"sets": [{"id": "MAL", "released": True, "cards": [{"id": "MAL-01", "book": 10, "rarity": "common", "name": "x"},
+                                                               {"id": "MAL-06", "book": 25, "rarity": "uncommon", "name": "y"}]}],
+           "values": {"copy_marginals": [1.0, 0.25, 0.1]}}
+    me = {"affinity": {"MAL": 0.5}, "assets": [{"id": i, "kind": "card", "ref": r, "serial": i, "rarity": rr}
+                                                for i, (r, rr) in enumerate([("MAL-01", "common")] * 3 + [("MAL-06", "uncommon")] * 2)]}
+    for fn in (chato_candidate, pilar_candidate, picaros_candidate):
+        fn(me, cat, {"common": 10, "uncommon": 25})                     # the dealer phase always passes the menu
+    assert picaros_candidate(me, cat, {"common": 10}) is not None
+
+
+def _test_deal_price_and_hold():
+    msg = lambda who, p, final=False: {"sender": who, "offer": {"give": {"cash": 0}, "want": {"cash": p}, "final": final}}
+    assert deal_price({"messages": [msg("t06", 20), msg("pilar", 22, True)]}, "t06") == 22, "we accepted her final"
+    assert deal_price({"messages": [msg("pilar", 22), msg("t06", 21)]}, "t06") == 21, "she accepted ours"
+    assert deal_price({"messages": []}, "t06") is None
+    inf = {"params": {"tol_share": 0.1}}
+    ours, hers = [25, 18], [(16, False, ""), (17, False, "")]
+    assert next_offer_sell(10, 25, ours, hers, inf)[0] == "accept", "default: 17 is within tolerance of 18"
+    act, price, _ = next_offer_sell(10, 25, ours, hers, inf, hold=True)
+    assert act == "offer" and price < 18, (act, price)                     # Pilar: keep conceding, she keeps raising
+    assert next_offer_sell(10, 25, ours, [(16, False, ""), (17, True, "")], inf, hold=True)[0] == "accept", "her final"
+    assert next_offer_sell(10, 25, [25, 18], [(16, False, ""), (18, False, "")], inf, hold=True)[0] == "accept", "meets ask"
+    rep = [(16, False, "")] * 3
+    assert next_offer_sell(20, 25, [25, 22, 21], rep, inf, soft_floor=12, hold=True)[0] != "accept", "no soft floor"
+
+
 def selftest():
+    _test_candidates_take_menu()
+    _test_deal_price_and_hold()
     import tempfile
     os.environ["ACCEPT_GATE_DIR"] = tempfile.mkdtemp(prefix="gate_selftest_")     # never reserve real ticks in the repo-root gate
     def play(cap, open_ask, floor, resp, final_after=None, list_price=26, inferred=None):
