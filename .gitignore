@@ -17,3 +17,4 @@ bench_snapshots.jsonl
 .trading_v2_mode
 market_intel.json
 logs/
+bench_model.json

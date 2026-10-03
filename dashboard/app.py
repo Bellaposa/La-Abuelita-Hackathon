@@ -30,7 +30,7 @@ HISTORY_FILE = os.path.join(HERE, "history.json")
 LOGS = [("agente", "smart_agent.log"), ("cazador", "page_hunter.log"), ("broker", "broker.log"), ("duelos", "smart_duels.log")]
 EVENT = re.compile(r"MARKET|LISTED|SELL|BUY|BID for|Chato|negotiation .* ended|opened pack|MATCHED|ACCEPT|walk|"
                    r"error|Traceback|refused|Abuela thread .*-> (accept|offer|walk)|PILAR|Pilar")
-SCRIPTS = ("smart_agent.py", "smart_duels.py", "page_hunter.py", "broker.py", "agent.py", "smart_broker.py")
+SCRIPTS = ("smart_agent.py", "smart_duels.py", "page_hunter.py", "broker.py", "trading_v2.py")
 
 app = Flask(__name__)
 LOCK = threading.Lock()
