@@ -154,6 +154,15 @@ def side_of(role):
     return 1 if role == "seller" else -1
 
 
+def signed_days_weight(duel):
+    """Our cash per delivery day, signed. The server sends your_days_weight as a positive size and says the direction in
+    days_meaning (Duels II: seller "each delivery day adds this much cash to your side", buyer "each delivery day costs
+    you this much cash"). Without a meaning, the old assumption (+weight) stands."""
+    w = duel.get("your_days_weight") or 0
+    meaning = str(duel.get("days_meaning") or "").lower()
+    return -abs(w) if "cost" in meaning else (abs(w) if "add" in meaning else w)
+
+
 def utility(side, limit, w, price, days, use_days):
     """Our gain from (price, days). Price part is surplus over our private limit; days part per DAYS_SIGN."""
     u = side * (price - limit)
@@ -287,7 +296,7 @@ def plan_days(duel, limit, frac, rival_days_hist, last_rival_days):
     """Our days offer, using days as currency. Returns (days or None, price_frac_multiplier)."""
     if "days" not in (duel.get("issues") or ["price"]):
         return None, 1.0
-    w = duel.get("your_days_weight") or 0
+    w = signed_days_weight(duel)
     ours = 10 if DAYS_SIGN * w > 0 else 0          # the extreme that favours us
     if last_rival_days is None:
         return ours, 1.0
@@ -337,7 +346,7 @@ def act(b, duel, tick, mem):
     role, limit = duel["role"], float(duel["your_limit"])
     side = side_of(role)
     use_days = "days" in (duel.get("issues") or ["price"])
-    w = duel.get("your_days_weight") or 0
+    w = signed_days_weight(duel)
     decay = duel.get("decay_per_round") or duel.get("decay") or DEFAULT_DECAY
 
     rec = mem["duels"].setdefault(did, {"observed": {"role": role, "limit": limit, "issues": duel.get("issues"),
@@ -517,7 +526,19 @@ class _Fake:
         self.deal = self.rp
 
 
+def _test_days_sign():
+    buyer = {"role": "buyer", "issues": ["price", "days"], "your_days_weight": 1.46,
+             "days_meaning": "each delivery day costs you this much cash"}
+    seller = {"role": "seller", "issues": ["price", "days"], "your_days_weight": 2.64,
+              "days_meaning": "each delivery day adds this much cash to your side"}
+    assert signed_days_weight(buyer) == -1.46 and signed_days_weight(seller) == 2.64
+    assert plan_days(buyer, 90, 0.0, [], None)[0] == 0, "a buyer whose days cost cash opens at day 0"
+    assert plan_days(seller, 26, 0.0, [], None)[0] == 10, "a seller whose days add cash opens at day 10"
+    assert utility(-1, 90, signed_days_weight(buyer), 60, 0, True) > utility(-1, 90, signed_days_weight(buyer), 60, 10, True)
+
+
 def selftest():
+    _test_days_sign()
     global MEM_FILE
     MEM_FILE = os.path.join(tempfile.gettempdir(), "duels_selftest.json")
     # unit checks
