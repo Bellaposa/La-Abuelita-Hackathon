@@ -6,9 +6,10 @@ con `./relevo.sh` en la máquina que tiene los agentes corriendo, justo antes de
 
 ## 0. Regla para quien arranque (persona o Claude)
 
-**No arranques ningún agente si no existe `relevo/STOPPED`** o si es más antiguo que `relevo/SNAPSHOT_TIME`:
-`relevo/STOPPED` lo escribe la máquina que tenía los agentes justo después de pararlos. Sin él, la otra máquina
-puede seguir corriendo con la misma key y los dos controladores se pisan.
+**Arranca solo si existe `relevo/STOPPED` y `relevo/SNAPSHOT_TIME` es igual o posterior a su hora**: la máquina
+anterior paró sus agentes y DESPUÉS guardó la foto final. Sin `relevo/STOPPED`, la otra máquina puede seguir corriendo
+con la misma key y los dos controladores se pisan. Al arrancar en tu máquina, borra `relevo/STOPPED` en tu próximo
+`./relevo.sh` no hace falta: lo reescribe quien pare la próxima vez.
 
 ## 1. Antes de arrancar
 
