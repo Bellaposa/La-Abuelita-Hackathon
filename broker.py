@@ -33,8 +33,8 @@ MEM_FILE = os.environ.get("BROKER_MEMORY", "broker_memory.json")
 SESSION_TICKS = int(os.environ.get("SESSION_TICKS", "16"))   # last-resort default, not a truth
 URGENT_AGE_FRAC = 0.5      # with no lifetime data: a trader older than this share of the session may leave soon
 LATE_TICKS = 2             # this close to the end of a session, match everything that crosses
-WAIT_ENABLED = os.environ.get("BROKER_WAIT", "1") != "0"   # BROKER_WAIT=0: never wait, match crossing pairs at once
-WAIT_FORCED_OFF = not WAIT_ENABLED                          # an explicit BROKER_WAIT=0 always wins over what we learn
+WAIT_ENABLED = os.environ.get("BROKER_WAIT", "0") == "1"   # waiting lost in every replay (recorded and synthetic): opt-in only
+WAIT_FORCED_OFF = not WAIT_ENABLED                          # without BROKER_WAIT=1 what we learn cannot switch waiting on
 
 
 ANNOUNCE_EVERY_H = float(os.environ.get("ANNOUNCE_EVERY_H", "0.333"))   # game clock hours (= real open time): ~20 min
@@ -211,6 +211,17 @@ def max_pairs(asks, bids):
     return []
 
 
+def stall_pairs(asks, bids):
+    """Highest bid x lowest ask while they cross (the auto stall's rule). max_pairs' extra pairs can tie a low bid to a
+    cheap ask that a higher bid arriving next tick needed (replay of b19, tick 447: -37 of ~251 possible)."""
+    out = []
+    for s, b in zip(sorted(asks, key=lambda o: o["want"]["cash"]), sorted(bids, key=lambda o: -o["give"]["cash"])):
+        if b["give"]["cash"] < s["want"]["cash"]:
+            break
+        out.append((s, b))
+    return out
+
+
 def bench_plan(book, tick, tr, sched_ticks=None, quiet=False):
     """[(sell id, buy id, price)] for pairs we decide to lock now. Highest bids against lowest asks, per run."""
     plan, runs = [], {}
@@ -220,7 +231,7 @@ def bench_plan(book, tick, tr, sched_ticks=None, quiet=False):
     for run, (asks, bids) in runs.items():
         left, src = session_left(tr, run, tick, asks + bids, sched_ticks)
         total = (tick - tr.run_first.get(run, tick)) + left
-        for s, bu in max_pairs(asks, bids):
+        for s, bu in stall_pairs(asks, bids):
             ask, bid = s["want"]["cash"], bu["give"]["cash"]
             action, why = decide(tr, s, bu, tick, left, max(1, total))
             if not quiet:
@@ -314,6 +325,9 @@ def _test_max_pairs():
     assert len(max_pairs([A(1, 10), A(2, 20), A(3, 30)], [B(4, 35), B(5, 25), B(6, 15)])) == 3
     for x, y in max_pairs([A(1, 10), A(2, 60), A(3, 30)], [B(4, 35), B(5, 70), B(6, 5)]):
         assert x["want"]["cash"] <= y["give"]["cash"]
+    got = stall_pairs([A(1, 28), A(2, 73), A(3, 87)], [B(4, 76), B(5, 29)])
+    assert [(x["id"], y["id"]) for x, y in got] == [("b1-1", "b1-4")], "stall rule: the low bid waits for a later ask"
+    assert stall_pairs([A(1, 50)], [B(2, 40)]) == []
 
 
 def _simulate(policy, seed, n=10, ticks=16):
