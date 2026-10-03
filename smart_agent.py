@@ -27,6 +27,7 @@ from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per 
 from bz.dealers import params as dparams          # every dealer-negotiation number, with bounds, in one table
 from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.py is the only trading authority
 from flags import is_item_lie, is_lie, is_switch
+import castizo
 import feed_intel
 import ladder
 import workshop
@@ -530,7 +531,10 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=None, soft_floor
 
 
 def chato_text(side, price, n_round, item, name="Chato"):
-    """Short and plain: he talks little, has a long memory and punishes cleverness."""
+    """Madrid talk in each dealer's register (castizo.py), the price always in it; the old plain lines as fallback."""
+    said = castizo.line(castizo.NAMES.get(name, ""), price, n_round, item)
+    if said:
+        return said
     if n_round == 0:
         return (f"Buenas, {name}. Te ofrezco {item}: {price} primas." if side == "sell"
                 else f"Buenas, {name}. Busco {item}. Te ofrezco {price} primas.")
@@ -544,6 +548,9 @@ PHRASES = ["Muchas gracias por su paciencia, Abuela. ¿Podríamos dejarlo en {p}
 
 
 def haggle_text(price, n_round, gift=False, item="un sobre de barrio"):
+    said = castizo.line("abuela", price, n_round, item)
+    if said:
+        return ("¡Y gracias por el regalito, Carmen! " + said) if gift else said
     if n_round == 0:
         return f"¡Hola, Abuela Carmen! Qué alegría verla, ¿ha comido ya? Vengo por {item}: ¿le parece bien {price} primas?"
     base = PHRASES[n_round % len(PHRASES)].format(p=price)

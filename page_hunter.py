@@ -21,7 +21,7 @@ import os
 import sys
 import time
 
-from bazaar_sdk import Bazaar, BazaarError
+from bazaar_sdk import Bazaar, BazaarError, _Http
 from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per tick across processes
 from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.py is the only trading authority
 
@@ -103,30 +103,66 @@ def sell_stock(catalog, affinity, assets, competitors, listed):
     return sorted(plan, key=lambda p: -(p[1] - p[3]))      # biggest gain first
 
 
-def sell_bid_choice(catalog, affinity, assets, offers, venue, me_id):
-    """Best existing bid for a single card of a set we do not build. We accept, so we pay the venue fee: gain = bid - fee - our value."""
+def sell_bid_choice(catalog, affinity, assets, offers, venue, me_id, venues=None):
+    """Best existing bid, on any venue we were given, for a card we hold. We accept, so we pay that venue's fee:
+    gain = bid - fee - what the copy is worth to us. Worth = the server's your_value for that very copy (page bonus
+    included: a card that completes a page is never sold under it), never less than our own estimate. Sets we build
+    keep their only copy whatever the bid. `venues`: {venue id: venue dict with fee_bps / fee_per_card}."""
     counts, held = {}, {}
     for a in assets:
         if a["kind"] == "card":
             counts[a["ref"]] = counts.get(a["ref"], 0) + 1
-            held[a["ref"]] = a
+            if a["ref"] not in held or float(a.get("your_value") or 0) < float(held[a["ref"]].get("your_value") or 0):
+                held[a["ref"]] = a                       # the copy worth least to us is the one we sell
     best = None
     for o in offers:
         g, w = o["give"], o["want"]
-        if o["maker"] == me_id or o["status"] != "open" or o.get("to") not in (None, me_id):
+        if o["maker"] == me_id or o.get("status", "open") != "open" or o.get("to") not in (None, me_id):
             continue
         if not g["cash"] or g["assets"] or len(w["types"]) != 1 or not w["types"][0].startswith("card:"):
             continue
         ref = w["types"][0].split(":", 1)[1]
         sid = ref.split("-")[0]
-        if counts.get(ref) != 1 or affinity.get(sid, 1.0) >= FOCUS_AFF:
+        if ref not in held or (counts[ref] == 1 and affinity.get(sid, 1.0) >= FOCUS_AFF):
             continue
-        card = next(c for c in cards_of(catalog, sid) if c["id"] == ref)
-        v = value_of_card(card, sid, affinity)
-        gain = g["cash"] - fee_of(venue, g["cash"]) - v
+        card = next((c for c in cards_of(catalog, sid) if c["id"] == ref), None)
+        if not card:
+            continue
+        v = max(value_of_card(card, sid, affinity) if counts[ref] == 1 else 0.0, float(held[ref].get("your_value") or 0))
+        ov = o.get("venue") or venue
+        vinfo = (venues or {}).get(ov) if isinstance(ov, str) else (ov if isinstance(ov, dict) else None)
+        fee = (math.ceil((vinfo.get("fee_bps") or 0) * g["cash"] / 10000) + (vinfo.get("fee_per_card") or 0)) if vinfo \
+            else fee_of(ov, g["cash"])
+        gain = g["cash"] - fee - v
         if gain >= max(2.0, 0.1 * v) and (best is None or gain > best["gain"]):
-            best = {"offer": o["id"], "ref": ref, "asset": held[ref]["id"], "bid": g["cash"], "value": round(v, 1), "gain": round(gain, 1)}
+            best = {"offer": o["id"], "ref": ref, "asset": held[ref]["id"], "bid": g["cash"], "value": round(v, 1),
+                    "gain": round(gain, 1), "venue": ov}
     return best
+
+
+SKIP_VENUES = {"v01", "v07"}       # ours (we cannot trade there) and Team 10's (a trade there scores for our closest rival)
+
+
+def other_bids(b, me_id):
+    """Open cash bids for a card on every open team venue but SKIP_VENUES (public reads), each tagged with its venue,
+    and {venue: venue dict} for their fees. Team 10 sells and buys across the board (SAL-11 at 207, LAV-11 at 210):
+    the buyers who need our cards are often not on El Rastro."""
+    pub = _Http(URL, {}, 15.0, False, 1)                 # keyless public reads: the team key's 5/s stay with the agents
+    try:
+        venues = {v["venue"]: v for v in pub._call("GET", "/api/venues").get("venues", []) if v.get("status") == "open"}
+    except BazaarError:
+        return [], {}
+    out = []
+    for vid in venues:
+        if vid in SKIP_VENUES or vid == "rastro":
+            continue
+        try:
+            for o in pub._call("GET", f"/api/venues/{vid}/offers").get("offers", []):
+                if (o.get("give") or {}).get("cash") and o.get("maker") != me_id:
+                    out.append(dict(o, venue=vid))
+        except BazaarError:
+            continue
+    return out, venues
 
 
 def buy_choice(targets, offers, venue, cash, me_id):
@@ -192,7 +228,8 @@ def step(b, me, catalog, venue):
             except BazaarError as e:
                 log("buy refused:", e.code, e.message)
     if not best:
-        sb = sell_bid_choice(catalog, me["affinity"], me["assets"], offers + directed, venue, me["id"])
+        others, vinfo = other_bids(b, me["id"])
+        sb = sell_bid_choice(catalog, me["affinity"], me["assets"], offers + directed + others, venue, me["id"], vinfo)
         if sb and not try_reserve(me["tick"]):
             log("sell-to-bid skipped: another process already used this tick's accept")
         elif sb:
@@ -282,7 +319,11 @@ def selftest():
     bidoff = lambda i, ref, cash: {"id": i, "maker": "tx", "status": "open", "to": None, "give": {"cash": cash, "assets": [], "types": []},
                                    "want": {"cash": 0, "assets": [], "types": [f"card:{ref}"]}}
     sb = sell_bid_choice(catalog, aff, assets, [bidoff(7, "LAT-10", 55), bidoff(8, "LAT-10", 70), bidoff(9, "LAV-01", 99), bidoff(10, "LAT-04", 50)], venue, "t06")
-    assert sb and sb["offer"] == 8 and sb["gain"] > 0, sb          # best bid; LAV is a set we build, LAT-04 is a duplicate
+    assert sb and sb["offer"] == 10 and sb["ref"] == "LAT-04", sb  # a duplicate is trading stock (Payday deck): 50 for it wins
+    sb = sell_bid_choice(catalog, aff, assets, [bidoff(7, "LAT-10", 55), bidoff(8, "LAT-10", 70), bidoff(9, "LAV-01", 99)], venue, "t06")
+    assert sb and sb["offer"] == 8 and sb["gain"] > 0, sb          # best bid; LAV is a set we build: its only copy stays
+    rich = [dict(a, your_value=80.0) if a["ref"] == "LAT-10" else a for a in assets]
+    assert sell_bid_choice(catalog, aff, rich, [bidoff(8, "LAT-10", 70)], venue, "t06") is None, "server value 80 > bid 70"
     assert sell_bid_choice(catalog, aff, assets, [bidoff(7, "LAT-10", 52)], venue, "t06") is None, "52 less fee barely covers 49: no deal"
     assert bid_plan(t, 40, set()) == [] and len(bid_plan(t, 500, set())) == 2 and bid_plan(t, 500, {"LAV-09"})[0][0] == "LAV-10"
     print("selftest OK")
