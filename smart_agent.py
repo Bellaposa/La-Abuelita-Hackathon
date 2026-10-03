@@ -26,7 +26,7 @@ from bazaar_sdk import Bazaar, BazaarError
 from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per tick across processes
 from bz.dealers import params as dparams          # every dealer-negotiation number, with bounds, in one table
 from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.py is the only trading authority
-from flags import is_item_lie, is_lie
+from flags import is_item_lie, is_lie, is_switch
 import workshop
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
@@ -1174,7 +1174,7 @@ def picaros_candidate(me, catalog, menu=None):
     best = None
     for ref, n in counts.items():
         a = ids[ref][-1]
-        if a["rarity"] not in ("common", "uncommon") or ref not in book or n < 2:
+        if a["rarity"] != "common" or ref not in book or n < 2:     # feed: they pay 10-11 for uncommons, Pilar 16-23
             continue
         lp = int((menu or {}).get(a["rarity"]) or book[ref]["book"])           # published menu price if any, else book
         lost = marginal_value(ref, n, catalog, me["affinity"])
@@ -1356,6 +1356,8 @@ def phase_flags(b, me, mem, catalog=None):
                 topic_card = ((t.get("topic") or {}).get("buy") or {}).get("card")
                 held = {x.get("ref") for x in me["assets"] if x.get("kind") == "card"}
                 lie, why = is_item_lie(m.get("text") or "", o, names, topic_card, held)
+                if not lie and t.get("with") == "picaros":                   # their documented trick: another card than asked
+                    lie, why = is_switch(topic_card, o, names)
             if lie:
                 try:
                     b.flag(mid, f"bad faith: {why}")
@@ -1446,7 +1448,8 @@ def _test_candidates_take_menu():
                                                 for i, (r, rr) in enumerate([("MAL-01", "common")] * 3 + [("MAL-06", "uncommon")] * 2)]}
     for fn in (chato_candidate, pilar_candidate, picaros_candidate):
         fn(me, cat, {"common": 10, "uncommon": 25})                     # the dealer phase always passes the menu
-    assert picaros_candidate(me, cat, {"common": 10}) is not None
+    pc = picaros_candidate(me, cat, {"common": 10})
+    assert pc is not None and pc[1] == "MAL-01", pc                    # commons only: uncommons go to Pilar
 
 
 def _test_deal_price_and_hold():

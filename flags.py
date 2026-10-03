@@ -135,6 +135,21 @@ def is_item_lie(text, offer, names, topic_card=None, held=()):
                   f"{given[0]} ({names.get(given[0])})")
 
 
+def is_switch(topic_card, offer, names=None):
+    """(True, reason) when a dealer's structured offer in a thread about card T gives exactly one DIFFERENT card.
+    Used only for Los Pícaros, whose documented trick is exactly this (seen in the public feed: asked RET-09, offered
+    RET-07; asked LAV-10, offered LAV-08). Objective: thread topic vs offer structure, no reading of the words."""
+    if not topic_card:
+        return False, "no card topic"
+    given = given_cards(offer)
+    if len(given) != 1:
+        return False, f"offer gives {len(given)} cards (need exactly one)"
+    if given[0] == topic_card:
+        return False, "the offer gives the card asked for"
+    n = names or {}
+    return True, f"asked for {topic_card} ({n.get(topic_card, '?')}), the offer gives {given[0]} ({n.get(given[0], '?')})"
+
+
 def selftest():
     names = {"LAV-09": "Cine Doré", "LAV-08": "Teatro Valle-Inclán", "SAL-09": "El Marqués"}
     off = lambda ref: {"give": {"cash": 0, "assets": [], "types": [f"card:{ref}"]}, "want": {"cash": 73}}
@@ -165,6 +180,10 @@ def selftest():
     assert is_lie("Te pago 20 primas, o 25 primas si", 17, [], False)[0] is False                 # two stated: ambiguous
     assert is_lie("Te pago 20 primas", 23, [], False)[0] is False                                 # offer better for us
     assert is_lie("20 primas, es decir 25 en total", 25, [], True)[0] is False                    # offer price in words
+    assert is_switch("RET-09", off("RET-07"))[0] is True                                             # the feed case
+    assert is_switch("RET-09", off("RET-09"))[0] is False
+    assert is_switch(None, off("RET-07"))[0] is False                                                # pack/rarity topic
+    assert is_switch("RET-09", {"give": {"cash": 56}})[0] is False                                   # no card given
     print("flags selftest OK")
 
 
