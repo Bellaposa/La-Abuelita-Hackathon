@@ -1,7 +1,8 @@
 """Duels: golden behaviour of smart_duels.py (+ invariants that must hold forever).
 
-Golden values were produced by the CURRENT code on 2026-10-03 (commit 098ff55): they freeze behaviour, they do not
-approve it. Invariants (limits, no retraction, never accept outside the limit) are rules of the game, not of the strategy.
+Golden values were produced by the CURRENT code on 2026-10-03 (commit 098ff55) and regenerated after the duel
+hardening (offers keep 10 % of the limit, endgame toward the rival, seeded jitter, day utility = weight x days):
+they freeze behaviour, they do not approve it. Invariants (limits, no retraction, never accept outside the limit) are rules of the game, not of the strategy.
 `DAYS_SIGN` (+1) is an UNVERIFIED assumption; the days traces freeze what that assumption does today.
 """
 import contextlib
@@ -31,11 +32,11 @@ def play(*a, **k):
 @pytest.mark.golden
 def test_side_reservation_and_utility():
     assert (sd.side_of("seller"), sd.side_of("buyer")) == (1, -1)
-    assert (sd.reservation(1, 100), sd.reservation(-1, 100)) == (101, 99)          # MIN_MARGIN = 1 on the right side of the limit
+    assert (sd.reservation(1, 100), sd.reservation(-1, 100)) == (110, 90)          # OFFER_KEEP = 10 % of the limit (>= MIN_MARGIN)
     assert sd.utility(1, 100, 0, 120, None, False) == 20                           # seller: price above cost
     assert sd.utility(-1, 100, 0, 80, None, False) == 20                           # buyer: price below value
-    assert sd.utility(1, 100, 2.0, 120, 8, True) == 26.0                           # + DAYS_SIGN * w * (days - 5)
-    assert sd.utility(-1, 100, -1.5, 90, 2, True) == 14.5
+    assert sd.utility(1, 100, 2.0, 120, 8, True) == 36.0                           # + DAYS_SIGN * w * days (official deck)
+    assert sd.utility(-1, 100, -1.5, 90, 2, True) == 7.0
     assert sd.utility(1, 100, 2.0, 120, None, True) == 20                          # no days offered: price part only
 
 
@@ -51,17 +52,17 @@ FIRM, GIVING = {"n": 3, "rate": 0.0, "firm": True}, {"n": 4, "rate": 5.0, "firm"
 # name -> (args of plan_price, expected (price, info))
 PLAN_PRICE = {
     "seller first":      ((1, 100, ST(150, None), None, None, 1, 16), (150, {"beta": 2.0, "frac": 0.0})),
-    "seller mid":        ((1, 100, ST(150, 140), None, 90, 8, 16), (138, {"beta": 2.0, "frac": 0.25})),
-    "seller at the end": ((1, 100, ST(150, 120), None, 90, 16, 16), (101, {"beta": 2.0, "frac": 1.0})),
-    "seller vs firm":    ((1, 100, ST(150, 140), FIRM, 95, 8, 16), (129, {"beta": 1.2, "frac": 0.44})),
+    "seller mid":        ((1, 100, ST(150, 140), None, 90, 8, 16), (140, {"beta": 2.0, "frac": 0.25})),
+    "seller at the end": ((1, 100, ST(150, 120), None, 90, 16, 16), (110, {"beta": 2.0, "frac": 1.0})),
+    "seller vs firm":    ((1, 100, ST(150, 140), FIRM, 95, 8, 16), (133, {"beta": 1.2, "frac": 0.44})),
     "seller vs giving":  ((1, 100, ST(150, 140), GIVING, 95, 8, 16), (140, {"beta": 2.6, "frac": 0.16})),
-    "seller no retract": ((1, 100, ST(150, 105), None, 90, 2, 16), (105, {"beta": 2.0, "frac": 0.02})),
+    "seller no retract": ((1, 100, ST(150, 105), None, 90, 2, 16), (110, {"beta": 2.0, "frac": 0.02})),
     "buyer first":       ((-1, 100, ST(50, None), None, None, 1, 16), (50, {"beta": 2.0, "frac": 0.0})),
-    "buyer mid":         ((-1, 100, ST(50, 60), None, 110, 8, 16), (62, {"beta": 2.0, "frac": 0.25})),
-    "buyer at the end":  ((-1, 100, ST(50, 80), None, 110, 16, 16), (99, {"beta": 2.0, "frac": 1.0})),
-    "buyer vs firm":     ((-1, 100, ST(50, 60), FIRM, 105, 8, 16), (71, {"beta": 1.2, "frac": 0.44})),
+    "buyer mid":         ((-1, 100, ST(50, 60), None, 110, 8, 16), (60, {"beta": 2.0, "frac": 0.25})),
+    "buyer at the end":  ((-1, 100, ST(50, 80), None, 110, 16, 16), (90, {"beta": 2.0, "frac": 1.0})),
+    "buyer vs firm":     ((-1, 100, ST(50, 60), FIRM, 105, 8, 16), (67, {"beta": 1.2, "frac": 0.44})),
     "buyer vs giving":   ((-1, 100, ST(50, 60), GIVING, 105, 8, 16), (60, {"beta": 2.6, "frac": 0.16})),
-    "buyer no retract":  ((-1, 100, ST(50, 95), None, 110, 2, 16), (95, {"beta": 2.0, "frac": 0.02})),
+    "buyer no retract":  ((-1, 100, ST(50, 95), None, 110, 2, 16), (90, {"beta": 2.0, "frac": 0.02})),
 }
 
 
@@ -88,16 +89,16 @@ SHOULD_ACCEPT = [
     ((0.5, 10, 5, None, 0.06), (False, "rival offer below our margin")),
     ((5, 5, 5, None, 0.06), (True, "rival offer already as good as our next planned offer")),
     ((8, 5, 5, None, 0.06), (True, "rival offer already as good as our next planned offer")),
-    ((8, 10, 1, None, 0.06), (True, "last round: a positive deal beats zero")),
+    ((8, 10, 1, None, 0.06), (True, "closing: a positive deal beats zero for both sides")),
     ((8, 10, 5, None, 0.06), (False, "holding: waiting is expected to pay more")),
     ((8, 10, 5, "firm", 0.06), (True, "waiting worth 5.6 <= 8.0 now (rate +0.0, firm=True)")),
     ((8, 10, 5, "giving", 0.06), (False, "holding: waiting is expected to pay more")),
     ((8, 10, 5, "mid", 0.06), (True, "waiting worth 6.7 <= 8.0 now (rate +0.5, firm=False)")),
-    ((3, 10, 2, "mid", 0.06), (True, "waiting worth 2.2 <= 3.0 now (rate +0.5, firm=False)")),
-    ((3, 10, 2, None, 0.06), (False, "holding: waiting is expected to pay more")),
+    ((3, 10, 2, "mid", 0.06), (True, "closing: a positive deal beats zero for both sides")),
+    ((3, 10, 2, None, 0.06), (True, "closing: a positive deal beats zero for both sides")),
     ((1, 1, 9, None, 0.06), (True, "rival offer already as good as our next planned offer")),
     ((20, 30, 4, "firm", 0.08), (True, "waiting worth 12.9 <= 20.0 now (rate +0.0, firm=True)")),
-    ((9, 10, 0, None, 0.06), (True, "last round: a positive deal beats zero")),
+    ((9, 10, 0, None, 0.06), (True, "closing: a positive deal beats zero for both sides")),
     ((1, 2, 16, "giving", 0.06), (False, "holding: waiting is expected to pay more")),
 ]
 
@@ -148,19 +149,19 @@ def asc(start, step, n=16):
 TRACES = {
     # name: (role, limit, rival prices, expected prices we SENT, rival price we ACCEPTED or None)
     "seller vs rising rival": ("seller", 100, asc(50, 4),
-                               [150, 150, 150, 149, 148, 147, 145, 142, 140, 136, 132, 127, 122, 116, 109], 110),
+                               [150, 150, 150, 149, 149, 147, 147, 146, 144, 141, 135, 132, 115, 110], 106),
     "seller vs silent rival": ("seller", 100, [None] * 16,
-                               [150, 150, 149, 147, 146, 144, 141, 138, 135, 131, 127, 123, 118, 113, 107, 101], None),
+                               [150, 150, 150, 148, 148, 145, 144, 142, 140, 137, 132, 128, 124, 120, 110, 110], None),
     "seller vs stubborn low rival": ("seller", 100, [60] * 16,
-                                     [150, 150, 144, 141, 138, 135, 132, 129, 126, 123, 119, 116, 112, 109, 105, 101], None),
-    "seller vs fast rival": ("seller", 100, asc(60, 10), [150, 150, 150, 149, 148, 147, 145, 142], 140),
+                                     [150, 150, 146, 143, 142, 138, 137, 135, 132, 130, 125, 122, 110, 110, 110, 110], None),
+    "seller vs fast rival": ("seller", 100, asc(60, 10), [150, 150, 150, 149, 149, 147, 147, 146, 144], 150),
     "buyer vs falling rival": ("buyer", 100, asc(160, -4),
-                               [50, 50, 50, 51, 52, 53, 55, 58, 60, 64, 68, 73, 78, 84, 91, 99], None),
+                               [50, 50, 50, 51, 51, 53, 53, 54, 56, 59, 65, 68, 90, 90, 90, 90], None),
     "buyer vs silent rival": ("buyer", 100, [None] * 16,
-                              [50, 50, 51, 53, 54, 56, 59, 62, 65, 69, 73, 77, 82, 87, 93, 99], None),
+                              [50, 50, 50, 52, 52, 55, 56, 58, 60, 63, 68, 72, 76, 80, 90, 90], None),
     "buyer vs stubborn high rival": ("buyer", 100, [150] * 16,
-                                     [50, 50, 56, 59, 62, 65, 68, 71, 74, 77, 81, 84, 88, 91, 95, 99], None),
-    "buyer vs fast rival": ("buyer", 100, asc(160, -10), [50, 50, 50, 51, 52, 53, 55, 58, 60, 64], 60),
+                                     [50, 50, 54, 57, 58, 62, 63, 65, 68, 70, 75, 78, 90, 90, 90, 90], None),
+    "buyer vs fast rival": ("buyer", 100, asc(160, -10), [50, 50, 50, 51, 51, 53, 53, 54, 56, 59], 60),
 }
 
 
@@ -177,11 +178,11 @@ def test_full_duel_trace_is_frozen(name):
 def test_two_issue_duel_traces_are_frozen_under_the_unverified_days_sign():
     """DAYS_SIGN = +1 is an assumption. These traces only freeze what it does today (price, days) per tick."""
     said, got, _ = play("seller", 100, asc(60, 3), issues=("price", "days"), w=2.0, rival_days=3)
-    assert said == [(150, 10), (150, 10), (150, 10), (149, 10), (148, 10), (147, 9), (145, 9), (142, 9), (140, 8),
-                    (136, 8), (132, 7), (127, 7), (122, 6), (116, 5), (109, 4)] and got == 105
+    assert said == [(150, 10), (150, 10), (150, 10), (149, 10), (149, 10), (147, 9), (147, 9), (146, 9), (144, 8),
+                    (141, 8), (135, 7), (132, 7), (114, 6), (110, 5)] and got == 102
     said, got, _ = play("buyer", 100, asc(150, -3), issues=("price", "days"), w=-1.0, rival_days=7)
-    assert said == [(50, 0), (50, 0), (50, 0), (51, 0), (52, 0), (53, 1), (55, 1), (58, 1), (60, 2), (64, 2), (68, 3),
-                    (73, 3), (78, 4), (84, 5), (91, 6), (99, 7)] and got is None
+    assert said == [(50, 0), (50, 0), (50, 0), (51, 0), (51, 0), (53, 1), (53, 1), (54, 1), (56, 2), (59, 2), (65, 3),
+                    (68, 3), (90, 4), (90, 5), (90, 6), (90, 7)] and got is None
 
 
 # ------------------------------------------------------------------ invariants (rules of the game)

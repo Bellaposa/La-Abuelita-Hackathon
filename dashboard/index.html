@@ -92,6 +92,15 @@
   .tip .k { display: inline-block; width: 12px; height: 2px; margin-right: 6px; vertical-align: middle; }
   .muted { color: var(--muted); } .empty { color: var(--muted); padding: 10px 0; }
   .refreshing { opacity: .6; transition: opacity .2s; }
+  .chat { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; max-height: 300px; overflow: auto; padding-right: 4px; }
+  .msg { max-width: 86%; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--ring); font-size: 12.5px; }
+  .msg.us { align-self: flex-end; background: var(--wash); }
+  .msg .who { color: var(--muted); font-size: 11px; display: flex; justify-content: space-between; gap: 10px; }
+  .msg .who b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 10px; }
+  .tabs button.on { background: var(--wash); color: var(--ink); border-color: var(--axis); }
+  .ok { color: var(--good-text); font-weight: 600; } .bad { color: var(--crit); font-weight: 600; }
+  details summary { cursor: pointer; color: var(--ink-2); font-size: 12px; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -122,9 +131,11 @@
     <div class="card c4"><h2>De dónde vienen los puntos</h2><div class="cap">Sobre 30 + 30 (los jueces valen otros 40)</div><div id="parts"></div></div>
     <div class="card c4"><h2>Album</h2><div class="cap">Página = comunes, poco comunes y raras de un set</div><div id="album"></div></div>
     <div class="card c4"><h2>Próximos eventos</h2><div class="cap">Tiempo real estimado según el ritmo de tick actual</div><div id="sched"></div></div>
-    <div class="card c6"><h2>Dealer</h2><div class="cap">Nuestras conversaciones con Abuela y El Chato</div><div id="dealers"></div></div>
-    <div class="card c6"><h2>Nuestro mercado</h2><div class="cap">Venue donde comercian los otros equipos</div><div id="venue"></div></div>
-    <div class="card c12" id="duelcard" style="display:none"><h2>Duelos</h2><div class="cap">El límite es privado: nunca vender por debajo del coste, nunca pagar por encima del valor. El valor del trato baja un 6 % en cada ronda</div><div id="duels"></div></div>
+    <div class="card c12"><div class="head"><div><h2>Market Test</h2><div class="cap">Cada 2 h todos los venues reciben el mismo libro sintético. Puntúa la parte de las ganancias posibles que realizamos casando pares</div></div><button data-toggle="bench">Tabla</button></div><div id="bench"></div></div>
+    <div class="card c12"><h2>Duelos</h2><div class="cap">Regla de oro: nunca cruzar nuestro límite. Sin trato, los dos equipos quedan a 0. El valor del trato baja en cada ronda</div><div id="duels"></div></div>
+    <div class="card c12"><h2>Prioridad de compra</h2><div class="cap">Valor para NOSOTROS (servidor, bonus de página incluido). Pagamos como máximo el 60 % de ese valor</div><div id="prio"></div></div>
+    <div class="card c7"><h2>Conversaciones con los dealers</h2><div class="cap">Mensajes reales de la conversación abierta o la última</div><div class="tabs" id="dealer-tabs"></div><div id="dealers"></div></div>
+    <div class="card c5"><h2>Nuestro mercado</h2><div class="cap">Venue donde comercian los otros equipos</div><div id="venue"></div></div>
     <div class="card c7"><h2>Actividad de los agentes</h2><div class="cap">Últimos eventos de los logs, los más recientes arriba</div><div class="feed scroll" id="feed"></div></div>
     <div class="card c5"><h2>Agentes en ejecución</h2><div class="cap">Una sola copia por agente: dos se pisan entre sí</div><div id="procs"></div></div>
     <div class="card c12"><h2>Cartas en mano</h2><div class="cap">Valor = lo que valen para nosotros (privado). “Repetida” = copia de más</div><div class="scroll" id="cards"></div></div>
@@ -180,7 +191,7 @@ function focusPoint(target, rows, title) {
 
 /* ---------- state ---------- */
 let S = null, fetchedAt = 0;
-const view = { board: false, hist: false };
+const view = { board: false, hist: false, bench: false, dealer: "abuela" };
 const prefs = new URLSearchParams(location.search).get("theme") || localStorage.getItem("theme");
 if (prefs) document.documentElement.dataset.theme = prefs;
 $("theme").onclick = () => {
@@ -285,6 +296,141 @@ function spark(values, color, w = 110, h = 26) {
   return svg;
 }
 
+/* ---------- Market Test: quote paths of the last recorded session ---------- */
+function drawBenchChart(r) {
+  const tr = r.traders.filter((t) => t.path.length);
+  if (!tr.length) return el("div", { class: "empty", text: "Esta sesión no se grabó (solo tenemos los pares casados del log)." });
+  const W = 900, Hh = 260, L = 40, R = 16, T = 12, B = 28;
+  const ticks = tr.flatMap((t) => t.path.map((p) => p[0])), qs = tr.flatMap((t) => t.path.map((p) => p[1]));
+  const t0 = Math.min(...ticks), t1 = Math.max(...ticks, t0 + 1), lo = Math.max(0, Math.floor(Math.min(...qs) / 10) * 10), hi = Math.ceil(Math.max(...qs) / 10) * 10;
+  const X = (t) => L + (W - L - R) * (t - t0) / Math.max(1, t1 - t0), Y = (v) => T + (Hh - T - B) * (1 - (v - lo) / Math.max(1, hi - lo));
+  const svg = sv("svg", { viewBox: `0 0 ${W} ${Hh}`, role: "img", "aria-label": `Cotizaciones de la sesión ${r.run}` });
+  for (let v = lo; v <= hi; v += Math.max(10, Math.ceil((hi - lo) / 5 / 10) * 10)) {
+    svg.appendChild(sv("line", { x1: L, x2: W - R, y1: Y(v), y2: Y(v), stroke: cssv("--grid"), "stroke-width": 1 }));
+    svg.appendChild(sv("text", { x: L - 6, y: Y(v) + 4, "text-anchor": "end" }, String(v)));
+  }
+  svg.appendChild(sv("line", { x1: L, x2: W - R, y1: Hh - B, y2: Hh - B, stroke: cssv("--axis"), "stroke-width": 1 }));
+  for (let t = t0; t <= t1; t += Math.max(1, Math.ceil((t1 - t0) / 8))) svg.appendChild(sv("text", { x: X(t), y: Hh - 8, "text-anchor": "middle" }, String(t)));
+  const matched = new Set(r.matches.flatMap((m) => [m.sell, m.buy]));
+  tr.forEach((t) => {
+    const color = t.side === "ask" ? cssv("--s2") : cssv("--s1"), pts = t.path.map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(" ");
+    const g = sv("g", { tabindex: 0, opacity: matched.has(t.id) ? 1 : 0.45 });
+    if (t.path.length > 1) g.appendChild(sv("polyline", { points: pts, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    const [lx, ly] = t.path[t.path.length - 1];
+    g.appendChild(sv("circle", { cx: X(lx), cy: Y(ly), r: 4, fill: color, stroke: cssv("--surface-1"), "stroke-width": 2 }));
+    const info = [{ label: t.side === "ask" ? "Vendedor pide" : "Comprador ofrece", value: t.path.map((p) => p[1]).join(" → "), color },
+                  { label: "Ticks", value: `${t.path[0][0]}–${lx}` }, { label: "Casado", value: matched.has(t.id) ? "sí" : "no" }];
+    g.addEventListener("pointermove", (e) => showTip(e, info, t.id)); g.addEventListener("pointerleave", hideTip);
+    g.addEventListener("focus", () => focusPoint(g, info, t.id)); g.addEventListener("blur", hideTip);
+    svg.appendChild(g);
+  });
+  r.matches.forEach((m) => {
+    if (m.ask == null || m.bid == null) return;
+    const g = sv("g", { tabindex: 0 });
+    g.appendChild(sv("line", { x1: X(m.tick), x2: X(m.tick), y1: Y(m.bid), y2: Y(m.ask), stroke: cssv("--ink-2"), "stroke-width": 2, "stroke-dasharray": "3 3" }));
+    g.appendChild(sv("rect", { class: "hit", x: X(m.tick) - 6, y: Y(m.bid), width: 12, height: Math.max(8, Y(m.ask) - Y(m.bid)) }));
+    const info = [{ label: "Vendedor", value: `${m.sell} @ ${m.ask}` }, { label: "Comprador", value: `${m.buy} @ ${m.bid}` }, { label: "Hueco", value: String(m.spread) }, { label: "Precio", value: String(m.price) }];
+    g.addEventListener("pointermove", (e) => showTip(e, info, `Par casado · tick ${m.tick}`)); g.addEventListener("pointerleave", hideTip);
+    g.addEventListener("focus", () => focusPoint(g, info, `Par casado · tick ${m.tick}`)); g.addEventListener("blur", hideTip);
+    svg.appendChild(g);
+  });
+  const legend = el("div", { class: "legend" }, [
+    el("span", {}, [Object.assign(el("i"), { style: `background:${cssv("--s1")}` }), "Compradores (pujas)"]),
+    el("span", {}, [Object.assign(el("i"), { style: `background:${cssv("--s2")}` }), "Vendedores (precios pedidos)"]),
+    el("span", {}, [Object.assign(el("i"), { style: `background:${cssv("--ink-2")}` }), "Par casado por nosotros (línea discontinua)"]),
+    el("span", { class: "muted", text: "Atenuado = no casado" })]);
+  return el("div", {}, [legend, svg]);
+}
+
+function drawBench(s) {
+  const runs = s.bench || [], hist = s.history || [];
+  const effs = hist.map((p) => p.eff).filter((v) => v != null);
+  const last = runs[runs.length - 1], rec = runs.filter((r) => r.recorded).pop();
+  const tile = (l, v, d, extra) => el("div", { class: "tile" }, [el("div", { class: "l", text: l }), el("div", { class: "v", text: v }), el("div", { class: "d" }, [d ? document.createTextNode(d) : "", extra || ""])]);
+  const unPairs = rec ? rec.unmatched.length : 0;
+  const tiles = el("div", { class: "kpis" }, [
+    tile("Eficiencia (media de la ronda)", s.score.bench_efficiency != null ? fmt(s.score.bench_efficiency * 100, 1) + " %" : "–", "parte de las ganancias posibles", spark(effs.slice(-80), cssv("--s1"))),
+    tile("Puntos del Market Test", fmt(s.score.bench_points, 3), "mitad = igual que el puesto automático"),
+    tile("Última sesión", last ? last.run : "–", last ? `${last.matches.length} pares casados · ticks ${last.first}–${last.last}` : ""),
+    tile("Sin casar (última grabada)", rec ? String(unPairs) : "–", rec ? `de ${rec.asks + rec.bids} traders` : "")]);
+  if (!runs.length) return replace("bench", tiles, el("div", { class: "empty", text: "Aún no hay sesiones registradas." }));
+  const rows = runs.slice().reverse().map((r) => {
+    const sp = r.matches.map((m) => m.spread).filter((v) => v != null);
+    return [r.run, `${r.first}–${r.last}`, r.recorded ? `${r.asks} / ${r.bids}` : "no grabada", r.matches.length,
+            sp.length ? fmt(sp.reduce((a, b) => a + b, 0) / sp.length, 1) : "–", r.recorded ? r.unmatched.length : "–"];
+  });
+  const tbl = table(["Sesión", "Ticks", "Vendedores / compradores", "Pares casados", "Hueco medio al casar", "Traders sin casar"], rows);
+  const pairs = last && last.matches.length ? table(["Tick", "Vendedor", "Pide", "Comprador", "Ofrece", "Hueco", "Precio"],
+    last.matches.map((m) => [m.tick, m.sell, m.ask ?? "–", m.buy, m.bid ?? "–", m.spread ?? "–", m.price])) : el("div", { class: "empty", text: "Sin pares casados en la última sesión." });
+  if (view.bench) return replace("bench", tiles, el("h2", { style: "margin-top:14px", text: "Sesiones" }), tbl, el("h2", { style: "margin-top:14px", text: `Pares de ${last?.run ?? ""}` }), pairs);
+  replace("bench", tiles,
+    el("div", { class: "cap", style: "margin-top:14px", text: rec ? `Sesión ${rec.run}: cotización de cada trader por tick. Pasa el ratón por una línea o un par` : "" }),
+    rec ? drawBenchChart(rec) : "", el("h2", { style: "margin-top:14px", text: "Sesiones" }), tbl);
+}
+
+function drawDuels(s) {
+  const du = s.duels || [], live = du.filter((d) => d.status === "live"), fin = du.filter((d) => d.status !== "live" && d.session !== 1);   // session 1 = practice, does not score
+  const deals = fin.filter((d) => d.price != null), gain = deals.reduce((a, d) => a + (d.gain || 0), 0), crossed = deals.filter((d) => (d.gain ?? 0) < 0).length;
+  const tile = (l, v, d) => el("div", { class: "tile" }, [el("div", { class: "l", text: l }), el("div", { class: "v", text: v }), el("div", { class: "d", text: d || "" })]);
+  const tiles = el("div", { class: "kpis" }, [
+    tile("En curso", String(live.length), live.length ? `el próximo termina en ${Math.min(...live.map((d) => d.left))} ticks` : ""),
+    tile("Cerrados con trato", `${deals.length} / ${fin.length}`, fin.length ? `${fin.length - deals.length} sin trato (0 para los dos) · sin contar la práctica` : "sin contar la sesión de práctica"),
+    tile("Ganancia total", fmt(gain, 0), "sobre nuestros límites, sesiones que puntúan"),
+    tile("Límite cruzado", crossed ? `⚠ ${crossed}` : "✓ 0", crossed ? "revisar ya" : "nunca hemos cruzado")]);
+  if (!du.length) return replace("duels", tiles, el("div", { class: "empty", text: "No hay duelos todavía." }));
+  const t = el("table"), hr = el("tr");
+  ["Duelo", "Sesión", "Rol", "Rival", "Límite", "Nosotros", "Rival ofrece", "Quedan", "Resultado"].forEach((h, i) => hr.appendChild(el("th", { class: i ? "n" : "", text: h })));
+  t.appendChild(el("thead", {}, [hr]));
+  const tb = el("tbody");
+  du.slice(0, 30).forEach((d) => {
+    const res = d.session === 1 && d.status !== "live" ? "práctica" : d.status === "live" ? "en curso" : d.price != null ? `${d.price} (${d.gain >= 0 ? "+" : ""}${fmt(d.gain, 0)})` : "sin trato";
+    const row = el("tr", {}, [`#${d.id} · ${d.item ?? ""}`, d.session ?? "–", d.role === "seller" ? "vendedor" : "comprador", d.rival ?? "–", d.limit ?? "–",
+      d.mine ?? "–", d.his ?? "–", d.status === "live" ? d.left + " ticks" : "–", res].map((c, i) => el("td", { class: i ? "n" : "", text: String(c) })));
+    const last = row.lastChild;
+    if (d.status !== "live") last.classList.add(d.price == null ? "muted" : d.gain >= 0 ? "ok" : "bad");
+    tb.appendChild(row);
+    if (d.path && d.path.length > 1 && d.status === "live") {
+      const pr = el("tr"), td = el("td", { colspan: 9 }), q = el("div", { class: "seq" });
+      d.path.forEach((p) => q.appendChild(el("span", { class: "chip", text: `r${p.round}: rival ${p.rival ?? "–"} · nos ${p.ours ?? (p.decision === "accept" ? "aceptamos" : "–")}` })));
+      td.append(el("span", { class: "muted", text: "Rondas: " }), q); pr.appendChild(td); tb.appendChild(pr);
+    }
+  });
+  t.appendChild(tb);
+  replace("duels", tiles, el("div", { class: "scroll", style: "max-height:420px;margin-top:12px" }, [t]));
+}
+
+function drawDealers(s) {
+  const names = { abuela: "Abuela Carmen", chato: "El Chato", pilar: "Doña Pilar" };
+  const ids = [...new Set(["abuela", "chato", "pilar", ...Object.keys(s.dealers || {})])];
+  replace("dealer-tabs", ...ids.map((id) => { const b = el("button", { class: view.dealer === id ? "on" : "", text: `${names[id] || id}${s.team.unlocked.includes(id) ? "" : " 🔒"}` });
+    b.onclick = () => { view.dealer = id; render(); }; return b; }));
+  const id = view.dealer, d = (s.dealers || {})[id];
+  if (!d) return replace("dealers", el("div", { class: "empty", text: s.team.unlocked.includes(id) ? "Aún no hay conversaciones." : "Bloqueado: aún no podemos hablar con este dealer." }));
+  const t = d.open || d.last;
+  const head = el("div", { class: "muted", text: `${d.total} conversaciones · ${d.deals} tratos · ${d.cooloffs} “cooloff”` });
+  const sub = el("div", { class: "cap", style: "margin:8px 0 0", text: `${d.open ? "Abierta" : "Última"} #${t.id} · ${JSON.stringify(t.topic)} · ${t.status}${t.reason ? " (" + t.reason + ")" : ""}` });
+  const chat = el("div", { class: "chat" }, (t.messages || []).map((m) => el("div", { class: "msg" + (m.who === "nosotros" ? " us" : "") }, [
+    el("div", { class: "who" }, [el("span", { text: m.who === "nosotros" ? "Nosotros" : (names[m.who] || m.who) }), m.price != null ? el("b", { text: `${m.price} P${m.final ? " · final" : ""}` }) : el("span")]),
+    el("div", { text: m.text || "—" })])));
+  const past = el("details", {}, [el("summary", { text: "Conversaciones anteriores" }),
+    table(["#", "Tema", "Rondas", "Último precio", "Final"], d.history.map((h) => [h.id, JSON.stringify(h.topic).slice(0, 40), h.rounds, h.last_price ?? "–", h.status + (h.reason ? ` (${h.reason})` : "")]))]);
+  replace("dealers", head, sub, chat, past);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function drawPrio(s) {
+  const p = s.priorities; if (!p) return;
+  const sets = table(["Barrio", "Multiplicador", "Página", "Prioridad"], p.sets.map((x, i) => [`${i + 1}. ${x.name}`, `×${x.affinity}`, `${x.have}/${x.of}`, fmt(x.score, 2)]));
+  const cards = table(["Carta", "Rareza", "Libro", "Valor para nosotros", "Tope (60 %)"], p.cards.map((c, i) => [`${i + 1}. ${c.ref} · ${c.name}`, RARITY[c.rarity] || c.rarity, c.book,
+    fmt(c.value, 0) + (c.server ? "" : " (estimado)"), fmt(Math.floor(c.value * 0.6), 0)]));
+  const fl = p.flags.length ? table(["Mensaje", "Dealer", "Motivo"], p.flags.map((f) => [f.message, f.dealer, f.why]))
+    : el("div", { class: "empty", text: `Ningún flag enviado · ${p.flags_checked} mensajes de dealers revisados. Solo marcamos si las palabras dicen otro precio que la oferta.` });
+  const dup = el("div", { class: "seq" }, p.dupes.map((d) => el("span", { class: "chip", text: `${d.ref} ×${d.copies}` })));
+  replace("prio", el("div", { class: "grid" }, [
+    el("div", { class: "c5" }, [el("h2", { text: "Barrios" }), sets, el("h2", { style: "margin-top:12px", text: "Repetidas (para vender o cambiar)" }), dup]),
+    el("div", { class: "c7" }, [el("h2", { text: "Cartas que faltan, por valor" }), cards, el("h2", { style: "margin-top:12px", text: "Flags" }), fl])]));
+}
+
 /* ---------- panels ---------- */
 const RARITY = { common: "común", uncommon: "poco común", rare: "rara", epic: "épica", legendary: "legendaria" };
 const ACTION = { duels: "Duelos", bench: "Market Test", persona_opens: "Se abre un dealer", round: "Nueva ronda", set_release: "Sale un set", persona_announce: "Anuncio de dealer" };
@@ -343,19 +489,7 @@ function render() {
   const el0 = (Date.now() - fetchedAt) / 1000;
   replace("sched", s.schedule.length ? table(["Evento", "En"], s.schedule.map((e) => [ACTION[e.action] || e.action, clock(e.eta_s - el0)])) : el("div", { class: "empty", text: "No hay eventos en el calendario." }));
 
-  /* dealers */
-  const dcard = (id, name) => {
-    const d = s.dealers[id], open = s.team.unlocked.includes(id);
-    const box = el("div", { style: "margin-bottom:14px" }, [el("div", { class: "top", style: "display:flex;justify-content:space-between" }, [el("b", { text: name }),
-      el("span", { class: "chip", text: open ? "✓ desbloqueado" : "✗ bloqueado" })])]);
-    if (!d) { box.appendChild(el("div", { class: "empty", text: "Aún no hay conversaciones." })); return box; }
-    box.appendChild(el("div", { class: "muted", text: `${d.total} conversaciones · ${d.deals} tratos cerrados · ${d.cooloffs} “cooloff”` }));
-    const t = d.open || d.last;
-    if (t) { box.appendChild(el("div", { class: "cap", style: "margin:8px 0 0", text: `${d.open ? "Abierta" : "Última"} #${t.id} · ${JSON.stringify(t.topic)} · ${t.status}${t.reason ? " (" + t.reason + ")" : ""}` }));
-      const q = el("div", { class: "seq" }); t.seq.forEach((m) => q.appendChild(el("span", { class: "chip", text: `${m.who === "noi" ? "nosotros" : "ella"} ${m.price}${m.final ? " F" : ""}` }))); box.appendChild(q); }
-    return box;
-  };
-  replace("dealers", dcard("abuela", "Abuela Carmen"), dcard("chato", "El Chato"));
+  drawDealers(s); drawBench(s); drawDuels(s); drawPrio(s);
 
   /* venue */
   const v = s.venue;
@@ -368,13 +502,6 @@ function render() {
   w.classList.toggle("on", dups.length > 0);
   w.textContent = dups.length ? `⚠ Copias duplicadas en ejecución: ${dups.join(", ")}. Dos copias con la misma clave se pisan entre sí: deja solo la más reciente.` : "";
   replace("procs", s.processes.list.length ? table(["Agente", "PID", "Activo desde hace"], s.processes.list.map((p) => [(dups.includes(p.script) ? "⚠ " : "✓ ") + p.script, p.pid, p.uptime])) : el("div", { class: "empty", text: "No se encontró ningún agente." }));
-
-  /* duels */
-  const du = s.duels || [];
-  $("duelcard").style.display = du.length ? "" : "none";
-  if (du.length) replace("duels", table(["Duelo", "Rol", "Rival", "Límite", "Nosotros", "Rival ofrece", "Ronda", "Quedan", "Estado"],
-    du.map((d) => [`#${d.id} · ${d.item}`, d.role === "seller" ? "vendedor" : "comprador", d.rival, d.limit, d.mine ?? "–", d.his ?? "–", d.rounds, d.status === "live" ? d.left + " ticks" : "–",
-      d.status === "live" ? "en curso" : (d.price != null ? `cerrado a ${d.price}` : d.status)])));
 
   /* feed */
   replace("feed", ...(s.activity.length ? s.activity.slice().reverse().map((r) => el("div", { class: "row" }, [el("span", { class: "t", text: r.t }), el("span", { class: "s", text: r.src }), el("span", { text: r.text })])) : [el("div", { class: "empty", text: "Aún no hay eventos en los logs." })]));

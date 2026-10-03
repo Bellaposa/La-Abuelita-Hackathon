@@ -15,6 +15,7 @@ Memory   memory.json keeps OBSERVED facts (every round, every outcome) apart fro
          each with its sample size, and only when the sample is large enough).
 """
 import json
+import re
 import math
 import os
 import statistics
@@ -22,6 +23,7 @@ import sys
 import time
 
 from bazaar_sdk import Bazaar, BazaarError
+from flags import is_lie
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 MEMORY_FILE = os.environ.get("AGENT_MEMORY", "memory.json")
@@ -32,6 +34,7 @@ MIN_DEALS = 3             # finished deals before we adapt the opening bid
 BUY_MIN_GAIN = 3          # primas of private-value gain we need to buy from another team
 SELL_MIN_GAIN = 2         # primas over what the copy is worth to us to sell it
 LISTINGS_PER_TICK = 3
+BUYER_MULT = 1.3          # ask for a duplicate with no competition: book x this (upper half of the buyers' multipliers)
 MAX_VALUE_CHECKS = 12     # b.value() calls per tick (rate limit friendly)
 BOARD_TTL = 120           # board offers; an offer inside a thread dies after 2 ticks
 DUENDE = "v02"            # El Duende: 0% and 0 P per card; swaps live here
@@ -211,7 +214,7 @@ def next_offer(cap, list_price, ours, hers, inferred):
     return "offer", new, f"mood {mood}, gap {gap}, step {step} (" + ", ".join(why) + ")"
 
 
-def next_offer_sell(floor, list_price, ours, hers, inferred, k0=0.35):
+def next_offer_sell(floor, list_price, ours, hers, inferred, k0=0.35, soft_floor=None):
     """Mirror of next_offer for selling to a dealer: we ask, they bid. (action, price, reason); never below floor."""
     if not hers:
         if ours:
@@ -224,6 +227,8 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=0.35):
     tol = max(1, int(0.04 * list_price))
     if last is None and not (bid >= floor and final):
         return "offer", max(floor, list_price), "opening ask (he spoke first)"
+    if soft_floor is not None and bid >= soft_floor and len(hers) >= 3 and len({h[0] for h in hers[-3:]}) == 1:
+        return "accept", bid, f"he repeated {bid} three times and it clears our soft floor {soft_floor}"
     if bid >= floor and (final or bid >= last - tol):          # `final` first: with ours empty `last` is None (he spoke first)
         return "accept", bid, "his final is over our floor" if final else "his bid is within reach of our ask"
     if final:
@@ -243,11 +248,11 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=0.35):
     return "offer", new, f"he is {mood}, gap {gap}, step {step} (k={k})"
 
 
-def chato_text(side, price, n_round, item):
+def chato_text(side, price, n_round, item, name="Chato"):
     """Short and plain: he talks little, has a long memory and punishes cleverness."""
     if n_round == 0:
-        return (f"Buenas, Chato. Te ofrezco {item}: {price} primas." if side == "sell"
-                else f"Buenas, Chato. Busco {item}. Te ofrezco {price} primas.")
+        return (f"Buenas, {name}. Te ofrezco {item}: {price} primas." if side == "sell"
+                else f"Buenas, {name}. Busco {item}. Te ofrezco {price} primas.")
     return f"Entendido. {price} primas." if side == "buy" else f"Entendido. Bajo a {price} primas."
 
 
@@ -398,9 +403,33 @@ def market_opportunities(me, catalog, venue, offers, value_of, free_cash=None):
     return opps
 
 
-def listing_plan(me, catalog, venue, offers, listed_assets):
-    """[(asset id, ask, ref, value lost)] for surplus copies: floor from OUR value of the copy; target from rivals' asks and book."""
+BID_PREMIUM = 1.15        # a team's cash bid is a floor on its value (nobody bids all of it): ask it this much above the bid
+
+
+def demand_from(offers, me_id, own_ids=()):
+    """ref -> (best cash bid, team id or None) from other teams' bids for one card: their proof of what it is worth to them.
+    Boards show makers as pseudonyms ("m2eb45963"), so our own offers are excluded by offer id; `to` is only a real team id."""
+    best, own = {}, set(own_ids)
+    for o in offers:
+        g, w = o.get("give") or {}, o.get("want") or {}
+        maker = o.get("maker")
+        if maker == me_id or o.get("id") in own or o.get("status", "open") != "open":
+            continue
+        refs = card_refs(w)
+        if len(refs) != 1 or not g.get("cash") or g.get("assets") or w.get("cash"):
+            continue
+        team = maker if isinstance(maker, str) and re.fullmatch(r"t\d+", maker) else None
+        if refs[0] not in best or g["cash"] > best[refs[0]][0]:
+            best[refs[0]] = (g["cash"], team)
+    return best
+
+
+def listing_plan(me, catalog, venue, offers, listed_assets, own_ids=()):
+    """[(asset id, ask, ref, value lost, to)] for surplus copies. Floor = OUR value of the copy + margin.
+    With a team bidding for the card: a directed ask to that team, BID_PREMIUM above its bid (its value is higher than
+    what it bid). Otherwise: undercut the cheapest rival ask, or book x BUYER_MULT when alone."""
     counts, ids = card_counts(me)
+    demand = demand_from(offers, me["id"], own_ids)
     comp = {}
     for o in offers:
         g, w = o.get("give") or {}, o.get("want") or {}
@@ -415,12 +444,18 @@ def listing_plan(me, catalog, venue, offers, listed_assets):
         card = next(c for s in catalog["sets"] for c in s["cards"] if c["id"] == ref)
         lost = marginal_value(ref, n, catalog, me["affinity"])
         floor = ask_floor(lost)
-        target = (min(comp[ref]) - 1) if ref in comp else card["book"]     # undercut the cheapest rival, else book value
-        ask = max(floor, min(target, math.ceil(card["book"] * 1.2)))
+        # A team missing this card values it at book x its own set multiplier (the same six, shuffled: 1.6 ... 0.5) plus any
+        # page bonus. Alone on the board we price for the upper half of those buyers; with rivals we undercut the cheapest.
+        target = (min(comp[ref]) - 1) if ref in comp else math.ceil(card["book"] * BUYER_MULT)
+        ask = max(floor, min(target, math.ceil(card["book"] * 1.5)))
+        to = None
+        if ref in demand:                                                  # a bidder told us a floor on its value
+            bid, to = demand[ref]
+            ask = max(floor, bid + 1, math.ceil(bid * BID_PREMIUM))
         spare = sorted(ids[ref], key=lambda a: -a["serial"])[:n - 1]       # keep the lowest serial
-        for a in spare:
+        for i, a in enumerate(spare):
             if a["id"] not in listed_assets:
-                plan.append((a["id"], ask, ref, round(lost, 1)))
+                plan.append((a["id"], ask, ref, round(lost, 1), to if i == 0 else None))
     return plan
 
 
@@ -632,7 +667,8 @@ def phase_market(b, me, catalog, can_accept):
     # One spare becomes a swap when we are missing something; the other spares stay cash asks.
     raw_swaps = swap_plan(me, catalog, listed, open_wants | got, holders, 1)
     swap_assets = {row[0] for row in raw_swaps}
-    asks = [("ask", asset, ask, ref, lost) for asset, ask, ref, lost in listing_plan(me, catalog, rastro, offers, listed)
+    asks = [("ask", asset, ask, ref, lost, to) for asset, ask, ref, lost, to in listing_plan(me, catalog, rastro, offers, listed,
+                                                                               {o.get("id") for o in mine})
             if asset not in swap_assets]
     bids = [("bid", ref, price, v, holder) for ref, price, v, holder in
             bid_plan(me, catalog, open_wants | got | {row[2] for row in raw_swaps}, free, holders, LISTINGS_PER_TICK)]
@@ -645,9 +681,10 @@ def phase_market(b, me, catalog, can_accept):
             item = q.pop(0)
             try:
                 if item[0] == "ask":
-                    _, asset, ask, ref, lost = item
-                    where = place_board(b, {"assets": [asset]}, {"cash": ask})
-                    log(f"LISTED spare {ref} (asset {asset}) at {ask} on {where}; the copy is worth {lost} to us")
+                    _, asset, ask, ref, lost, to = item
+                    where = place_board(b, {"assets": [asset]}, {"cash": ask}, to=to)
+                    log(f"LISTED spare {ref} (asset {asset}) at {ask} on {where}" + (f" to bidder {to}" if to else "")
+                        + f"; the copy is worth {lost} to us")
                 elif item[0] == "bid":
                     _, ref, price, v, holder = item
                     where = place_board(b, {"cash": price}, {"cards": [ref]}, to=holder)
@@ -737,6 +774,8 @@ def fresh_accept_target(b, tid, dealer, me_id, expect_give, expect_want, labels)
 
 def phase_abuela(b, me, catalog, mem):
     """One step of the Abuela negotiation. Returns True if we accepted something this tick."""
+    if mem.get("active_buy_abuela"):
+        return False                                   # a card buy holds her one conversation: leave it to phase_card_buy
     inferred = mem["inferred"] = infer(mem)
     act = mem["active"]
     tid = next((t for t in me.get("open_threads", []) if b.thread(t).get("with") == "abuela"), None)
@@ -819,7 +858,7 @@ def chato_candidate(me, catalog):
     for ref, n in counts.items():
         a = ids[ref][-1]
         lp = CHATO.get(a["rarity"])
-        if not lp:
+        if not lp or n < 2:                               # never our only copy: the page bonus is not in its value
             continue
         lost = marginal_value(ref, n, catalog, me["affinity"])
         floor = math.ceil(lost * 1.4 + SELL_MIN_GAIN)
@@ -830,71 +869,285 @@ def chato_candidate(me, catalog):
     return best
 
 
-def phase_chato(b, me, catalog, mem, can_accept):
-    """One step with El Chato: sell him a card that is worth little to us. Returns True if we accepted something."""
-    if "chato" not in me.get("unlocked", []):
+def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=None):
+    """One step with a card buyer (El Chato by default, Doña Pilar via phase_pilar): sell him a card worth little to us.
+    Returns True if we accepted something. Memory keys are per dealer (chato_*, pilar_*)."""
+    candidate_fn = candidate_fn or chato_candidate
+    name = dealer.title()
+    if dealer not in me.get("unlocked", []):
         return False
-    if mem.get("chato_block_until", -1) > me["tick"]:
+    if mem.get(f"{dealer}_block_until", -1) > me["tick"]:
         return False
-    inferred = infer(mem, "chato")
-    act = mem.get("active_chato")
-    tid = next((t for t in me.get("open_threads", []) if b.thread(t).get("with") == "chato"), None)
+    inferred = infer(mem, dealer)
+    act = mem.get(f"active_{dealer}")
+    tid = next((t for t in me.get("open_threads", []) if b.thread(t).get("with") == dealer), None)
     if act and (tid is None or act["thread"] != tid):
         t = b.thread(act["thread"])
-        ours, hers = read_thread(t, me["id"], "chato", sell=True)
+        ours, hers = read_thread(t, me["id"], dealer, sell=True)
         got = me["cash"] - act["cash_start"] if t["status"] == "deal" else None
-        mem["observed"]["negotiations"].append({"dealer": "chato", "thread": act["thread"], "topic": act["topic"], "outcome": t["status"],
+        mem["observed"]["negotiations"].append({"dealer": dealer, "thread": act["thread"], "topic": act["topic"], "outcome": t["status"],
                                                 "closed_reason": t.get("closed_reason"), "paid": None, "received": got,
                                                 "rounds": rounds_of(ours, hers)})
         reason = t.get("closed_reason")
-        log(f"Chato negotiation {t['id']} ended: {t['status']} {reason or ''} received {got}")
+        log(f"{name} negotiation {t['id']} ended: {t['status']} {reason or ''} received {got}")
         if t["status"] != "deal":
-            mem["chato_block_until"] = me["tick"] + 30            # any ending but a deal: do not pester him, he remembers
-            mem.setdefault("chato_tried", {})[act["ref"]] = me["tick"]
-        mem["active_chato"], act = None, None
+            mem[f"{dealer}_block_until"] = me["tick"] + 30            # any ending but a deal: do not pester him, he remembers
+            mem.setdefault(f"{dealer}_tried", {})[act["ref"]] = me["tick"]
+        mem[f"active_{dealer}"], act = None, None
     if tid is None:
-        cand = chato_candidate(me, catalog)
+        cand = candidate_fn(me, catalog)
         if not cand:
             return False
         _, ref, asset, floor, lp, lost = cand
-        if me["tick"] - mem.get("chato_tried", {}).get(ref, -999) < 90:
+        if me["tick"] - mem.get(f"{dealer}_tried", {}).get(ref, -999) < 90:
             return False                                          # same card, no new reason: stay quiet for a while
-        try:
-            th = b.open_thread("chato", topic={"sell": {"assets": [asset["id"]]}})
+        try:                                                      # a market listing of this copy would sell it under the dealer
+            for o in b.my_offers().get("offers", []):
+                if o.get("maker") == me["id"] and o.get("status", "open") == "open" and \
+                        any(isinstance(a, dict) and a.get("id") == asset["id"] for a in (o.get("give") or {}).get("assets") or []):
+                    b.cancel(o["id"])
+                    log(f"{name}: cancelled listing {o['id']} of {ref} before offering it")
         except BazaarError as e:
-            log("Chato unavailable:", e.code, e.message)
-            mem["chato_block_until"] = me["tick"] + 30
+            log(f"{name}: could not clear listings of {ref}: {e.code}")
+            return False
+        try:
+            th = b.open_thread(dealer, topic={"sell": {"assets": [asset["id"]]}})
+        except BazaarError as e:
+            log(f"{name} unavailable:", e.code, e.message)
+            mem[f"{dealer}_block_until"] = me["tick"] + 30
             return False
         tid = th["id"]
-        mem["active_chato"] = {"thread": tid, "topic": {"sell": {"assets": [asset["id"]]}}, "cash_start": me["cash"],
+        mem[f"active_{dealer}"] = {"thread": tid, "topic": {"sell": {"assets": [asset["id"]]}}, "cash_start": me["cash"],
                                "ref": ref, "floor": floor, "lp": lp, "lost": round(lost, 1)}
-        log(f"Chato: offering {ref} (worth {lost:.1f} to us), floor {floor}, his list {lp}")
-    elif mem.get("active_chato") is None:
+        log(f"{name}: offering {ref} (worth {lost:.1f} to us), floor {floor}, his list {lp}")
+    elif mem.get(f"active_{dealer}") is None:
         return False                                              # a thread we did not open: leave it alone
-    act = mem["active_chato"]
+    act = mem[f"active_{dealer}"]
     t = b.thread(tid)
     if t["status"] != "open":
         return False
-    ours, hers = read_thread(t, me["id"], "chato", sell=True)
-    action, price, why = next_offer_sell(act["floor"], act["lp"], ours, hers, inferred)
-    log(f"Chato thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {act['floor']} -> {action} {price} ({why})")
+    ours, hers = read_thread(t, me["id"], dealer, sell=True)
+    soft = None if mem.get(f"{dealer}_soft_done") else math.ceil(act["lost"] + 1)     # one firm-bid deal per dealer, for the ladder
+    action, price, why = next_offer_sell(act["floor"], act["lp"], ours, hers, inferred, soft_floor=soft)
+    log(f"{name} thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {act['floor']} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
         assets = ((act["topic"] or {}).get("sell") or {}).get("assets") or []
-        if len(assets) != 1 or price is None or price < act["floor"]:
-            log(f"Chato thread {tid}: accept blocked: topic or price not verifiable (topic {act['topic']}, price {price}, floor {act['floor']})")
+        least = act["floor"] if soft is None else min(act["floor"], soft)     # the soft floor may close one deal under the floor
+        if len(assets) != 1 or price is None or price < least:
+            log(f"{name} thread {tid}: accept blocked: topic or price not verifiable (topic {act['topic']}, price {price}, floor {least})")
             return False
-        offer_id, why = fresh_accept_target(b, tid, "chato", me["id"], _key(cash=price), _key(assets=assets), ("price", "item"))
+        offer_id, why = fresh_accept_target(b, tid, dealer, me["id"], _key(cash=price), _key(assets=assets), ("price", "item"))
         if offer_id is None:
-            log(f"Chato thread {tid}: accept blocked: {why} (decided {price})")
+            log(f"{name} thread {tid}: accept blocked: {why} (decided {price})")
             return why == "no open standing offer"
-        b.accept(offer_id)
-        log(f"CHATO SELL {act['ref']} at {price}: it was worth {act['lost']} to us")
+        try:
+            b.accept(offer_id)
+        except BazaarError as e:
+            if e.code in ("asset_gone", "not_owner", "asset_locked"):     # the card left (sold elsewhere): end cleanly
+                log(f"{name}: {act['ref']} is no longer ours ({e.code}); closing thread {tid}")
+                b.close_thread(tid)
+                mem[f"active_{dealer}"] = None
+                return False
+            raise
+        if price < act["floor"]:
+            mem[f"{dealer}_soft_done"] = True
+        log(f"{name.upper()} SELL {act['ref']} at {price}: it was worth {act['lost']} to us")
         return True
     if action == "walk":
         b.close_thread(tid)
     elif action == "offer":
-        b.say(tid, chato_text("sell", price, len(ours), act["ref"]), price=price)
+        b.say(tid, chato_text("sell", price, len(ours), act["ref"], name), price=price)
     return False
+
+
+def pilar_candidate(me, catalog):
+    """Doña Pilar buys uncommon, rare and epic cards over book (SAL and RET most). Her prices are not published:
+    we assume her list at book (x1.1 for SAL/RET) and let next_offer_sell protect the floor."""
+    counts, ids = card_counts(me)
+    book = {c["id"]: c for st in catalog["sets"] for c in st["cards"]}
+    best = None
+    for ref, n in counts.items():
+        a = ids[ref][-1]
+        if a["rarity"] not in ("uncommon", "rare", "epic") or ref not in book or n < 2:   # never our only copy
+            continue
+        lp = int(book[ref]["book"] * (1.1 if ref.split("-")[0] in ("SAL", "RET") else 1.0))
+        lost = marginal_value(ref, n, catalog, me["affinity"])
+        floor = math.ceil(lost * 1.4 + SELL_MIN_GAIN)
+        if floor <= 0.85 * lp:
+            score = 0.8 * lp - lost
+            if best is None or score > best[0]:
+                best = (score, ref, a, floor, lp, lost)
+    return best
+
+
+def phase_pilar(b, me, catalog, mem, can_accept):
+    return phase_chato(b, me, catalog, mem, can_accept, dealer="pilar", candidate_fn=pilar_candidate)
+
+
+# ---------------------------------------------------------------- buying the cards we value most from dealers
+
+DEALER_SELLS = {"abuela": {"common": 10, "uncommon": 25}, "chato": {"uncommon": 26, "rare": 77}}   # list prices (dealer menus)
+CARD_EDGE = 0.95          # we pay at most this share of the card's value TO US (server value, page bonus included), and
+                          # always at least 1 prima under it. The ladder scores the share of the dealer's range we capture,
+                          # so a deal under our value that the dealer can reach is worth more than a tight cap with no deal.
+VALUE_TTL = 20            # ticks a server value stays cached
+MAX_PAY = json.loads(os.environ.get("MAX_PAY", "{}"))   # optional per-card price ceilings (none by default): the cap comes from our value
+
+
+def set_priority(me, catalog):
+    """Neighbourhoods by what they can still give us: affinity x page progress (a nearly complete page carries the bonus).
+    [(set id, score, have, of)] best first. Only released sets."""
+    counts, _ = card_counts(me)
+    rows = []
+    for st in catalog["sets"]:
+        if not st.get("released") or st["id"] not in me["affinity"]:
+            continue
+        page = [c for c in st["cards"] if c.get("page")]
+        have = sum(1 for c in page if counts.get(c["id"], 0))
+        rows.append((st["id"], round(me["affinity"][st["id"]] * (1 + have / max(1, len(page))), 2), have, len(page)))
+    return sorted(rows, key=lambda r: -r[1])
+
+
+def buy_priorities(b, me, catalog, mem, limit=6):
+    """Missing page cards, ranked by their SERVER value to us (includes the page bonus), checked at most every VALUE_TTL
+    ticks. [(ref, rarity, value)] best first."""
+    counts, _ = card_counts(me)
+    cache = mem.setdefault("value_cache", {})
+    order = {sid: i for i, (sid, *_r) in enumerate(set_priority(me, catalog))}
+    cands = []
+    for st in catalog["sets"]:
+        if st["id"] not in order:
+            continue
+        for c in st["cards"]:
+            if c.get("page") and not counts.get(c["id"], 0):
+                cands.append((order[st["id"]], -c["book"] * me["affinity"][st["id"]], c["id"], c["rarity"]))
+    out = []
+    for _o, _v, ref, rarity in sorted(cands)[:limit * 2]:
+        hit = cache.get(ref)
+        if not hit or me["tick"] - hit[0] > VALUE_TTL:
+            try:
+                hit = cache[ref] = [me["tick"], float(b.value(ref).get("your_value") or 0)]
+            except BazaarError:
+                continue
+        out.append((ref, rarity, hit[1]))
+    out.sort(key=lambda r: -r[2])
+    return out[:limit]
+
+
+def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
+    """Buy the highest-value missing card this dealer sells, at most CARD_EDGE x its value to us.
+    Never repeats a price (next_offer walks instead), takes a final only under our cap. Returns (accepted, busy)."""
+    if dealer not in me.get("unlocked", []):
+        return False, False
+    key = f"active_buy_{dealer}"
+    act = mem.get(key)
+    tid = next((t for t in me.get("open_threads", []) if b.thread(t).get("with") == dealer), None)
+    name = dealer.title()
+    if act and (tid is None or act["thread"] != tid):                     # our buy ended: record it
+        t = b.thread(act["thread"])
+        ours, hers = read_thread(t, me["id"], dealer)
+        paid = act["cash_start"] - me["cash"] if t["status"] == "deal" else None
+        mem["observed"]["negotiations"].append({"dealer": f"{dealer}_buy", "thread": act["thread"], "topic": act["topic"],
+                                                "outcome": t["status"], "closed_reason": t.get("closed_reason"),
+                                                "paid": paid, "rounds": rounds_of(ours, hers)})
+        log(f"{name} card buy {t['id']} ({act['ref']}) ended: {t['status']} {t.get('closed_reason') or ''} paid {paid} "
+            f"(worth {act['value']:.0f} to us)")
+        if t["status"] != "deal":
+            mem.setdefault(f"{dealer}_buy_tried", {})[act["ref"]] = me["tick"]
+            mem[f"{dealer}_buy_block_until"] = me["tick"] + 20
+        mem[key], act = None, None
+    if tid is not None and act is None:
+        return False, True                                                # a sell thread (or someone else's) is open
+    if tid is None:
+        if mem.get(f"{dealer}_buy_block_until", -1) > me["tick"]:
+            return False, False
+        sells = DEALER_SELLS.get(dealer, {})
+        pick = None
+        busy_refs = {(mem.get(f"active_buy_{d}") or {}).get("ref") for d in DEALER_SELLS if d != dealer}
+        for ref, rarity, value in buy_priorities(b, me, catalog, mem):
+            lp = sells.get(rarity)
+            if not lp or ref in busy_refs or me["tick"] - mem.get(f"{dealer}_buy_tried", {}).get(ref, -999) < 60:
+                continue                                                  # one dealer per card: never buy it twice
+            cap = min(me["cash"] - CASH_RESERVE, min(int(CARD_EDGE * value), int(value) - 1), MAX_PAY.get(ref, 10 ** 9))
+            if cap >= 0.8 * lp:                                           # realistic for the dealer, a real gain for us
+                pick = (ref, rarity, value, lp, cap)
+                break
+        if not pick:
+            return False, False
+        ref, rarity, value, lp, cap = pick
+        topic = {"buy": {"card": ref}}
+        try:
+            th = b.open_thread(dealer, topic=topic)
+        except BazaarError as e:
+            log(f"{name} card buy unavailable: {e.code} {e.message}")
+            mem[f"{dealer}_buy_block_until"] = me["tick"] + 20
+            return False, False
+        tid = th["id"]
+        act = mem[key] = {"thread": tid, "topic": topic, "cash_start": me["cash"], "ref": ref, "value": value, "lp": lp}
+        log(f"{name}: buying {ref} ({rarity}), worth {value:.0f} to us, cap {cap}, his list {lp}")
+    t = b.thread(tid)
+    if t["status"] != "open":
+        return False, True
+    cap = min(me["cash"] - CASH_RESERVE, min(int(CARD_EDGE * act["value"]), int(act["value"]) - 1), MAX_PAY.get(act["ref"], 10 ** 9))
+    ours, hers = read_thread(t, me["id"], dealer)
+    action, price, why = next_offer(cap, act["lp"], ours, hers, infer(mem, f"{dealer}_buy"))
+    log(f"{name} buy {tid} {act['ref']}: ours {ours} his {[h[0] for h in hers]} cap {cap} -> {action} {price} ({why})")
+    if action == "accept" and can_accept:
+        if price is None or price > cap:
+            log(f"{name} buy {tid}: accept blocked: price {price} over cap {cap}")
+            return False, True
+        offer_id, why = fresh_accept_target(b, tid, dealer, me["id"], _key(types=[f"card:{act['ref']}"]), _key(cash=price),
+                                            ("item", "price"))
+        if offer_id is None:
+            log(f"{name} buy {tid}: accept blocked: {why} (decided {price})")
+            return False, True
+        b.accept(offer_id)
+        log(f"{name.upper()} BUY {act['ref']} at {price}: worth {act['value']:.0f} to us (+{act['value'] - price:.0f})")
+        return True, True
+    if action == "walk":
+        b.close_thread(tid)
+    elif action == "offer":
+        text = haggle_text(price, len(ours), item=act["ref"]) if dealer == "abuela" else \
+            chato_text("buy", price, len(ours), act["ref"], name)
+        b.say(tid, text, price=price)
+    return False, True
+
+
+FLAG_EVERY = 4            # ticks between scans of our dealer threads for bad faith
+
+
+def phase_flags(b, me, mem):
+    """Flag a dealer message only when its words state a different (worse for us) price than its own structured offer.
+    Each message is judged once; a wrong flag costs score, so flags.is_lie is deliberately strict."""
+    if me["tick"] - mem.get("flags_scan_tick", -999) < FLAG_EVERY:
+        return
+    mem["flags_scan_tick"] = me["tick"]
+    seen = set(mem.setdefault("flags_seen", []))
+    for t in b.my_threads().get("threads", []):
+        if t.get("kind") != "persona":
+            continue
+        dealer_sells = "buy" in (t.get("topic") or {})
+        ours = []
+        for m in t.get("messages", []):
+            o = m.get("offer") or {}
+            price = ((o.get("give") or {}).get("cash") or (o.get("want") or {}).get("cash")) if o else None
+            if m["sender"] == me["id"]:
+                if price:
+                    ours.append(price)
+                continue
+            mid = m.get("id")
+            if mid is None or mid in seen:
+                continue
+            seen.add(mid)
+            lie, why = is_lie(m.get("text") or "", price, ours, dealer_sells)
+            if lie:
+                try:
+                    b.flag(mid, f"bad faith: {why}")
+                    mem.setdefault("flags_sent", []).append({"message": mid, "dealer": t["with"], "thread": t["id"], "why": why})
+                    log(f"FLAG {t['with']} message {mid} (thread {t['id']}): {why}")
+                except BazaarError as e:
+                    log(f"flag refused for message {mid}: {e.code} {e.message}")
+    mem["flags_seen"] = sorted(seen)[-3000:]
 
 
 def run_agent():
@@ -913,11 +1166,32 @@ def run_agent():
                 accepted = phase_abuela(b, me, catalog, mem)
             except BazaarError as e:
                 log("Abuela step:", e.code, e.message)
+            busy = {}
+            for d in ("chato", "abuela"):                                  # priority cards first (Abuela: only when no pack talk)
+                if d == "abuela" and mem.get("active"):
+                    continue
+                try:
+                    got, busy[d] = phase_card_buy(b, me, catalog, mem, not accepted, d)
+                    accepted = got or accepted
+                except BazaarError as e:
+                    log(f"{d} card buy step:", e.code, e.message)
             try:
-                accepted = phase_chato(b, me, catalog, mem, can_accept=not accepted) or accepted
+                if not busy.get("chato") or mem.get("active_chato"):
+                    accepted = phase_chato(b, me, catalog, mem, can_accept=not accepted) or accepted
             except BazaarError as e:
                 log("Chato step:", e.code, e.message)
-            phase_market(b, me, catalog, can_accept=not accepted)
+            try:
+                accepted = phase_pilar(b, me, catalog, mem, can_accept=not accepted) or accepted
+            except BazaarError as e:
+                log("Pilar step:", e.code, e.message)
+            reserved = {aid for d in ("chato", "pilar")                  # cards on the table with a dealer: the market must not sell them
+                        for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
+            me_market = dict(me, assets=[a for a in me["assets"] if a.get("id") not in reserved]) if reserved else me
+            phase_market(b, me_market, catalog, can_accept=not accepted)
+            try:
+                phase_flags(b, me, mem)
+            except BazaarError as e:
+                log("flags step:", e.code, e.message)
             save_memory(mem)
             b.wait_tick()
         except KeyboardInterrupt:
@@ -984,6 +1258,17 @@ def selftest():
     assert kinds == [("buy", 10), ("sell", 12)], kinds
     plan = listing_plan(me, catalog, venue, offers, set())
     assert [p[0] for p in plan] == [2], "list the higher serial, keep the lowest"
+    dem = demand_from(offers, me["id"])
+    assert dem["LAT-04"] == (8, None), dem                                  # "tx" is not a team id: demand, but no `to`
+    p = plan[0]
+    assert p[2] == "LAT-04" and p[4] is None, p                              # open ask (cannot address a pseudonym)
+    assert p[1] == max(ask_floor(p[3]), 9, math.ceil(8 * BID_PREMIUM)), p    # above its bid, never under our floor
+    offers_t = [dict(o, maker="t09") if i == 2 else o for i, o in enumerate(offers)]
+    p2 = listing_plan(me, catalog, venue, offers_t, set())[0]
+    assert p2[4] == "t09" and p2[1] == p[1], p2                              # a real team id: directed to that bidder
+    assert demand_from([dict(offers[2], maker=me["id"])], me["id"]) == {}, "our own bids are not demand"
+    assert demand_from([dict(offers[2], maker="m2eb45963")], me["id"]) == {"LAT-04": (8, None)}, "pseudonymous bids count"
+    assert demand_from([dict(offers[2], maker="m2eb45963")], me["id"], {offers[2]["id"]}) == {}, "our own offer by id"
     assert plan[0][1] >= ask_floor(1.75), "ask must clear what the copy is worth to us"
     def play_sell(floor, open_bid, ceiling, resp, final_after=None, lp=26):
         ours, hers, bid = [], [], open_bid
@@ -1009,9 +1294,12 @@ def selftest():
     catalog2 = {"sets": [{"id": "MAL", "cards": [{"id": "MAL-07", "book": 25}, {"id": "LAT-10", "book": 70}]},
                          {"id": "LAT", "cards": [{"id": "LAT-10", "book": 70}]}], "values": {"copy_marginals": [1.0, 0.25, 0.1]}}
     me2 = {"affinity": {"MAL": 0.5, "LAT": 0.7}, "assets": [{"id": 9, "kind": "card", "ref": "MAL-07", "serial": 1, "rarity": "uncommon"},
+                                                          {"id": 7, "kind": "card", "ref": "MAL-07", "serial": 2, "rarity": "uncommon"},
                                                           {"id": 8, "kind": "card", "ref": "LAT-10", "serial": 1, "rarity": "rare"}]}
     cand = chato_candidate(me2, catalog2)
     assert cand and cand[1] == "MAL-07", "only the card that is cheap for us and realistic for him"
+    me2["assets"] = [a for a in me2["assets"] if a["id"] != 7]
+    assert chato_candidate(me2, catalog2) is None, "never our only copy"
     cat3 = {"sets": [{"id": "LAV", "released": True, "cards": [{"id": f"LAV-{i:02d}", "book": 10, "rarity": "common"} for i in range(1, 6)]}],
             "packs": [{"id": "sobre_barrio", "slots": [{"common": 1.0}, {"common": 1.0}]}], "values": {"copy_marginals": [1.0, 0.25, 0.1]}}
     empty = {"affinity": {"LAV": 1.0}, "assets": []}
@@ -1116,7 +1404,7 @@ def selftest():
     asks = [p for p in mkt.posts if p[0].get("assets") and "cash" in p[1]]
     bids = [p for p in mkt.posts if p[0].get("cash")]
     swaps = [p for p in mkt.posts if p[0].get("assets") and p[1].get("cards")]
-    assert asks and asks[0][0]["assets"] == [4] and asks[0][1] == {"cash": 10} and asks[0][2] == "v07" and asks[0][4] == 120, asks
+    assert asks and asks[0][0]["assets"] == [4] and asks[0][1] == {"cash": math.ceil(10 * BUYER_MULT)} and asks[0][2] == "v07" and asks[0][4] == 120, asks
     assert swaps and swaps[0][0] == {"assets": [2]} and swaps[0][1] == {"cards": ["LAV-03"]} and swaps[0][2] == "v02" and swaps[0][3] == "t03", swaps
     assert bids and bids[0][1] == {"cards": ["LAV-01"]} and bids[0][2] == "v07" and bids[0][3] is None and bids[0][4] == 120, bids
     assert len({p[1]["cards"][0] for p in bids}) == len(bids), "the same bid is not posted twice"
