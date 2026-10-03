@@ -24,6 +24,7 @@ import time
 
 from bazaar_sdk import Bazaar, BazaarError
 from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per tick across processes
+from bz.dealers import params as dparams          # every dealer-negotiation number, with bounds, in one table
 from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.py is the only trading authority
 from flags import is_lie
 import workshop
@@ -31,7 +32,7 @@ import workshop
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 MEMORY_FILE = os.environ.get("AGENT_MEMORY", "memory.json")
 CASH_RESERVE = int(os.environ.get("CASH_RESERVE", "0"))  # primas never spent (e.g. 270 for a venue bond)
-DEFAULT_K = 0.25          # share of the gap we close per round until we have data
+DEFAULT_K = dparams.SPEC["default_k"][0]      # kept for compatibility; the strategy reads dparams.static("default_k")
 MIN_SAMPLES = 3           # observations per step-size bucket before we trust a response ratio (was 5: we have so little data
                           # that nothing was ever inferred; the choice it drives, k in {0.1, 0.25, 0.5}, is bounded anyway)
 MIN_DEALS = 2             # finished deals before we adapt the opening bid (was 3)
@@ -82,7 +83,7 @@ def log(*a):
 
 def bucket(step, gap):
     r = step / gap if gap > 0 else 0
-    return "small" if r < 0.15 else "mid" if r < 0.35 else "large"
+    return "small" if r < dparams.static("bucket_small") else "mid" if r < dparams.static("bucket_mid") else "large"
 
 
 def infer(mem, dealer="abuela"):
@@ -108,12 +109,12 @@ def infer(mem, dealer="abuela"):
             paid.append(amount)
     inf = {"response_ratio": {}, "best_k": None, "paid_median": None, "paid_n": len(paid)}
     for name, xs in resp.items():
-        if len(xs) >= MIN_SAMPLES:
+        if len(xs) >= dparams.static("min_samples"):
             inf["response_ratio"][name] = {"mean": round(statistics.mean(xs), 3), "n": len(xs)}
     if len(inf["response_ratio"]) >= 2:           # compare buckets only when at least two are measured
         best = max(inf["response_ratio"], key=lambda k: inf["response_ratio"][k]["mean"])
-        inf["best_k"] = {"small": 0.1, "mid": 0.25, "large": 0.5}[best]
-    if len(paid) >= MIN_DEALS:
+        inf["best_k"] = {"small": dparams.static("k_small"), "mid": dparams.static("k_mid"), "large": dparams.static("k_large")}[best]
+    if len(paid) >= dparams.static("min_deals"):
         inf["paid_median"] = statistics.median(paid)
     return inf
 
@@ -143,15 +144,15 @@ def profile_hints(mem, key):
             if our is not None and her is not None and ((not is_sale and her > our) or (is_sale and her < our)):
                 rejected.append(our)
     out = {}
-    if len(prices) >= 2:
+    if len(prices) >= dparams.static("min_settle"):
         lo, hi = min(prices), max(prices)
         out.update(settle_n=len(prices), settle_min=lo, settle_max=hi)
         if sale:
-            out["open_ask"] = math.ceil(1.2 * hi)
+            out["open_ask"] = math.ceil(dparams.static("open_ask_mult") * hi)
         else:
-            out["open_bid"] = max(1, round(0.7 * lo))
-            if len(prices) >= 3:
-                out["soft_cap"] = math.ceil(1.05 * hi)
+            out["open_bid"] = max(1, round(dparams.static("open_frac_settle") * lo))
+            if len(prices) >= dparams.static("min_settle_cap"):
+                out["soft_cap"] = math.ceil(dparams.static("soft_cap_mult") * hi)
     if rejected:
         out["rejected"] = min(rejected) if sale else max(rejected)
     return out
@@ -161,15 +162,34 @@ def trait_multiplier(traits):
     """Prior for how big our concession steps should be, from the dealer's published traits (patience, generosity, shrewdness...).
     1.0 = the default step. A generous, patient, unshrewd dealer (Abuela) -> smaller steps; a shrewd one (Pilar) -> bigger.
     HYPOTHESIS, bounded to [0.5, 1.6]; it only applies while we have no learned `best_k` for that dealer."""
-    g = lambda k, d: float((traits or {}).get(k, d))
-    m = 1 + 0.8 * (g("shrewdness", 0.4) - 0.4) - 0.6 * (g("generosity", 0.5) - 0.5) - 0.3 * (g("patience", 0.6) - 0.6)
-    return round(max(0.5, min(1.6, m)), 3)
+    ref = {"shrewdness": dparams.static("ref_shrew"), "generosity": dparams.static("ref_gen"), "patience": dparams.static("ref_pat")}
+    g = lambda k, d=None: float((traits or {}).get(k, ref[k] if d is None else d))
+    m = (1 + dparams.static("trait_shrew") * (g("shrewdness") - ref["shrewdness"]) - dparams.static("trait_gen") * (g("generosity") - ref["generosity"])
+         - dparams.static("trait_pat") * (g("patience") - ref["patience"]))
+    return round(max(dparams.static("prior_lo"), min(dparams.static("prior_hi"), m)), 3)
 
 
-def learned(mem, key):
-    """Everything we know about dealer `key` ("abuela", "chato", "abuela_buy", ...): inferred ratios + profile hints + trait prior."""
+def menu_list_price(mem, dealer, kind, default=None):
+    """The dealer's published list price for `kind` ("pack:sobre_barrio", "rarity:uncommon"), else `default`."""
+    return ((mem.get("dealer_menu") or {}).get(dealer) or {}).get(kind, default)
+
+
+def log_param_changes(mem, key, list_price=None):
+    """Say, once per change, which learned parameters moved away from their defaults and why (so learning is never silent)."""
+    notes = dparams.derive(mem, key, list_price)["notes"]
+    seen = mem.setdefault("params_logged", {})
+    text = "; ".join(notes)
+    if text and seen.get(key) != text:
+        seen[key] = text
+        log(f"learned parameters for {key}: {text}")
+
+
+def learned(mem, key, list_price=None):
+    """Everything we know about dealer `key` ("abuela", "chato", "abuela_buy", ...): inferred ratios + profile hints + trait prior
+    + the learned parameters (tol_share, open_scale, block_after_fail: bz/dealers/params.py)."""
     inf = infer(mem, key)
     inf.update(profile_hints(mem, key))
+    inf["params"] = dparams.learned_params(mem, key, list_price)
     base = key[:-4] if key.endswith("_buy") else key
     traits = (mem.get("dealer_traits") or {}).get(base)
     if traits:
@@ -177,13 +197,13 @@ def learned(mem, key):
     return inf
 
 
-TRAITS_EVERY = 200        # ticks between refreshes of the dealers' published traits
+TRAITS_EVERY = dparams.SPEC["traits_every"][0]        # compat; refresh_traits reads dparams.static("traits_every")
 
 
 def refresh_traits(b, mem, tick):
     """Store each dealer's traits from GET /api/dealers (real shape: {"personas": [{id, traits{...}}]}). Cheap: 1 read per
     TRAITS_EVERY ticks. Any failure leaves the previous values in place."""
-    if tick - mem.get("dealer_traits_tick", -10 ** 9) < TRAITS_EVERY:
+    if tick - mem.get("dealer_traits_tick", -10 ** 9) < dparams.static("traits_every"):
         return False
     mem["dealer_traits_tick"] = tick                    # even on failure: do not hammer the endpoint
     try:
@@ -193,6 +213,16 @@ def refresh_traits(b, mem, tick):
         return False
     rows = resp.get("personas") or resp.get("dealers") or []
     traits = {d["id"]: d["traits"] for d in rows if isinstance(d, dict) and d.get("id") and isinstance(d.get("traits"), dict)}
+    menu = {}
+    for d in rows:                                              # list prices the dealer publishes: no hand-written copies
+        if isinstance(d, dict) and d.get("id"):
+            for e in ((d.get("menu") or {}).get("sells") or []):
+                if isinstance(e, dict) and isinstance(e.get("list_price"), (int, float)):
+                    kind = f"pack:{e['pack']}" if e.get("pack") else f"rarity:{e['rarity']}" if e.get("rarity") else None
+                    if kind:
+                        menu.setdefault(d["id"], {})[kind] = e["list_price"]
+    if menu:
+        mem["dealer_menu"] = menu
     if traits:
         mem["dealer_traits"] = traits
         log("dealer traits:", {k: trait_multiplier(v) for k, v in traits.items()})
@@ -240,7 +270,8 @@ def tone(ours, hers):
     text = hers[-1][2].lower()
     if any(w in text for w in ("last offer", "final", "última", "ultima", "take it or", "walk")):
         return "near_final"
-    if len(hers) >= 3 and hers[-1][0] == hers[-2][0] == hers[-3][0]:
+    n_firm = dparams.static("firm_rounds")
+    if len(hers) >= n_firm and len({h[0] for h in hers[-n_firm:]}) == 1:
         return "firm"
     if len(hers) >= 2 and hers[-1][0] < hers[-2][0]:
         return "yielding"
@@ -250,10 +281,13 @@ def tone(ours, hers):
 
 
 def opening_bid(list_price, inferred):
+    scale = (inferred.get("params") or {}).get("open_scale", 1.0)       # learned from how our past openings fared
     if inferred.get("open_bid"):                                   # evidence about where it settles (profile_hints)
-        return inferred["open_bid"]
-    med = inferred.get("paid_median")
-    return max(1, round(0.8 * med)) if med else max(1, round(0.5 * list_price))
+        base = inferred["open_bid"]
+    else:
+        med = inferred.get("paid_median")
+        base = round(dparams.static("open_frac_median") * med) if med else round(dparams.static("open_frac_list") * list_price)
+    return max(1, round(base * scale))
 
 
 def next_offer(cap, list_price, ours, hers, inferred):
@@ -267,7 +301,7 @@ def next_offer(cap, list_price, ours, hers, inferred):
     ask, final, _ = hers[-1]
     last = ours[-1] if ours else 0
     mood = tone(ours, hers)
-    tol = max(1, int(0.04 * list_price))
+    tol = max(1, int((inferred.get("params") or {}).get("tol_share", dparams.static("tol_share")) * list_price))
     if ask <= cap and (ask <= last + tol or final):
         return "accept", ask, ("her final is under our cap" if final else "her ask is within reach of our own bid")
     if final:
@@ -280,19 +314,19 @@ def next_offer(cap, list_price, ours, hers, inferred):
             return "walk", None, f"at our cap {cap}, she asks {ask}"
         return "wait", None, "at our cap, letting her move"
     gap = ask - last
-    k = inferred.get("best_k") or round(DEFAULT_K * inferred.get("prior_mult", 1.0), 3)
+    k = inferred.get("best_k") or round(dparams.static("default_k") * inferred.get("prior_mult", 1.0), 3)
     why = [f"k={k}"]
     her_move = (hers[-2][0] - ask) if len(hers) >= 2 else None
     our_move = (ours[-1] - ours[-2]) if len(ours) >= 2 else None
     if mood == "yielding" and her_move is not None and our_move and her_move >= our_move:
-        k *= 0.5                           # she gave at least as much as we did: do not run ahead of her
+        k *= dparams.static("slow_mult")    # she gave at least as much as we did: do not run ahead of her
         why.append("she out-conceded us, slow down")
     if mood == "firm":
         if ask <= cap:
-            k = max(k, 0.5)                # she stopped and the price is workable: close the deal
+            k = max(k, dparams.static("firm_k"))   # she stopped and the price is workable: close the deal
             why.append("she is firm and ask <= cap, close")
         else:
-            k = 0.0                        # she stopped above our cap: one token step
+            k = dparams.static("token_k")   # she stopped above our cap: one token step
             why.append("she is firm above cap, token step")
     step = max(1, round(gap * k))
     soft = inferred.get("soft_cap")
@@ -305,9 +339,11 @@ def next_offer(cap, list_price, ours, hers, inferred):
     return "offer", new, f"mood {mood}, gap {gap}, step {step} (" + ", ".join(why) + ")"
 
 
-def next_offer_sell(floor, list_price, ours, hers, inferred, k0=0.35, soft_floor=None):
+def next_offer_sell(floor, list_price, ours, hers, inferred, k0=None, soft_floor=None):
     """Mirror of next_offer for selling to a dealer: we ask, they bid. (action, price, reason); never below floor."""
     ask0 = min(list_price, inferred["open_ask"]) if inferred.get("open_ask") else list_price      # open_ask: profile_hints
+    if inferred.get("open_ask"):
+        ask0 = min(list_price, round(ask0 * (inferred.get("params") or {}).get("open_scale", 1.0)))
     if not hers:
         if ours:
             return "wait", None, "no reply yet"
@@ -316,10 +352,10 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=0.35, soft_floor
         return "wait", None, "he has not answered our last ask"
     bid, final, _ = hers[-1]
     last = ours[-1] if ours else None
-    tol = max(1, int(0.04 * list_price))
+    tol = max(1, int((inferred.get("params") or {}).get("tol_share", dparams.static("tol_share")) * list_price))
     if last is None and not (bid >= floor and final):
         return "offer", max(floor, ask0), "opening ask (he spoke first)"
-    if soft_floor is not None and bid >= soft_floor and len(hers) >= 3 and len({h[0] for h in hers[-3:]}) == 1:
+    if soft_floor is not None and bid >= soft_floor and len(hers) >= dparams.static("firm_rounds") and len({h[0] for h in hers[-dparams.static("firm_rounds"):]}) == 1:
         return "accept", bid, f"he repeated {bid} three times and it clears our soft floor {soft_floor}"
     if bid >= floor and (final or bid >= last - tol):          # `final` first: with ours empty `last` is None (he spoke first)
         return "accept", bid, "his final is over our floor" if final else "his bid is within reach of our ask"
@@ -329,10 +365,11 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=0.35, soft_floor
         stalled = len(hers) >= 2 and hers[-1][0] <= hers[-2][0]
         return ("walk", None, f"at our floor {floor}, he bids {bid}") if stalled else ("wait", None, "at our floor, letting him move")
     gap = last - bid
+    k0 = dparams.static("sell_k0") if k0 is None else k0
     k = inferred.get("best_k") or round(k0 * inferred.get("prior_mult", 1.0), 3)
     mood = "firm" if (len(hers) >= 2 and hers[-1][0] <= hers[-2][0]) else "yielding"
-    if mood == "firm" and len(hers) >= 3:
-        k = max(k, 0.5)
+    if mood == "firm" and len(hers) >= dparams.static("firm_rounds"):
+        k = max(k, dparams.static("firm_k"))
     step = max(1, round(gap * k))
     new = max(floor, last - step)
     if new >= last:
@@ -817,11 +854,11 @@ def pack_private_value(me, catalog, pack_id="sobre_barrio"):
     return ev
 
 
-PACK_EDGE = 0.9           # we pay at most this share of what the pack is worth to us
+PACK_EDGE = dparams.SPEC["pack_edge"][0]          # compatibility: the cap reads dparams.static("pack_edge")
 
 
 def pack_cap(me, catalog):
-    return max(0, min(me["cash"] - CASH_RESERVE, int(PACK_EDGE * pack_private_value(me, catalog))))
+    return max(0, min(me["cash"] - CASH_RESERVE, int(dparams.static("pack_edge") * pack_private_value(me, catalog))))
 
 
 def _key(cash=0, assets=(), types=()):
@@ -885,7 +922,9 @@ def phase_abuela(b, me, catalog, mem):
     """One step of the Abuela negotiation. Returns True if we accepted something this tick."""
     if mem.get("active_buy_abuela"):
         return False                                   # a card buy holds her one conversation: leave it to phase_card_buy
-    inferred = mem["inferred"] = learned(mem, "abuela")
+    list_pack = menu_list_price(mem, "abuela", "pack:sobre_barrio", dparams.static("fallback_list"))     # the dealer's own list price
+    inferred = mem["inferred"] = learned(mem, "abuela", list_pack)
+    log_param_changes(mem, "abuela", list_pack)
     act = mem["active"]
     tid = next((t for t in me.get("open_threads", []) if b.thread(t).get("with") == "abuela"), None)
     if act and (tid is None or act["thread"] != tid):                   # our negotiation ended: record the outcome
@@ -903,7 +942,7 @@ def phase_abuela(b, me, catalog, mem):
         log_chat(f"🏁 {rec['topic']}: {outcome} {rec['closed_reason'] or ''} pagado {paid}")
     cap = pack_cap(me, catalog)
     if tid is None:
-        best_ever = min(mem.get("abuela_min_price", 999), 20)         # the lowest she ever sold a pack to us (capped at 20)
+        best_ever = min(mem.get("abuela_min_price", 999), dparams.static("reach_cap"))         # the lowest she ever sold a pack to us (capped)
         if cap < best_ever:
             log(f"Abuela: a pack is worth {pack_private_value(me, catalog):.1f} to us (cap {cap}) and she never goes under {best_ever}: no deal")
             return False
@@ -920,7 +959,7 @@ def phase_abuela(b, me, catalog, mem):
     if t["status"] != "open":
         return False
     ours, hers = read_thread(t, me["id"])
-    action, price, why = next_offer(cap, 26, ours, hers, inferred)
+    action, price, why = next_offer(cap, list_pack, ours, hers, inferred)
     log(f"Abuela thread {tid}: ours {ours} hers {[h[0] for h in hers]} mood {tone(ours, hers)} cap {cap} -> {action} {price} ({why})")
     if hers:
         log_chat(f"👵 Abuela pide: {hers[-1][0]} P{' (final)' if hers[-1][1] else ''}")
@@ -956,22 +995,36 @@ def phase_abuela(b, me, catalog, mem):
 CHATO = {"uncommon": 26, "rare": 77}      # his list prices; he buys these two rarities
 
 
-def chato_candidate(me, catalog):
+def menu_rarity_prices(mem, dealer):
+    """{rarity: list price} from the dealer's published menu (empty until refresh_traits has run)."""
+    return {k.split(":", 1)[1]: v for k, v in ((mem.get("dealer_menu") or {}).get(dealer) or {}).items() if k.startswith("rarity:")}
+
+
+def chato_candidate(me, catalog, menu=None):
     """The card to offer him: worth little to us (we ask 1.4x our value + margin) and realistic for him (<= 85% of his list)."""
     counts, ids = card_counts(me)
     best = None
     for ref, n in counts.items():
         a = ids[ref][-1]
-        lp = CHATO.get(a["rarity"])
+        lp = (menu or {}).get(a["rarity"]) or CHATO.get(a["rarity"])      # published menu first, the old table as a fallback
         if not lp or n < 2:                               # never our only copy: the page bonus is not in its value
             continue
         lost = marginal_value(ref, n, catalog, me["affinity"])
-        floor = math.ceil(lost * 1.4 + SELL_MIN_GAIN)
-        if floor <= 0.85 * lp:
-            score = 0.8 * lp - lost
+        floor = math.ceil(lost * dparams.static("floor_mult") + dparams.static("floor_add"))
+        if floor <= dparams.static("cand_floor_share") * lp:
+            score = dparams.static("cand_score_share") * lp - lost
             if best is None or score > best[0]:
                 best = (score, ref, a, floor, lp, lost)
     return best
+
+
+def learned_block(mem, dealer):
+    """Ticks to leave a dealer alone after a conversation that ended without a deal (learned: more after cooloffs)."""
+    return learned_params_for(mem, dealer)["block_after_fail"]
+
+
+def learned_params_for(mem, key):
+    return dparams.learned_params(mem, key)
 
 
 def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=None):
@@ -984,6 +1037,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     if mem.get(f"{dealer}_block_until", -1) > me["tick"]:
         return False
     inferred = learned(mem, dealer)
+    log_param_changes(mem, dealer)
     act = mem.get(f"active_{dealer}")
     tid = next((t for t in me.get("open_threads", []) if b.thread(t).get("with") == dealer), None)
     if act and (tid is None or act["thread"] != tid):
@@ -996,15 +1050,15 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
         reason = t.get("closed_reason")
         log(f"{name} negotiation {t['id']} ended: {t['status']} {reason or ''} received {got}")
         if t["status"] != "deal":
-            mem[f"{dealer}_block_until"] = me["tick"] + 30            # any ending but a deal: do not pester him, he remembers
+            mem[f"{dealer}_block_until"] = me["tick"] + learned_block(mem, dealer)            # any ending but a deal: do not pester him, he remembers
             mem.setdefault(f"{dealer}_tried", {})[act["ref"]] = me["tick"]
         mem[f"active_{dealer}"], act = None, None
     if tid is None:
-        cand = candidate_fn(me, catalog)
+        cand = candidate_fn(me, catalog, menu_rarity_prices(mem, dealer))
         if not cand:
             return False
         _, ref, asset, floor, lp, lost = cand
-        if me["tick"] - mem.get(f"{dealer}_tried", {}).get(ref, -999) < 90:
+        if me["tick"] - mem.get(f"{dealer}_tried", {}).get(ref, -999) < dparams.static("retry_same_card"):
             return False                                          # same card, no new reason: stay quiet for a while
         try:                                                      # a market listing of this copy would sell it under the dealer
             for o in b.my_offers().get("offers", []):
@@ -1019,7 +1073,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
             th = b.open_thread(dealer, topic={"sell": {"assets": [asset["id"]]}})
         except BazaarError as e:
             log(f"{name} unavailable:", e.code, e.message)
-            mem[f"{dealer}_block_until"] = me["tick"] + 30
+            mem[f"{dealer}_block_until"] = me["tick"] + learned_block(mem, dealer)
             return False
         tid = th["id"]
         mem[f"active_{dealer}"] = {"thread": tid, "topic": {"sell": {"assets": [asset["id"]]}}, "cash_start": me["cash"],
@@ -1032,7 +1086,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     if t["status"] != "open":
         return False
     ours, hers = read_thread(t, me["id"], dealer, sell=True)
-    soft = None if mem.get(f"{dealer}_soft_done") else math.ceil(act["lost"] + 1)     # one firm-bid deal per dealer, for the ladder
+    soft = None if mem.get(f"{dealer}_soft_done") else math.ceil(act["lost"] + dparams.static("soft_add"))     # one firm-bid deal per dealer, for the ladder
     action, price, why = next_offer_sell(act["floor"], act["lp"], ours, hers, inferred, soft_floor=soft)
     log(f"{name} thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {act['floor']} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
@@ -1068,7 +1122,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     return False
 
 
-def pilar_candidate(me, catalog):
+def pilar_candidate(me, catalog, menu=None):
     """Doña Pilar buys uncommon, rare and epic cards over book (SAL and RET most). Her prices are not published:
     we assume her list at book (x1.1 for SAL/RET) and let next_offer_sell protect the floor."""
     counts, ids = card_counts(me)
@@ -1078,11 +1132,11 @@ def pilar_candidate(me, catalog):
         a = ids[ref][-1]
         if a["rarity"] not in ("uncommon", "rare", "epic") or ref not in book or n < 2:   # never our only copy
             continue
-        lp = int(book[ref]["book"] * (1.1 if ref.split("-")[0] in ("SAL", "RET") else 1.0))
+        lp = int(book[ref]["book"] * dparams.static("pilar_list_mult") * (dparams.static("pilar_focus_mult") if ref.split("-")[0] in ("SAL", "RET") else 1.0))
         lost = marginal_value(ref, n, catalog, me["affinity"])
-        floor = math.ceil(lost * 1.4 + SELL_MIN_GAIN)
-        if floor <= 0.85 * lp:
-            score = 0.8 * lp - lost
+        floor = math.ceil(lost * dparams.static("floor_mult") + dparams.static("floor_add"))
+        if floor <= dparams.static("cand_floor_share") * lp:
+            score = dparams.static("cand_score_share") * lp - lost
             if best is None or score > best[0]:
                 best = (score, ref, a, floor, lp, lost)
     return best
@@ -1095,7 +1149,7 @@ def phase_pilar(b, me, catalog, mem, can_accept):
 # ---------------------------------------------------------------- buying the cards we value most from dealers
 
 DEALER_SELLS = {"abuela": {"common": 10, "uncommon": 25}, "chato": {"uncommon": 26, "rare": 77}}   # list prices (dealer menus)
-CARD_EDGE = 0.95          # we pay at most this share of the card's value TO US (server value, page bonus included), and
+CARD_EDGE = dparams.SPEC["card_edge"][0]          # (compat; the cap reads dparams.static) we pay at most this share of the card's value TO US (server value, page bonus included), and
                           # always at least 1 prima under it. The ladder scores the share of the dealer's range we capture,
                           # so a deal under our value that the dealer can reach is worth more than a tight cap with no deal.
 VALUE_TTL = 20            # ticks a server value stays cached
@@ -1162,22 +1216,22 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
             f"(worth {act['value']:.0f} to us)")
         if t["status"] != "deal":
             mem.setdefault(f"{dealer}_buy_tried", {})[act["ref"]] = me["tick"]
-            mem[f"{dealer}_buy_block_until"] = me["tick"] + 20
+            mem[f"{dealer}_buy_block_until"] = me["tick"] + dparams.static("buy_block")
         mem[key], act = None, None
     if tid is not None and act is None:
         return False, True                                                # a sell thread (or someone else's) is open
     if tid is None:
         if mem.get(f"{dealer}_buy_block_until", -1) > me["tick"]:
             return False, False
-        sells = DEALER_SELLS.get(dealer, {})
+        sells = {**DEALER_SELLS.get(dealer, {}), **menu_rarity_prices(mem, dealer)}      # published menu wins over the old table
         pick = None
         busy_refs = {(mem.get(f"active_buy_{d}") or {}).get("ref") for d in DEALER_SELLS if d != dealer}
         for ref, rarity, value in buy_priorities(b, me, catalog, mem):
             lp = sells.get(rarity)
-            if not lp or ref in busy_refs or me["tick"] - mem.get(f"{dealer}_buy_tried", {}).get(ref, -999) < 60:
+            if not lp or ref in busy_refs or me["tick"] - mem.get(f"{dealer}_buy_tried", {}).get(ref, -999) < dparams.static("buy_retry"):
                 continue                                                  # one dealer per card: never buy it twice
-            cap = min(me["cash"] - CASH_RESERVE, min(int(CARD_EDGE * value), int(value) - 1), MAX_PAY.get(ref, 10 ** 9))
-            if cap >= 0.8 * lp:                                           # realistic for the dealer, a real gain for us
+            cap = min(me["cash"] - CASH_RESERVE, min(int(dparams.static("card_edge") * value), int(value) - dparams.static("card_margin")), MAX_PAY.get(ref, 10 ** 9))
+            if cap >= dparams.static("buy_realistic") * lp:              # realistic for the dealer, a real gain for us
                 pick = (ref, rarity, value, lp, cap)
                 break
         if not pick:
@@ -1188,7 +1242,7 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
             th = b.open_thread(dealer, topic=topic)
         except BazaarError as e:
             log(f"{name} card buy unavailable: {e.code} {e.message}")
-            mem[f"{dealer}_buy_block_until"] = me["tick"] + 20
+            mem[f"{dealer}_buy_block_until"] = me["tick"] + dparams.static("buy_block")
             return False, False
         tid = th["id"]
         act = mem[key] = {"thread": tid, "topic": topic, "cash_start": me["cash"], "ref": ref, "value": value, "lp": lp}
@@ -1196,7 +1250,7 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
     t = b.thread(tid)
     if t["status"] != "open":
         return False, True
-    cap = min(me["cash"] - CASH_RESERVE, min(int(CARD_EDGE * act["value"]), int(act["value"]) - 1), MAX_PAY.get(act["ref"], 10 ** 9))
+    cap = min(me["cash"] - CASH_RESERVE, min(int(dparams.static("card_edge") * act["value"]), int(act["value"]) - dparams.static("card_margin")), MAX_PAY.get(act["ref"], 10 ** 9))
     ours, hers = read_thread(t, me["id"], dealer)
     action, price, why = next_offer(cap, act["lp"], ours, hers, learned(mem, f"{dealer}_buy"))
     log(f"{name} buy {tid} {act['ref']}: ours {ours} his {[h[0] for h in hers]} cap {cap} -> {action} {price} ({why})")
