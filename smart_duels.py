@@ -309,6 +309,19 @@ def plan_days(duel, limit, frac, rival_days_hist, last_rival_days):
     return int(round(min(10, max(0, ours + (last_rival_days - ours) * day_frac)))), 1.0
 
 
+def bound_days(side, limit, w, price, days):
+    """The days we offer, moved only as far as our whole offer (price AND days) still keeps the reservation surplus.
+    Days used to drift toward the rival's while the price conceded too, and a buyer with 4.43 a day offered 58 at day 9
+    on a limit of 71 (-26.9: duel 5770). Buyer (w < 0): days <= (surplus - keep) / |w|; seller (w > 0): days >= ..."""
+    if days is None or not w:
+        return days
+    keep = max(MIN_MARGIN, round(OFFER_KEEP * limit))
+    surplus = side * (price - limit)
+    if w < 0:
+        return int(max(0, min(days, math.floor((surplus - keep) / -w))))
+    return int(min(10, max(days, math.ceil((keep - surplus) / w))))
+
+
 def should_accept(u_now, u_next, remaining, stats, decay):
     """(accept?, reason). u_* are our utilities of the rival's offer and of our own planned next offer."""
     if u_now < MIN_MARGIN:
@@ -388,6 +401,8 @@ def act(b, duel, tick, mem):
     # the last round is our last shot: go to the reservation so a deal inside the margin remains possible
     next_price = endgame_price(side, limit, st["our_last"], rival_price, remaining, next_price)
     next_price = jitter_price(side, limit, st["our_last"], next_price, did, tick, remaining)
+    if use_days:
+        next_days = bound_days(side, limit, w, next_price, next_days)     # the whole package keeps our margin
     rival_prices = [h["rival_price"] for h in hist if h.get("rival_price") is not None]
     if rival_price is not None and (not rival_prices or rival_prices[-1] != rival_price):
         rival_prices.append(rival_price)
@@ -535,6 +550,11 @@ def _test_days_sign():
     assert plan_days(buyer, 90, 0.0, [], None)[0] == 0, "a buyer whose days cost cash opens at day 0"
     assert plan_days(seller, 26, 0.0, [], None)[0] == 10, "a seller whose days add cash opens at day 10"
     assert utility(-1, 90, signed_days_weight(buyer), 60, 0, True) > utility(-1, 90, signed_days_weight(buyer), 60, 10, True)
+    # duel 5770: buyer, limit 71, 4.43 a day: 58 at day 9 was -26.9; the bound keeps our whole offer positive
+    d = bound_days(-1, 71, -4.43, 58, 9)
+    assert utility(-1, 71, -4.43, 58, d, True) >= MIN_MARGIN and d <= 1, d
+    s = bound_days(1, 50, 2.0, 52, 0)                     # seller near its cost: days must make up the margin
+    assert utility(1, 50, 2.0, 52, s, True) >= max(MIN_MARGIN, round(OFFER_KEEP * 50)), s
 
 
 def selftest():
