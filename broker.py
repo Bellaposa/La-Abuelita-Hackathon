@@ -37,6 +37,34 @@ WAIT_ENABLED = os.environ.get("BROKER_WAIT", "1") != "0"   # BROKER_WAIT=0: neve
 WAIT_FORCED_OFF = not WAIT_ENABLED                          # an explicit BROKER_WAIT=0 always wins over what we learn
 
 
+ANNOUNCE_EVERY_H = float(os.environ.get("ANNOUNCE_EVERY_H", "0.333"))   # game clock hours (= real open time): ~20 min
+ANNOUNCEMENTS = [                                     # facts only; rotated so the feed never sees the same words twice in a row
+    "Team 6 · v01: 0 % fee, no per-card charge. Our broker matches every crossing pair each tick, card by card, "
+    "at the midpoint, any copy included.",
+    "Selling spares or hunting a card? Post it on v01 (Team 6): 0 % fee, and a broker crosses bids and asks every tick, "
+    "any copy of the card counts.",
+    "v01 · Mercado Team 6: zero fees, matched every tick at the midpoint, so both sides beat their own quote. "
+    "Bids and asks welcome.",
+]
+
+
+def maybe_announce(broker, clock, state):
+    """Publish one of ANNOUNCEMENTS every ANNOUNCE_EVERY_H hours of game clock (stops by itself while doors are closed)."""
+    t = clock.get("t_hours")
+    if ANNOUNCE_EVERY_H <= 0 or not isinstance(t, (int, float)) or clock.get("paused"):
+        return False
+    if state.get("last_t") is not None and t - state["last_t"] < ANNOUNCE_EVERY_H:
+        return False
+    text = ANNOUNCEMENTS[state.get("i", 0) % len(ANNOUNCEMENTS)]
+    try:
+        broker.announce(text)
+        log(f"announced ({t:.2f} h): {text[:70]}...")
+    except BazaarError as e:
+        log(f"announce refused ({e})")
+    state["last_t"], state["i"] = t, state.get("i", 0) + 1
+    return True
+
+
 def apply_learned(model, why):
     """bench_learn.py replays our recorded sessions and picks the best HOLD; 0 = lock every crossing pair at once."""
     global WAIT_ENABLED
@@ -229,9 +257,12 @@ def main():
     logged_keys = False
     relearn("startup")
     run_deadline, pending = {}, set()           # a run is over only after its offers' expires_tick, not when the book empties
+    announce_state = {}
     while True:
         try:
-            tick, book = broker.clock()["tick"], broker.book()
+            clock = broker.clock()
+            tick, book = clock["tick"], broker.book()
+            maybe_announce(broker, clock, announce_state)
             if not logged_keys:
                 log("book keys:", sorted(book.keys()))
                 logged_keys = True
@@ -321,8 +352,20 @@ def _simulate(policy, seed, n=10, ticks=16):
     return gain / possible if possible else 0.0
 
 
+def _test_announce():
+    class B:
+        def __init__(self): self.sent = []
+        def announce(self, text): self.sent.append(text)
+    b, st = B(), {}
+    assert maybe_announce(b, {"t_hours": 9.0}, st) and len(b.sent) == 1
+    assert not maybe_announce(b, {"t_hours": 9.2}, st), "less than 20 min later: quiet"
+    assert maybe_announce(b, {"t_hours": 9.34}, st) and b.sent[0] != b.sent[1], "rotated text"
+    assert not maybe_announce(b, {"t_hours": 12.0, "paused": True}, st), "doors closed: quiet"
+
+
 def selftest():
     _test_max_pairs()
+    _test_announce()
     # unit checks of the decision rules
     tr = Track()
     def offs(t, aq, bq):
