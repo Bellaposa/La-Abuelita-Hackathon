@@ -10,6 +10,7 @@ import collections
 import json
 import os
 import re
+import statistics
 import subprocess
 import sys
 import threading
@@ -246,6 +247,26 @@ def read_json(name):
         return None
 
 
+def workshop_view():
+    """The Workshop as smart_agent sees it: crafts made (inputs -> output, expected gain, luck), observed sale prices per
+    rarity, and the last decision line from the log."""
+    mem = agent_memory()
+    crafts = []
+    for c in mem.get("ws_crafts", [])[-12:]:
+        luck = None
+        try:
+            luck = json.loads(c.get("raw") or "{}").get("luck")
+        except ValueError:
+            pass
+        crafts.append({"tick": c.get("tick"), "from": c.get("from"), "inputs": [i[0] for i in c.get("inputs", [])],
+                       "out": c.get("out"), "e_out": c.get("e_out"), "luck": luck})
+    obs = {r: {"n": len(v), "median": round(statistics.median(v), 1)} for r, v in (mem.get("ws_obs") or {}).items() if v}
+    last = next((l.split(" ", 1)[1].strip() for l in reversed(read_log("smart_agent.log", 600))
+                 if "workshop" in l.lower() and re.match(r"\d\d:\d\d:\d\d ", l)), None)
+    return {"crafts": crafts[::-1], "n": len(mem.get("ws_crafts", [])), "obs": obs, "last": last,
+            "outputs_seen": sum((mem.get("ws_out") or {}).values())}
+
+
 def duel_memory():
     try:
         with open(os.path.join(ROOT, "duels_memory.json"), encoding="utf-8") as f:
@@ -346,7 +367,7 @@ def poll_once(b):
         "offers_open": len([o for o in offers if o["maker"] == me["id"]]),
         "dealers": threads_view(me, threads), "duels": duels_view(duels, clock["tick"]),
         "venue": my_v, "schedule": schedule_view(sched, clock), "bench": bench_view(), "priorities": priorities_view(me, catalog),
-        "market": market_view(venues, my_v, s),
+        "market": market_view(venues, my_v, s), "workshop": workshop_view(),
         "learning": learning_view(agent_memory(), read_json("duels_memory.json"), read_json("market_intel.json")),
         "news": [{k: n.get(k) for k in ("id", "tick", "source", "source_name", "headline", "body")} for n in news[:15]],
         "processes": processes(), "activity": activity(),

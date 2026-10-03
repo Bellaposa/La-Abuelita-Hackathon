@@ -71,6 +71,8 @@
   th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 4px 8px 6px 0; border-bottom: 1px solid var(--grid); }
   td { padding: 5px 8px 5px 0; border-bottom: 1px solid var(--grid); vertical-align: top; }
   td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; padding-right: 0; }
+  td + td, th + th { padding-left: 14px; }
+  th { white-space: nowrap; }                    /* a right-aligned number never touches the next column */
   .scroll { max-height: 320px; overflow: auto; }
   .legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--ink-2); font-size: 12px; margin: 4px 0 8px; }
   .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; border-radius: 1px; }
@@ -92,6 +94,10 @@
   .tip .k { display: inline-block; width: 12px; height: 2px; margin-right: 6px; vertical-align: middle; }
   .muted { color: var(--muted); } .empty { color: var(--muted); padding: 10px 0; }
   .refreshing { opacity: .6; transition: opacity .2s; }
+  .jump { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 8px 24px; border-bottom: 1px solid var(--grid); background: var(--surface-1); position: sticky; top: 53px; z-index: 4; }
+  .jump a { color: var(--ink-2); text-decoration: none; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--ring); }
+  .jump a:hover, .jump a:focus-visible { color: var(--ink); background: var(--wash); }
+  [id^="sec-"] { scroll-margin-top: 110px; }
   .chat { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; max-height: 300px; overflow: auto; padding-right: 4px; }
   .msg { max-width: 86%; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--ring); font-size: 12.5px; }
   .msg.us { align-self: flex-end; background: var(--wash); }
@@ -113,6 +119,11 @@
   <span class="pill">próximo tick <b id="pill-next">–</b></span>
   <button id="theme" title="Cambiar tema">Tema</button>
 </header>
+<nav class="jump" aria-label="Secciones">
+  <a href="#sec-board">Clasificación</a><a href="#sec-bench">Market Test</a><a href="#sec-duels">Duelos</a><a href="#sec-market">Mercado</a>
+  <a href="#sec-dealers">Dealers</a><a href="#sec-workshop">Workshop</a><a href="#sec-prio">Prioridad</a><a href="#sec-learn">Aprendido</a>
+  <a href="#sec-news">Noticias</a><a href="#sec-feed">Actividad</a><a href="#sec-cards">Cartas</a>
+</nav>
 <main id="main">
   <div class="warnbar" id="warn"></div>
   <section class="hero">
@@ -126,21 +137,22 @@
     <div class="kpis" id="kpis"></div>
   </section>
   <section class="grid">
-    <div class="card c5"><div class="head"><div><h2>Clasificación</h2><div class="cap" id="board-cap"></div></div><button data-toggle="board">Tabla</button></div><div id="board"></div></div>
+    <div id="sec-board" class="card c5"><div class="head"><div><h2>Clasificación</h2><div class="cap" id="board-cap"></div></div><button data-toggle="board">Tabla</button></div><div id="board"></div></div>
     <div class="card c7"><div class="head"><div><h2>Puntuación en el tiempo</h2><div class="cap">Nosotros y el primero de la clasificación, un punto cada ~15 s</div></div><button data-toggle="hist">Tabla</button></div><div id="hist"></div></div>
     <div class="card c4"><h2>De dónde vienen los puntos</h2><div class="cap">Sobre 30 + 30 (los jueces valen otros 40)</div><div id="parts"></div></div>
     <div class="card c4"><h2>Album</h2><div class="cap">Página = comunes, poco comunes y raras de un set</div><div id="album"></div></div>
     <div class="card c4"><h2>Próximos eventos</h2><div class="cap">Tiempo real estimado según el ritmo de tick actual</div><div id="sched"></div></div>
-    <div class="card c12"><div class="head"><div><h2>Market Test</h2><div class="cap">Cada 2 h todos los venues reciben el mismo libro sintético. Puntúa la parte de las ganancias posibles que realizamos casando pares</div></div><button data-toggle="bench">Tabla</button></div><div id="bench"></div></div>
-    <div class="card c12"><h2>Duelos</h2><div class="cap">Regla de oro: nunca cruzar nuestro límite. Sin trato, los dos equipos quedan a 0. El valor del trato baja en cada ronda</div><div id="duels"></div></div>
-    <div class="card c12"><h2>Noticias</h2><div class="cap">Boletín = oficial · Radio = mezcla verdad y ambiente · Tablón = rumores. Ninguna se cree sin comprobarla en datos reales</div><div id="news"></div></div>
-    <div class="card c12"><h2>Prioridad de compra</h2><div class="cap">Valor para NOSOTROS (servidor, bonus de página incluido). Pagamos como máximo el 60 % de ese valor</div><div id="prio"></div></div>
-    <div class="card c12"><h2>Nuestro mercado</h2><div class="cap">Venue v01: libro en vivo (broker), operaciones entre otros equipos y comparación con los demás mercados</div><div id="venue"></div></div>
-    <div class="card c12"><div class="head"><div><h2>Lo que hemos aprendido</h2><div class="cap">Dealers, rivales de duelo y vendedores del mercado. Cada cifra lleva su <b>n</b>: con pocos datos casi todo sigue en el valor por defecto, y aquí se ve.</div></div></div><div id="learning"></div></div>
-    <div class="card c12"><h2>Conversaciones con los dealers</h2><div class="cap">Mensajes reales de la conversación abierta o la última</div><div class="tabs" id="dealer-tabs"></div><div id="dealers"></div></div>
-    <div class="card c7"><h2>Actividad de los agentes</h2><div class="cap">Últimos eventos de los logs, los más recientes arriba</div><div class="feed scroll" id="feed"></div></div>
+    <div id="sec-bench" class="card c12"><div class="head"><div><h2>Market Test</h2><div class="cap">Cada 2 h todos los venues reciben el mismo libro sintético. Puntúa la parte de las ganancias posibles que realizamos casando pares</div></div><button data-toggle="bench">Tabla</button></div><div id="bench"></div></div>
+    <div id="sec-duels" class="card c12"><h2>Duelos</h2><div class="cap">Regla de oro: nunca cruzar nuestro límite. Sin trato, los dos equipos quedan a 0. El valor del trato baja en cada ronda</div><div id="duels"></div></div>
+    <div id="sec-news" class="card c12"><h2>Noticias</h2><div class="cap">Boletín = oficial · Radio = mezcla verdad y ambiente · Tablón = rumores. Ninguna se cree sin comprobarla en datos reales</div><div id="news"></div></div>
+    <div id="sec-workshop" class="card c12"><h2>Workshop</h2><div class="cap">3 repetidas de una rareza → 1 carta de la siguiente. Solo convertimos si lo que sale se vende mejor que lo que entra (la carta en sí no puntúa)</div><div id="workshop"></div></div>
+    <div id="sec-prio" class="card c12"><h2>Prioridad de compra</h2><div class="cap">Valor para NOSOTROS (servidor, bonus de página incluido). Pagamos como máximo ese valor − 1, y nunca más que nuestro efectivo</div><div id="prio"></div></div>
+    <div id="sec-market" class="card c12"><h2>Nuestro mercado</h2><div class="cap">Venue v01: libro en vivo (broker), operaciones entre otros equipos y comparación con los demás mercados</div><div id="venue"></div></div>
+    <div id="sec-learn" class="card c12"><div class="head"><div><h2>Lo que hemos aprendido</h2><div class="cap">Dealers, rivales de duelo y vendedores del mercado. Cada cifra lleva su <b>n</b>: con pocos datos casi todo sigue en el valor por defecto, y aquí se ve.</div></div></div><div id="learning"></div></div>
+    <div id="sec-dealers" class="card c12"><h2>Conversaciones con los dealers</h2><div class="cap">Mensajes reales de la conversación abierta o la última</div><div class="tabs" id="dealer-tabs"></div><div id="dealers"></div></div>
+    <div id="sec-feed" class="card c7"><h2>Actividad de los agentes</h2><div class="cap">Últimos eventos de los logs, los más recientes arriba</div><div class="feed scroll" id="feed"></div></div>
     <div class="card c5"><h2>Agentes en ejecución</h2><div class="cap">Una sola copia por agente: dos se pisan entre sí</div><div id="procs"></div></div>
-    <div class="card c12"><h2>Cartas en mano</h2><div class="cap">Valor = lo que valen para nosotros (privado). “Repetida” = copia de más</div><div class="scroll" id="cards"></div></div>
+    <div id="sec-cards" class="card c12"><h2>Cartas en mano</h2><div class="cap">Valor = lo que valen para nosotros (privado). “Repetida” = copia de más</div><div class="scroll" id="cards"></div></div>
   </section>
 </main>
 <div class="tip" id="tip" role="status"></div>
@@ -211,11 +223,14 @@ function roundedRight(x, y, w, h, r) {
   return `M${x},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} H${x},${y} Z`.replace(/ H(\S+),\S+ Z$/, " H$1 Z");
 }
 function table(head, rows) {
+  /* numbers right-aligned, words left-aligned: a column is numeric when every non-empty cell looks like a number */
+  const NUMERIC = /^[\s+\-−–#.,%P×()\/0-9]*$/;
+  const num = head.map((_, i) => i > 0 && rows.length > 0 && rows.every((r) => NUMERIC.test(String(r[i] ?? ""))));
   const t = el("table"), tr = el("tr");
-  head.forEach((h, i) => tr.appendChild(el("th", { class: i ? "n" : "", text: h })));
+  head.forEach((h, i) => tr.appendChild(el("th", { class: num[i] ? "n" : "", text: h })));
   t.appendChild(el("thead", {}, [tr]));
   const tb = el("tbody");
-  rows.forEach((r) => tb.appendChild(el("tr", {}, r.map((c, i) => el("td", { class: i ? "n" : "", text: String(c) })))));
+  rows.forEach((r) => tb.appendChild(el("tr", {}, r.map((c, i) => el("td", { class: num[i] ? "n" : "", text: String(c) })))));
   t.appendChild(tb); return t;
 }
 
@@ -402,8 +417,8 @@ function drawDuels(s) {
 }
 
 function drawDealers(s) {
-  const names = { abuela: "Abuela Carmen", chato: "El Chato", pilar: "Doña Pilar" };
-  const ids = [...new Set(["abuela", "chato", "pilar", ...Object.keys(s.dealers || {})])];
+  const names = { abuela: "Abuela Carmen", chato: "El Chato", pilar: "Doña Pilar", picaros: "Los Pícaros" };
+  const ids = [...new Set(["abuela", "chato", "pilar", "picaros", ...Object.keys(s.dealers || {})])];
   replace("dealer-tabs", ...ids.map((id) => { const b = el("button", { class: view.dealer === id ? "on" : "", text: `${names[id] || id}${s.team.unlocked.includes(id) ? "" : " 🔒"}` });
     b.onclick = () => { view.dealer = id; render(); }; return b; }));
   const id = view.dealer, d = (s.dealers || {})[id];
@@ -466,10 +481,10 @@ function drawLearning(s) {
 function drawPrio(s) {
   const p = s.priorities; if (!p) return;
   const sets = table(["Barrio", "Multiplicador", "Página", "Prioridad"], p.sets.map((x, i) => [`${i + 1}. ${x.name}`, `×${x.affinity}`, `${x.have}/${x.of}`, fmt(x.score, 2)]));
-  const cards = table(["Carta", "Rareza", "Libro", "Valor para nosotros", "Tope (60 %)"], p.cards.map((c, i) => [`${i + 1}. ${c.ref} · ${c.name}`, RARITY[c.rarity] || c.rarity, c.book,
-    fmt(c.value, 0) + (c.server ? "" : " (estimado)"), fmt(Math.floor(c.value * 0.6), 0)]));
+  const cards = table(["Carta", "Rareza", "Libro", "Valor para nosotros", "Tope"], p.cards.map((c, i) => [`${i + 1}. ${c.ref} · ${c.name}`, RARITY[c.rarity] || c.rarity, c.book,
+    fmt(c.value, 0) + (c.server ? "" : " (estimado)"), fmt(Math.max(0, Math.min(Math.floor(c.value * 0.95), Math.floor(c.value) - 1, s.team.cash)), 0)]));
   const fl = p.flags.length ? table(["Mensaje", "Dealer", "Motivo"], p.flags.map((f) => [f.message, f.dealer, f.why]))
-    : el("div", { class: "empty", text: `Ningún flag enviado · ${p.flags_checked} mensajes de dealers revisados. Solo marcamos si las palabras dicen otro precio que la oferta.` });
+    : el("div", { class: "empty", text: `Ningún flag enviado · ${p.flags_checked} mensajes de dealers revisados. Solo marcamos lo indiscutible: las palabras dicen otro precio que la oferta, o venden la carta pedida y la oferta da otra.` });
   const dup = el("div", { class: "seq" }, p.dupes.map((d) => el("span", { class: "chip", text: `${d.ref} ×${d.copies}` })));
   replace("prio", el("div", { class: "grid" }, [
     el("div", { class: "c5" }, [el("h2", { text: "Barrios" }), sets, el("h2", { style: "margin-top:12px", text: "Repetidas (para vender o cambiar)" }), dup]),
@@ -497,13 +512,29 @@ function drawMarket(s) {
   t.appendChild(el("thead", {}, [hr]));
   const tb = el("tbody");
   m.venues.forEach((x, i) => { const row = el("tr", {}, [i + 1, `${x.venue} · ${x.name}`, x.owner, `${(x.fee_bps || 0) / 100} %`, x.mechanism || "–", x.trades, x.traders, x.volume]
-    .map((c, j) => el("td", { class: j > 2 ? "n" : "", text: String(c) })));
+    .map((c, j) => el("td", { class: j > 2 ? "n" : "", style: j === 1 ? "" : "white-space:nowrap", text: String(c) })));
     if (x.us) row.style.fontWeight = "650"; tb.appendChild(row); });
   t.appendChild(tb);
   const house = m.house ? el("div", { class: "cap", style: "margin-top:6px", text: `El Rastro (la casa, 5 % + 1 P/carta): ${m.house.trades} operaciones · ${m.house.traders} traders · ${m.house.volume} P` }) : "";
   replace("venue", tiles, el("div", { class: "grid", style: "margin-top:14px" }, [
     el("div", { class: "c5" }, [el("h2", { text: "Libro en vivo" }), book, el("h2", { style: "margin-top:12px", text: "Últimas operaciones en nuestro mercado" }), rec]),
     el("div", { class: "c7" }, [el("h2", { text: "Todos los mercados" }), el("div", { class: "scroll" }, [t]), house])]));
+}
+
+function drawWorkshop(s) {
+  const w = s.workshop; if (!w) return;
+  const tile = (l, v, d) => el("div", { class: "tile" }, [el("div", { class: "l", text: l }), el("div", { class: "v", text: v }), el("div", { class: "d", text: d || "" })]);
+  const ob = w.obs || {};
+  const tiles = el("div", { class: "kpis" }, [
+    tile("Conversiones hechas", String(w.n), `${w.outputs_seen} resultados vistos (nuestros + feed)`),
+    tile("Común se vende a", ob.common ? `${fmt(ob.common.median, 0)} P` : "–", ob.common ? `mediana de ${ob.common.n} ventas reales` : "sin datos"),
+    tile("Poco común se vende a", ob.uncommon ? `${fmt(ob.uncommon.median, 0)} P` : "–", ob.uncommon ? `mediana de ${ob.uncommon.n} ventas reales` : "sin datos"),
+    tile("Rara se vende a", ob.rare ? `${fmt(ob.rare.median, 0)} P` : "–", ob.rare ? `mediana de ${ob.rare.n} ventas reales` : "sin datos")]);
+  const last = el("div", { class: "cap", style: "margin-top:10px", text: w.last ? `Última decisión: ${w.last}` : "Aún no hay decisiones en el log." });
+  const tbl = w.crafts.length ? table(["Tick", "Entran", "Sale", "Ganancia esperada", "Suerte (no puntúa)"],
+    w.crafts.map((c) => [c.tick, c.inputs.join(" + "), `${c.out || "?"} (${RARITY[c.from === "common" ? "uncommon" : c.from === "uncommon" ? "rare" : "epic"] || ""})`, fmt(c.e_out, 1), c.luck != null ? fmt(c.luck, 1) : "–"]))
+    : el("div", { class: "empty", text: "Ninguna conversión todavía." });
+  replace("workshop", tiles, last, tbl);
 }
 
 /* ---------- panels ---------- */
@@ -564,7 +595,7 @@ function render() {
   const el0 = (Date.now() - fetchedAt) / 1000;
   replace("sched", s.schedule.length ? table(["Evento", "En"], s.schedule.map((e) => [ACTION[e.action] || e.action, clock(e.eta_s - el0)])) : el("div", { class: "empty", text: "No hay eventos en el calendario." }));
 
-  drawDealers(s); drawBench(s); drawDuels(s); drawPrio(s); drawLearning(s);
+  drawDealers(s); drawBench(s); drawDuels(s); drawPrio(s); drawWorkshop(s); drawLearning(s);
   const TRUST = { boletin: "oficial", radio: "a veces", tablon: "rumor" };
   replace("news", (s.news || []).length ? table(["Tick", "Fuente", "Fiabilidad", "Noticia"], s.news.map((n) => [n.tick, n.source_name || n.source,
     TRUST[n.source] || "?", `${n.headline}${n.body ? " — " + n.body : ""}`])) : el("div", { class: "empty", text: "Sin noticias." }));
