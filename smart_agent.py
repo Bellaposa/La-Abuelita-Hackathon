@@ -1081,11 +1081,11 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
         _, ref, asset, floor, lp, lost = cand
         if me["tick"] - mem.get(f"{dealer}_tried", {}).get(ref, -999) < dparams.static("retry_same_card"):
             return False                                          # same card, no new reason: stay quiet for a while
-        fh = feed_intel.hints(mem, dealer, "buys", asset.get("rarity"), ref.split("-")[0])
+        fh = feed_intel.hints(mem, dealer, "buys", asset.get("rarity"), ref.split("-")[0], ref)
         if feed_intel.sell_is_futile(fh, floor):                  # it never paid that much to any team: do not ask
             mem.setdefault(f"{dealer}_tried", {})[ref] = me["tick"]
             log(f"{name}: skip selling {ref}: our floor {floor} > most it paid any team for a {asset.get('rarity')} "
-                f"({fh['deal_max']:.0f}, {fh['n_deals']} deals)")
+                f"({fh['deal_max']:.0f}, {fh['n_deals']} deals, by {fh['level']})")
             return False
         if fh:
             lp = max(lp, math.ceil(fh["deal_max"]))               # open at no less than what it paid other teams
@@ -1286,12 +1286,12 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
             if not lp or ref in busy_refs or me["tick"] - mem.get(f"{dealer}_buy_tried", {}).get(ref, -999) < dparams.static("buy_retry"):
                 continue                                                  # one dealer per card: never buy it twice
             cap = min(me["cash"] - CASH_RESERVE, min(int(dparams.static("card_edge") * value), int(value) - dparams.static("card_margin")), MAX_PAY.get(ref, 10 ** 9))
-            fh = feed_intel.hints(mem, dealer, "sells", rarity, ref.split("-")[0])
+            fh = feed_intel.hints(mem, dealer, "sells", rarity, ref.split("-")[0], ref)
             if feed_intel.buy_is_futile(fh, cap):                      # every team paid more: this talk cannot end in a deal
                 if mem.setdefault("feed_futile_logged", {}).get(f"{dealer}|{ref}") != cap:
                     mem["feed_futile_logged"][f"{dealer}|{ref}"] = cap
                     log(f"{name}: skip buying {ref}: our cap {cap} < lowest price it sold a {rarity} to any team "
-                        f"({fh['deal_min']:.0f}, {fh['n_deals']} deals)")
+                        f"({fh['deal_min']:.0f}, {fh['n_deals']} deals, by {fh['level']})")
                 continue
             if cap >= dparams.static("buy_realistic") * lp:              # realistic for the dealer, a real gain for us
                 pick = (ref, rarity, value, lp, cap)

@@ -1,22 +1,16 @@
-"""Learn every dealer from ALL teams' public conversations, not only ours.
+"""Learn every dealer from ALL teams' REAL deals (feed settlements), not from what anyone says.
 
     python3 feed_intel.py --selftest
-    python3 feed_intel.py --dry-run        # live: what the current feed window teaches, per dealer / side / rarity
+    python3 feed_intel.py --dry-run        # live: the deals in the current feed window, per dealer / side / rarity
 
-The public feed (GET /api/feed, last ~500 events, about 30-40 ticks) carries every team's dealer conversations:
-`thread.opened` (team, dealer, topic), `thread.message` (each offer: card, price, final) and `settlement` with a
-`persona` (the deal: card, price, who sold to whom). We read it every few ticks and accumulate, per dealer, side
-(the dealer `sells` to a team or `buys` from it) and rarity (and set, since Pilar pays more for the sets she loves):
+Only `settlement` events with a `persona` are stored: a deal that actually happened (card, price, who sold to whom).
+What dealers SAY (opening quotes, "final" offers, switched cards) and what teams list on the boards are not stored:
+they are often bluffs or noise. Each deal is kept with its tick, card, set, rarity and team, so profiles can be as
+concrete as the data allows: per card when there are enough deals of that card, else per set, else per rarity.
 
-    openings   the dealer's first price in each conversation
-    finals     prices the dealer marked `final`
-    deals      prices that actually settled
-
-hints(...) turns that into numbers the agent uses, only with at least MIN_DEALS deals observed:
-    deal_min / deal_max / deal_med, open_med, final_med, n_deals, n_threads.
-Two decisions read them (smart_agent): skip a conversation that cannot end in a deal (our buy cap under the lowest
-price the dealer ever sold that rarity at; our sell floor over the highest it ever paid), and open a sale at no less
-than what the dealer has paid other teams for that rarity (and set).
+hints(...) needs at least MIN_DEALS deals and returns deal_min / deal_max / deal_med / recent_med, n_deals and the
+level it used ("card", "set" or "rarity"). smart_agent uses it to skip conversations that cannot end in a deal and to
+open a sale at no less than what the dealer paid other teams.
 """
 import statistics
 import sys
@@ -50,10 +44,12 @@ def _store(fi, kind, dealer, side, rarity, setid, price):
 
 
 def observe(mem, events, rarity_of):
-    """Accumulate dealer behaviour from feed events (idempotent: each event id once). rarity_of: ref -> rarity."""
+    """Store each real dealer deal once (by event id): settlement events with a persona. rarity_of: ref -> rarity."""
     fi = mem.setdefault("feed_intel", {})
+    for k in ("openings", "finals", "threads"):                # older versions kept quotes: drop them, they are not deals
+        fi.pop(k, None)
     seen = set(fi.get("seen", []))
-    threads = fi.setdefault("threads", {})
+    deals = fi.setdefault("deals", {})
     new = 0
     for e in events or []:
         eid = e.get("id")
@@ -61,67 +57,55 @@ def observe(mem, events, rarity_of):
             continue
         seen.add(eid)
         p = e.get("payload") or {}
-        typ = e.get("type")
-        if typ == "thread.message" and p.get("sender") in DEALERS and p.get("offer"):
-            dealer, o = p["sender"], p["offer"]
-            g, w = o.get("give") or {}, o.get("want") or {}
-            if _card(g) and w.get("cash"):
-                side, (ref, rar, setid), price = "sells", _card(g), w["cash"]
-            elif _card(w) and g.get("cash"):
-                side, (ref, rar, setid), price = "buys", _card(w), g["cash"]
-            else:
-                continue
-            rar = rar or rarity_of(ref)
-            key = str(p.get("thread"))
-            th = threads.setdefault(key, {"dealer": dealer, "side": side, "first": None})
-            if th["first"] is None:
-                th["first"] = price
-                _store(fi, "openings", dealer, side, rar, setid, price)
-            if o.get("final"):
-                _store(fi, "finals", dealer, side, rar, setid, price)
-            new += 1
-        elif typ == "settlement" and p.get("persona") in DEALERS:
-            dealer = p["persona"]
-            cards = [i for i in p.get("items") or [] if i.get("kind") == "card"]
-            if len(cards) != 1:
-                continue
-            c = cards[0]
-            side = "sells" if c.get("frm") == dealer else "buys" if c.get("to") == dealer else None
-            if side:
-                _store(fi, "deals", dealer, side, c.get("rarity") or rarity_of(c.get("ref")),
-                       c.get("set") or (c.get("ref") or "-").split("-")[0], p.get("price"))
-                new += 1
+        if e.get("type") != "settlement" or p.get("persona") not in DEALERS:
+            continue
+        dealer = p["persona"]
+        cards = [i for i in p.get("items") or [] if i.get("kind") == "card"]
+        price = p.get("price")
+        if len(cards) != 1 or not isinstance(price, (int, float)) or price <= 0:
+            continue
+        c = cards[0]
+        side = "sells" if c.get("frm") == dealer else "buys" if c.get("to") == dealer else None
+        ref = c.get("ref")
+        rarity = c.get("rarity") or (rarity_of(ref) if ref else None)
+        if not side or not ref or not rarity:
+            continue
+        team = c.get("to") if side == "sells" else c.get("frm")
+        lst = deals.setdefault(f"{dealer}|{side}|{rarity}", [])
+        lst.append({"t": e.get("tick"), "ref": ref, "set": c.get("set") or ref.split("-")[0], "price": float(price),
+                    "team": team})
+        del lst[:-KEEP]
+        new += 1
     fi["seen"] = sorted(seen)[-SEEN_KEEP:]
-    if len(threads) > 3000:                                    # keep the newest conversations only
-        for k in sorted(threads, key=lambda x: int(x) if x.isdigit() else 0)[:-2000]:
-            threads.pop(k, None)
     return new
 
 
-def hints(mem, dealer, side, rarity, setid=None):
-    """What all teams' conversations say about `dealer` on `side` ("sells"/"buys") for `rarity` (and `setid` when there
-    are enough deals in that set). Empty dict until MIN_DEALS deals are known."""
-    fi = mem.get("feed_intel") or {}
-    key = f"{dealer}|{side}|{rarity}"
-
-    def pick(kind):
-        rows = (fi.get(kind) or {}).get(key, [])
-        if setid:
-            same = [p for s, p in rows if s == setid]
-            if kind != "deals" or len(same) >= MIN_DEALS:
-                return same or [p for _, p in rows]
-        return [p for _, p in rows]
-
-    deals = pick("deals")
-    if len(deals) < MIN_DEALS:
-        return {}
-    out = {"n_deals": len(deals), "deal_min": min(deals), "deal_max": max(deals), "deal_med": statistics.median(deals)}
-    opens, finals = pick("openings"), pick("finals")
-    if opens:
-        out["open_med"] = statistics.median(opens)
-    if finals:
-        out["final_med"] = statistics.median(finals)
+def _rows(fi, key):
+    out = []
+    for r in (fi.get("deals") or {}).get(key, []):
+        if isinstance(r, dict):
+            out.append(r)
+        elif isinstance(r, (list, tuple)) and len(r) == 2:      # older format [set, price]
+            out.append({"t": None, "ref": None, "set": r[0], "price": float(r[1]), "team": None})
     return out
+
+
+def hints(mem, dealer, side, rarity, setid=None, ref=None):
+    """What all teams' REAL deals say about `dealer` on `side` ("sells"/"buys") for `rarity`: per card when that card
+    has MIN_DEALS deals, else per set, else per rarity. Empty dict until MIN_DEALS deals are known."""
+    rows = _rows(mem.get("feed_intel") or {}, f"{dealer}|{side}|{rarity}")
+    level, use = "rarity", rows
+    by_set = [r for r in rows if setid and r["set"] == setid]
+    by_ref = [r for r in rows if ref and r["ref"] == ref]
+    if len(by_ref) >= MIN_DEALS:
+        level, use = "card", by_ref
+    elif len(by_set) >= MIN_DEALS:
+        level, use = "set", by_set
+    prices = [r["price"] for r in use]
+    if len(prices) < MIN_DEALS:
+        return {}
+    return {"n_deals": len(prices), "deal_min": min(prices), "deal_max": max(prices),
+            "deal_med": statistics.median(prices), "recent_med": statistics.median(prices[-10:]), "level": level}
 
 
 def buy_is_futile(h, cap):
@@ -149,40 +133,36 @@ def step(b, mem, tick, rarity_of, log=print):
 def summary(mem):
     rows = []
     fi = mem.get("feed_intel") or {}
-    for key in sorted(set((fi.get("deals") or {})) | set((fi.get("openings") or {}))):
+    for key in sorted(fi.get("deals") or {}):
         dealer, side, rar = key.split("|")
-        d = [p for _, p in (fi.get("deals") or {}).get(key, [])]
-        o = [p for _, p in (fi.get("openings") or {}).get(key, [])]
-        f = [p for _, p in (fi.get("finals") or {}).get(key, [])]
-        rows.append({"dealer": dealer, "side": side, "rarity": rar, "deals": len(d),
-                     "deal_med": statistics.median(d) if d else None, "deal_min": min(d) if d else None,
-                     "deal_max": max(d) if d else None, "open_med": statistics.median(o) if o else None,
-                     "final_med": statistics.median(f) if f else None, "threads": len(o)})
+        d = [r["price"] for r in _rows(fi, key)]
+        if d:
+            rows.append({"dealer": dealer, "side": side, "rarity": rar, "deals": len(d), "deal_min": min(d),
+                         "deal_med": statistics.median(d), "deal_max": max(d)})
     return rows
 
 
 def selftest():
-    rar = {"RET-09": "rare", "LAT-02": "common", "SAL-07": "uncommon"}.get
-    ev = [
-        {"id": 1, "type": "thread.message", "payload": {"thread": 10, "sender": "picaros", "offer": {
-            "give": {"types": ["card:RET-09"]}, "want": {"cash": 73}, "final": False}}},
-        {"id": 2, "type": "thread.message", "payload": {"thread": 10, "sender": "picaros", "offer": {
-            "give": {"types": ["card:RET-09"]}, "want": {"cash": 60}, "final": True}}},
-        {"id": 3, "type": "thread.message", "payload": {"thread": 11, "sender": "picaros", "offer": {
-            "give": {"cash": 4}, "want": {"assets": [{"id": 5, "ref": "LAT-02", "rarity": "common", "set": "LAT"}]}}}},
-        {"id": 4, "type": "thread.message", "payload": {"thread": 12, "sender": "t07", "offer": {"give": {"cash": 50}}}},
-    ] + [{"id": 100 + i, "type": "settlement", "payload": {"persona": "picaros", "price": p, "items": [
-        {"kind": "card", "ref": "RET-09", "rarity": "rare", "set": "RET", "frm": "picaros", "to": "t1"}]}} for i, p in enumerate((57, 60, 63))] \
-      + [{"id": 200 + i, "type": "settlement", "payload": {"persona": "pilar", "price": p, "items": [
-        {"kind": "card", "ref": "SAL-07", "rarity": "uncommon", "set": "SAL", "frm": "t2", "to": "pilar"}]}} for i, p in enumerate((19, 23, 22))]
-    mem = {}
-    assert observe(mem, ev, rar) == 9
+    rar = {"RET-09": "rare", "LAT-02": "common", "SAL-07": "uncommon", "LAV-07": "uncommon"}.get
+    quote = {"id": 1, "type": "thread.message", "payload": {"thread": 10, "sender": "picaros", "offer": {
+        "give": {"types": ["card:RET-09"]}, "want": {"cash": 73}, "final": True}}}
+    st = lambda i, dealer, ref, rarity, price, frm, to, tick=900: {"id": i, "type": "settlement", "tick": tick, "payload": {
+        "persona": dealer, "price": price, "items": [{"kind": "card", "ref": ref, "rarity": rarity,
+                                                     "set": ref.split("-")[0], "frm": frm, "to": to}]}}
+    ev = [quote] + [st(100 + i, "picaros", "RET-09", "rare", p, "picaros", "t1") for i, p in enumerate((57, 60, 63))] \
+        + [st(200 + i, "pilar", "SAL-07", "uncommon", p, "t2", "pilar") for i, p in enumerate((19, 23, 22))] \
+        + [st(300, "pilar", "LAV-07", "uncommon", 15, "t3", "pilar")]
+    mem = {"feed_intel": {"openings": {"x": [1]}, "finals": {"x": [1]}, "threads": {"1": {}}}}
+    assert observe(mem, ev, rar) == 7, "settlements only: the dealer's quote is not stored"
     assert observe(mem, ev, rar) == 0, "each event once"
-    h = hints(mem, "picaros", "sells", "rare")
-    assert h["deal_min"] == 57 and h["deal_max"] == 63 and h["open_med"] == 73 and h["final_med"] == 60, h
-    assert hints(mem, "picaros", "buys", "common") == {}, "one opening, no deals: no hint yet"
+    assert set(mem["feed_intel"]) == {"seen", "deals"}, "quotes from older versions are dropped"
+    h = hints(mem, "picaros", "sells", "rare", "RET", "RET-09")
+    assert h["deal_min"] == 57 and h["deal_max"] == 63 and h["level"] == "card", h
+    assert mem["feed_intel"]["deals"]["picaros|sells|rare"][0]["team"] == "t1"
     hp = hints(mem, "pilar", "buys", "uncommon", "SAL")
-    assert hp["deal_max"] == 23 and hp["n_deals"] == 3, hp
+    assert hp["deal_max"] == 23 and hp["level"] == "set", hp                 # Salamanca alone: Pilar pays more there
+    hr = hints(mem, "pilar", "buys", "uncommon", "LAV")
+    assert hr["level"] == "rarity" and hr["n_deals"] == 4, hr               # only 1 LAV deal: fall back to the rarity
     assert buy_is_futile(h, 50) and not buy_is_futile(h, 58) and not buy_is_futile({}, 1)
     assert sell_is_futile(hp, 30) and not sell_is_futile(hp, 20)
     print("feed_intel selftest OK")
@@ -199,6 +179,6 @@ if __name__ == "__main__":
         rarity = {c["id"]: c["rarity"] for s in cat["sets"] for c in s["cards"]}
         mem = {}
         n = observe(mem, b.call("GET", "/api/feed?limit=500").get("events", []), rarity.get)
-        print(f"{n} observations from the current feed window")
+        print(f"{n} real dealer deals in the current feed window")
         for r in summary(mem):
             print(r)
