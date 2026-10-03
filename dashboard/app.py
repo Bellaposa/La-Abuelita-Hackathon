@@ -26,9 +26,9 @@ URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 PORT = int(os.environ.get("DASH_PORT", "5051"))
 POLL, SAMPLE = 8, 15
 HISTORY_FILE = os.path.join(HERE, "history.json")
-LOGS = [("agente", "smart_agent.log"), ("cazador", "page_hunter.log"), ("broker", "broker.log")]
+LOGS = [("agente", "smart_agent.log"), ("cazador", "page_hunter.log"), ("broker", "broker.log"), ("duelos", "smart_duels.log")]
 EVENT = re.compile(r"MARKET|LISTED|SELL|BUY|BID for|Chato|negotiation .* ended|opened pack|MATCHED|ACCEPT|walk|"
-                   r"error|Traceback|refused|Abuela thread .*-> (accept|offer|walk)")
+                   r"error|Traceback|refused|Abuela thread .*-> (accept|offer|walk)|PILAR|Pilar")
 SCRIPTS = ("smart_agent.py", "smart_duels.py", "page_hunter.py", "broker.py", "agent.py", "smart_broker.py")
 
 app = Flask(__name__)
@@ -58,11 +58,15 @@ def read_log(name, limit=400):
 def activity():
     rows = []
     for label, fname in LOGS:
-        for line in read_log(fname):
-            m = re.match(r"(\d\d:\d\d:\d\d) (.*)", line.rstrip())
-            if m and EVENT.search(m.group(2)):
-                rows.append({"t": m.group(1), "src": label, "text": m.group(2)[:240]})
-    rows.sort(key=lambda r: r["t"])
+        parsed = [m for m in (re.match(r"(\d\d:\d\d:\d\d) (.*)", l.rstrip()) for l in read_log(fname)) if m]
+        day, later = 0, None
+        for m in reversed(parsed):                       # logs span midnight: a later line with an earlier clock = new day
+            if later is not None and m.group(1) > later:
+                day -= 1
+            later = m.group(1)
+            if EVENT.search(m.group(2)):
+                rows.append({"t": m.group(1), "day": day, "src": label, "text": m.group(2)[:240]})
+    rows.sort(key=lambda r: (r["day"], r["t"]))
     return rows[-70:]
 
 
@@ -118,6 +122,63 @@ def holdings(me):
     return sorted(rows, key=lambda r: -r["value"])
 
 
+MATCHED = re.compile(r"(\d\d:\d\d:\d\d) tick (\d+): MATCHED (b\d+-\d+) x (b\d+-\d+) at (\d+)")
+
+
+def bench_view():
+    """Market Test sessions from our own records: bench_snapshots.jsonl (every book state the broker saw) and
+    the MATCHED lines of broker.log. Per run: each trader's quote path, the pairs we locked, and what was left."""
+    runs = collections.OrderedDict()
+    try:
+        with open(os.path.join(ROOT, "bench_snapshots.jsonl"), encoding="utf-8") as f:
+            for line in f:
+                try:
+                    snap = json.loads(line)
+                except ValueError:
+                    continue
+                for o in snap.get("bench") or []:
+                    run = o["id"].split("-")[0]
+                    r = runs.setdefault(run, {"run": run, "traders": {}, "matches": [], "first": snap["tick"], "last": snap["tick"]})
+                    r["last"] = max(r["last"], snap["tick"])
+                    is_ask = bool(o["want"]["cash"])
+                    q = o["want"]["cash"] if is_ask else o["give"]["cash"]
+                    tr = r["traders"].setdefault(o["id"], {"id": o["id"], "side": "ask" if is_ask else "bid", "path": []})
+                    if not tr["path"] or tr["path"][-1] != [snap["tick"], q]:
+                        tr["path"].append([snap["tick"], q])
+    except OSError:
+        pass
+    for line in read_log("broker.log", 5000):
+        m = MATCHED.search(line)
+        if not m:
+            continue
+        _, tick, sell, buy, price = m.groups()
+        run = sell.split("-")[0]
+        r = runs.setdefault(run, {"run": run, "traders": {}, "matches": [], "first": int(tick), "last": int(tick)})
+        r["matches"].append({"tick": int(tick), "sell": sell, "buy": buy, "price": int(price)})
+    out = []
+    for r in runs.values():
+        tr = r["traders"]
+        matched = {m["sell"] for m in r["matches"]} | {m["buy"] for m in r["matches"]}
+        for m in r["matches"]:                                     # quotes at the moment we locked the pair
+            m["ask"] = next((q for t, q in reversed(tr.get(m["sell"], {}).get("path", [])) if t <= m["tick"]), None)
+            m["bid"] = next((q for t, q in reversed(tr.get(m["buy"], {}).get("path", [])) if t <= m["tick"]), None)
+            m["spread"] = None if m["ask"] is None or m["bid"] is None else m["bid"] - m["ask"]
+        out.append({"run": r["run"], "first": r["first"], "last": r["last"], "recorded": bool(tr),
+                    "asks": sum(t["side"] == "ask" for t in tr.values()), "bids": sum(t["side"] == "bid" for t in tr.values()),
+                    "matches": r["matches"], "unmatched": [t for k, t in tr.items() if k not in matched],
+                    "traders": list(tr.values())})
+    out.sort(key=lambda r: r["first"])
+    return out[-8:]
+
+
+def duel_memory():
+    try:
+        with open(os.path.join(ROOT, "duels_memory.json"), encoding="utf-8") as f:
+            return json.load(f).get("duels", {})
+    except (OSError, ValueError):
+        return {}
+
+
 def threads_view(me, threads):
     out = {}
     for t in threads:
@@ -129,8 +190,14 @@ def threads_view(me, threads):
             if o:
                 cash = o["give"]["cash"] or o["want"]["cash"]
                 seq.append({"who": "noi" if m["sender"] == me["id"] else t["with"], "price": cash, "final": bool(o.get("final"))})
-        row = {"id": t["id"], "status": t["status"], "reason": t.get("closed_reason"), "topic": t.get("topic"), "seq": seq[-8:]}
-        d = out.setdefault(t["with"], {"open": None, "last": None, "deals": 0, "cooloffs": 0, "total": 0})
+        msgs = [{"who": "nosotros" if m["sender"] == me["id"] else t["with"], "text": (m.get("text") or "")[:300],
+                 "price": ((m.get("offer") or {}).get("give") or {}).get("cash") or ((m.get("offer") or {}).get("want") or {}).get("cash"),
+                 "final": bool((m.get("offer") or {}).get("final"))} for m in t.get("messages", [])]
+        row = {"id": t["id"], "status": t["status"], "reason": t.get("closed_reason"), "topic": t.get("topic"), "seq": seq[-8:],
+               "messages": msgs[-14:]}
+        d = out.setdefault(t["with"], {"open": None, "last": None, "deals": 0, "cooloffs": 0, "total": 0, "history": []})
+        d["history"].append({"id": t["id"], "status": t["status"], "reason": t.get("closed_reason"), "topic": t.get("topic"),
+                             "rounds": len(seq), "last_price": seq[-1]["price"] if seq else None})
         d["total"] += 1
         d["deals"] += t["status"] == "deal"
         d["cooloffs"] += t["status"] == "cooloff"
@@ -138,17 +205,26 @@ def threads_view(me, threads):
             d["open"] = row
         if d["last"] is None or t["id"] > d["last"]["id"]:
             d["last"] = row
+    for d in out.values():
+        d["history"] = sorted(d["history"], key=lambda h: -h["id"])[:12]
     return out
 
 
 def duels_view(duels, tick):
-    rows = []
+    rows, mem = [], duel_memory()
     for d in duels:
         mine, rival = d.get("your_offer") or {}, d.get("rival_offer") or {}
         rows.append({"id": d.get("duel"), "item": d.get("item"), "role": d.get("role"), "rival": d.get("rival"),
                      "status": d.get("status"), "limit": d.get("your_limit"), "mine": mine.get("price"), "his": rival.get("price"),
                      "rounds": d.get("rounds"), "left": max(0, (d.get("deadline_tick") or tick) - tick),
                      "result": d.get("result"), "price": d.get("price"), "session": d.get("session")})
+        side = 1 if d.get("role") == "seller" else -1
+        r = rows[-1]
+        r["gain"] = None if d.get("price") is None or d.get("your_limit") is None else round(side * (d["price"] - d["your_limit"]), 1)
+        hist = (mem.get(str(d.get("duel"))) or {}).get("observed", {}).get("history", [])
+        r["path"] = [{"round": h.get("round"), "left": h.get("remaining"), "rival": h.get("rival_price"), "ours": h.get("our_price"),
+                      "decision": h.get("decision")} for h in hist][-16:]
+    rows.sort(key=lambda r: (r["status"] != "live", -(r["session"] or 0), -(r["id"] or 0)))
     return rows
 
 
@@ -167,7 +243,10 @@ def poll_once(b):
     me, clock = b.me(), b.clock()
     offers = b.my_offers().get("offers", [])
     threads = b.my_threads().get("threads", [])
-    duels = b.duels().get("duels", [])
+    live = b.duels().get("duels", [])
+    done = cached("duels_done", 30, lambda: b.duels(done=True)).get("duels", [])
+    seen = {d.get("duel") for d in live}
+    duels = live + [d for d in done if d.get("duel") not in seen]
     catalog = cached("catalog", 120, b.catalog)
     lb = cached("lb", 20, b.leaderboard)
     venues = cached("venues", 20, b.venues)
@@ -190,7 +269,7 @@ def poll_once(b):
         "album": album(me, catalog), "holdings": holdings(me),
         "offers_open": len([o for o in offers if o["maker"] == me["id"]]),
         "dealers": threads_view(me, threads), "duels": duels_view(duels, clock["tick"]),
-        "venue": my_v, "schedule": schedule_view(sched, clock),
+        "venue": my_v, "schedule": schedule_view(sched, clock), "bench": bench_view(),
         "processes": processes(), "activity": activity(),
     }
 
@@ -199,7 +278,9 @@ def sample(st):
     if not st.get("ok"):
         return
     HISTORY.append({"ts": int(st["ts"]), "tick": st["clock"]["tick"], "score": st["score"]["score"], "rank": st["score"]["rank"],
-                    "cash": st["team"]["cash"], "cv": st["team"]["collection_value"], "leader": st["leader"]["score"]})
+                    "cash": st["team"]["cash"], "cv": st["team"]["collection_value"], "leader": st["leader"]["score"],
+                    "eff": st["score"]["bench_efficiency"], "duel": st["score"]["duel_points"], "ladder": st["score"]["ladder_points"],
+                    "neg": st["score"]["negotiating"], "mkt": st["score"]["market"]})
 
 
 def poller():
