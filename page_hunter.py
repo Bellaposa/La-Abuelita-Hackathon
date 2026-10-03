@@ -23,6 +23,7 @@ import time
 
 from bazaar_sdk import Bazaar, BazaarError
 from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per tick across processes
+from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.py is the only trading authority
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 FOCUS_AFF = float(os.environ.get("FOCUS_AFF", "1.0"))   # sets with affinity >= this are the ones we build
@@ -221,6 +222,9 @@ def main():
         try:
             if b.clock().get("paused"):
                 time.sleep(10)
+                continue
+            if not legacy_should_trade():                       # TRADING_V2=on: stand aside this tick
+                b.wait_tick()
                 continue
             venue = next((v for v in b.venues()["venues"] if v["venue"] == "rastro"), {"fee_bps": 500, "fee_per_card": 1})
             step(b, b.me(), b.catalog(), venue)

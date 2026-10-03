@@ -14,3 +14,6 @@ backup/
 .pytest_cache/
 bench_snapshots.jsonl
 .accept_gate/
+.trading_v2_mode
+market_intel.json
+logs/

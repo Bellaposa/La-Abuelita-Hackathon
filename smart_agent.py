@@ -24,6 +24,7 @@ import time
 
 from bazaar_sdk import Bazaar, BazaarError
 from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per tick across processes
+from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.py is the only trading authority
 from flags import is_lie
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
@@ -1200,7 +1201,8 @@ def run_agent():
             reserved = {aid for d in ("chato", "pilar")                  # cards on the table with a dealer: the market must not sell them
                         for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
             me_market = dict(me, assets=[a for a in me["assets"] if a.get("id") not in reserved]) if reserved else me
-            phase_market(b, me_market, catalog, can_accept=not accepted)
+            if legacy_should_trade():
+                phase_market(b, me_market, catalog, can_accept=not accepted)
             try:
                 phase_flags(b, me, mem)
             except BazaarError as e:
