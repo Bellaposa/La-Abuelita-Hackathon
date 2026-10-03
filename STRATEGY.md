@@ -41,6 +41,7 @@ No hay suelo de caja por defecto (`CASH_RESERVE=0`). El sábado a las ~21:50 se 
 1. Creer que el valor de las cartas no puntuaba: la vuelta de épicas vendió SAL-11 a Ernesto por 120 valiendo 198 (−78).
 2. Pagar primas de escalera por encima de nuestro valor.
 3. Usar nuestro valor local (sin bonus de página) como suelo de venta: una común de Lavapiés vale 122 para nosotros.
+5. **Ofertas de venta caducadas (22:47, −54,5 en intercambios, del 2.º al 6.º puesto).** `page_hunter` había puesto RET-06 a la venta a 30 cuando valía 22,5. Compramos RET-03 y RET-05, El Retiro se completó y RET-06 pasó a valer ~82, pero la oferta seguía publicada: alguien la aceptó y rompimos la página. Ahora cada tick se cancelan las ofertas por debajo del valor actual y nunca se vende una carta de una página completa.
 4. Duelos II: sumar el peso de los días también como comprador (pedíamos el día 10), y ceder días a la vez que precio hasta salir de nuestro margen (−20 a −31 en tres duelos).
 
 ## Para el domingo
