@@ -23,6 +23,7 @@ import sys
 import time
 
 from bazaar_sdk import Bazaar, BazaarError
+from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per tick across processes
 from flags import is_lie
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
@@ -650,6 +651,9 @@ def phase_market(b, me, catalog, can_accept):
         log("market opportunities:", json.dumps(sorted(opps, key=lambda o: -o["gain"])[:5]))
     if can_accept:
         best = rank_pick(opps)
+        if best and not try_reserve(me["tick"]):
+            log("market accept skipped: another process already used this tick's accept")
+            best = None
         if best:
             try:
                 b.accept(best["offer"], assets=[best["asset"]] if best["kind"] in ("sell", "swap") else None)
@@ -832,6 +836,9 @@ def phase_abuela(b, me, catalog, mem):
         if offer_id is None:
             log(f"Abuela thread {tid}: accept blocked: {why} (decided {price})")
             return why == "no open standing offer"          # legacy: nothing open = probably already accepted, settles next tick
+        if not try_reserve(me["tick"]):
+            log(f"Abuela thread {tid}: accept skipped: another process already used this tick's accept")
+            return False
         b.accept(offer_id)
         log_chat(f"🤝 aceptado a {price} P")
         return True
@@ -940,6 +947,9 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
         if offer_id is None:
             log(f"{name} thread {tid}: accept blocked: {why} (decided {price})")
             return why == "no open standing offer"
+        if not try_reserve(me["tick"]):
+            log(f"{name} thread {tid}: accept skipped: another process already used this tick's accept")
+            return False
         try:
             b.accept(offer_id)
         except BazaarError as e:
@@ -1100,6 +1110,9 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
                                             ("item", "price"))
         if offer_id is None:
             log(f"{name} buy {tid}: accept blocked: {why} (decided {price})")
+            return False, True
+        if not try_reserve(me["tick"]):
+            log(f"{name} buy {tid}: accept skipped: another process already used this tick's accept")
             return False, True
         b.accept(offer_id)
         log(f"{name.upper()} BUY {act['ref']} at {price}: worth {act['value']:.0f} to us (+{act['value'] - price:.0f})")

@@ -1,6 +1,7 @@
 """SPEC (executable) for the shared accept gate: one accept per tick across PROCESSES (hotfix 1.4).
+Implemented in bz/core/accept_gate.py; these tests were PENDING (skipped) until then.
 
-Interface expected (nothing implements it yet, so these tests are PENDING/skipped):
+Interface:
 
     gate = AcceptGate(path)        # path: a file or directory shared by every process of the team
     gate.reserve(tick) -> bool     # True: this process may send ONE accept in `tick`; False: someone already took it
@@ -18,8 +19,6 @@ import pytest
 
 from helpers import ROOT
 from spec import load
-
-pytestmark = pytest.mark.pending
 
 
 @pytest.fixture

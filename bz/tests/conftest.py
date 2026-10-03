@@ -64,6 +64,7 @@ def isolate(tmp_path, monkeypatch):
     monkeypatch.setattr(smart_agent, "log_chat", lambda msg: None)
     monkeypatch.setattr(smart_duels, "MEM_FILE", str(tmp_path / "duels_memory.json"))
     monkeypatch.setattr(broker, "MEM_FILE", str(tmp_path / "broker_memory.json"))
+    monkeypatch.setenv("ACCEPT_GATE_DIR", str(tmp_path / "accept_gate"))      # never touch the repo-root .accept_gate/
     yield
 
 

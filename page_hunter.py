@@ -22,6 +22,7 @@ import sys
 import time
 
 from bazaar_sdk import Bazaar, BazaarError
+from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per tick across processes
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 FOCUS_AFF = float(os.environ.get("FOCUS_AFF", "1.0"))   # sets with affinity >= this are the ones we build
@@ -172,14 +173,19 @@ def step(b, me, catalog, venue):
     log(f"cash {me['cash']} | missing page cards {[(t[0], t[1], round(t[2])) for t in targets]} | open offers {len(mine)}")
     best = buy_choice(targets, offers + directed, venue, me["cash"], me["id"])
     if best:
-        try:
-            b.accept(best["offer"])
-            log(f"BUY {best['ref']}: cost {best['cost']} cap {best['cap']} gain {best['gain']}")
-        except BazaarError as e:
-            log("buy refused:", e.code, e.message)
+        if not try_reserve(me["tick"]):
+            log("buy skipped: another process already used this tick's accept")
+        else:
+            try:
+                b.accept(best["offer"])
+                log(f"BUY {best['ref']}: cost {best['cost']} cap {best['cap']} gain {best['gain']}")
+            except BazaarError as e:
+                log("buy refused:", e.code, e.message)
     if not best:
         sb = sell_bid_choice(catalog, me["affinity"], me["assets"], offers + directed, venue, me["id"])
-        if sb:
+        if sb and not try_reserve(me["tick"]):
+            log("sell-to-bid skipped: another process already used this tick's accept")
+        elif sb:
             try:
                 b.accept(sb["offer"], assets=[sb["asset"]])
                 log(f"SELL to bid {sb['ref']}: bid {sb['bid']}, worth {sb['value']} to us, gain {sb['gain']}")
