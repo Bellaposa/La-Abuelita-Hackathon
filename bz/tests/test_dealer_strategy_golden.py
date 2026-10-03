@@ -80,6 +80,12 @@ NEXT_OFFER_SELL = [
     ("he spoke first with a low bid: we state our ask", (20, 26, [], H((12, False)), {}), ("offer", 26, "opening ask (he spoke first)")),
     ("he spoke first with a final under floor: we state our ask", (20, 26, [], H((12, True)), {}),
      ("offer", 26, "opening ask (he spoke first)")),
+    ("he spoke first with a NON-final bid over floor: we still state our ask", (20, 26, [], H((22, False)), {}),
+     ("offer", 26, "opening ask (he spoke first)")),
+    ("he spoke first with a final just under floor: we state our ask", (20, 26, [], H((19, True)), {}),
+     ("offer", 26, "opening ask (he spoke first)")),
+    ("he spoke first with a final exactly at floor: accept (hotfix: was a TypeError)", (20, 26, [], H((20, True)), {}),
+     ("accept", 20, "his final is over our floor")),
 ]
 
 

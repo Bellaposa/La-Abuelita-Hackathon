@@ -224,7 +224,7 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=0.35):
     tol = max(1, int(0.04 * list_price))
     if last is None and not (bid >= floor and final):
         return "offer", max(floor, list_price), "opening ask (he spoke first)"
-    if bid >= floor and (bid >= last - tol or final):
+    if bid >= floor and (final or bid >= last - tol):          # `final` first: with ours empty `last` is None (he spoke first)
         return "accept", bid, "his final is over our floor" if final else "his bid is within reach of our ask"
     if final:
         return "walk", None, f"his final {bid} is below our floor {floor}"
