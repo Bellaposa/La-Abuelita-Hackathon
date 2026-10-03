@@ -39,7 +39,10 @@ OPEN_ANCHOR = 0.5      # opening claim beyond our limit, as a fraction of it (th
 MIN_MARGIN = 1         # whole primas of surplus we always keep: we never offer or accept at our limit
 OFFER_KEEP = 0.10      # OUR offers never go closer to the limit than this share of it: a +1 deal is worth ~0 of the pie,
                        # so conceding all the way only hands the pie to rivals who wait. We still ACCEPT any offer >= MIN_MARGIN.
-BETA = 2.0             # concession exponent: >1 holds early, concedes late
+BETA = 1.5             # concession exponent: >1 holds early, concedes late (was 2.0: Duels I closed at a median of 8
+                       # rounds, and every round shrinks the pie for both: 0.92^8 = 0.51 with Duels II's 8 %)
+SPEED_HORIZON = 8      # our curve reaches the reservation by this round, not at the deadline: speed pays (organisers'
+                       # deck: "open with an offer the other side can take; every full round of talk costs both sides")
 DEFAULT_TICKS = 16     # duel length when the payload does not say (schedule: duel_ticks 16)
 DEFAULT_DECAY = 0.06   # pie shrink per round of talk (schedule: decay 0.06 / 0.08)
 DAYS_SIGN = 1          # utility from days = DAYS_SIGN * your_days_weight * days (official deck: "seller gains 1 per later day,
@@ -232,7 +235,7 @@ def plan_price(side, limit, st, stats, rival_price, elapsed, total):
             beta = BETA * 0.6                      # rival stopped moving: waiting is not buying us anything
         elif gap and stats["rate"] >= 0.03 * gap:
             beta = BETA * 1.3                      # rival is giving real ground: hold longer
-    frac = min(1.0, max(0.0, (elapsed / max(1, total)) ** beta))
+    frac = min(1.0, max(0.0, (elapsed / max(1, min(total, SPEED_HORIZON))) ** beta))
     price = anchor + (resv - anchor) * frac
     price = math.ceil(price) if side > 0 else math.floor(price)
     if st["our_last"] is not None:                 # never retract
@@ -301,8 +304,8 @@ def should_accept(u_now, u_next, remaining, stats, decay):
     """(accept?, reason). u_* are our utilities of the rival's offer and of our own planned next offer."""
     if u_now < MIN_MARGIN:
         return False, "rival offer below our margin"
-    if u_now >= u_next:
-        return True, "rival offer already as good as our next planned offer"
+    if u_now >= u_next * (1 - decay):                      # our next offer lands a round later, on a smaller pie
+        return True, "rival offer as good as our next planned offer after a round of decay"
     if remaining <= 2:
         return True, "closing: a positive deal beats zero for both sides"
     if stats:
