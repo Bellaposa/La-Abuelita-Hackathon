@@ -1,14 +1,14 @@
 {
  "relax": {
-  "ask": 3.0,
-  "bid": 1.46
+  "ask": 3.5,
+  "bid": 2.07
  },
  "relax_n": {
-  "ask": 13,
-  "bid": 12
+  "ask": 17,
+  "bid": 18
  },
- "lifetime": 4,
- "lifetime_n": 19,
+ "lifetime": 3,
+ "lifetime_n": 25,
  "sessions": {
   "b19": {
    "traders": 20,
@@ -16,19 +16,19 @@
    "ticks_with_unlocked_cross": 0,
    "hold0": {
     "pairs": 6,
-    "est_eff": 0.679
+    "est_eff": 0.652
    },
    "hold1": {
     "pairs": 6,
-    "est_eff": 0.613
+    "est_eff": 0.652
    },
    "hold2": {
     "pairs": 6,
-    "est_eff": 0.679
+    "est_eff": 0.652
    },
    "hold3": {
     "pairs": 6,
-    "est_eff": 0.679
+    "est_eff": 0.652
    }
   },
   "b37": {
@@ -37,28 +37,49 @@
    "ticks_with_unlocked_cross": 0,
    "hold0": {
     "pairs": 6,
-    "est_eff": 0.845
+    "est_eff": 0.82
    },
    "hold1": {
     "pairs": 6,
-    "est_eff": 0.839
+    "est_eff": 0.608
    },
    "hold2": {
     "pairs": 6,
-    "est_eff": 0.839
+    "est_eff": 0.608
    },
    "hold3": {
     "pairs": 6,
-    "est_eff": 0.839
+    "est_eff": 0.82
+   }
+  },
+  "b55": {
+   "traders": 20,
+   "our_pairs": 6,
+   "ticks_with_unlocked_cross": 0,
+   "hold0": {
+    "pairs": 6,
+    "est_eff": 0.883
+   },
+   "hold1": {
+    "pairs": 7,
+    "est_eff": 0.856
+   },
+   "hold2": {
+    "pairs": 7,
+    "est_eff": 0.856
+   },
+   "hold3": {
+    "pairs": 6,
+    "est_eff": 0.883
    }
   }
  },
  "est_eff_by_hold": {
-  "0": 0.756,
-  "1": 0.718,
-  "2": 0.753,
-  "3": 0.753
+  "0": 0.782,
+  "1": 0.709,
+  "2": 0.709,
+  "3": 0.782
  },
  "best_hold": 0,
- "n_sessions": 2
+ "n_sessions": 3
 }

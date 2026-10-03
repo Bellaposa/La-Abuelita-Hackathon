@@ -1778,3 +1778,59 @@
 17:57:28 --- tick 926 | cash 90 | cards 36 ---
 17:57:29 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
 17:57:29 Picaros buy 1340 RET-10: ours [36] his [73] cap 59 -> offer 45 (mood unknown, gap 37, step 9 (k=0.25))
+17:57:58 --- tick 927 | cash 90 | cards 36 ---
+17:57:58 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:57:58 Picaros buy 1340 RET-10: ours [36, 45] his [73] cap 59 -> wait None (she has not answered our last offer)
+17:58:28 --- tick 928 | cash 90 | cards 36 ---
+17:58:28 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:58:29 Picaros buy 1340 RET-10: ours [36, 45] his [73, 66] cap 59 -> offer 50 (mood yielding, gap 21, step 5 (k=0.25))
+17:58:59 --- tick 929 | cash 90 | cards 36 ---
+17:58:59 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:59:00 Picaros buy 1340 RET-10: ours [36, 45, 50] his [73, 66] cap 59 -> wait None (she has not answered our last offer)
+17:59:28 --- tick 930 | cash 90 | cards 36 ---
+17:59:29 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+17:59:30 Picaros buy 1340 RET-10: ours [36, 45, 50] his [73, 66, 62] cap 59 -> offer 53 (mood yielding, gap 12, step 3 (k=0.25))
+17:59:38 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.48], "uncommon": [18.5, 0.72], "rare": [62.0, 0.9], "epic": [153.0, 0.3], "legendary": [1, 0.8]}
+18:00:01 --- tick 931 | cash 90 | cards 36 ---
+18:00:01 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:00:02 Picaros buy 1340 RET-10: ours [36, 45, 50, 53] his [73, 66, 62] cap 59 -> wait None (she has not answered our last offer)
+18:00:28 --- tick 932 | cash 90 | cards 36 ---
+18:00:33 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:00:33 Picaros buy 1340 RET-10: ours [36, 45, 50, 53] his [73, 66, 62, 58] cap 59 -> offer 54 (mood yielding, gap 5, step 1 (k=0.25, she out-conceded us, slow down))
+18:00:58 --- tick 933 | cash 90 | cards 36 ---
+18:00:58 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:00:59 Picaros buy 1340 RET-10: ours [36, 45, 50, 53, 54] his [73, 66, 62, 58] cap 59 -> wait None (she has not answered our last offer)
+18:01:30 --- tick 934 | cash 90 | cards 36 ---
+18:01:30 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:01:31 Picaros buy 1340 RET-10: ours [36, 45, 50, 53, 54] his [73, 66, 62, 58, 55] cap 59 -> accept 55 (her ask is within reach of our own bid)
+18:01:31 PICAROS BUY RET-10 at 55: worth 63 to us (+8)
+18:02:01 --- tick 935 | cash 35 | cards 37 ---
+18:02:01 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:02:01 Picaros card buy 1340 (RET-10) ended: deal  paid 55 (worth 63 to us)
+18:02:07 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.51], "uncommon": [18.5, 0.7], "rare": [60.0, 0.83], "epic": [153.0, 0.3], "legendary": [1, 0.75]}
+18:02:28 --- tick 936 | cash 35 | cards 37 ---
+18:02:28 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:03:03 --- tick 937 | cash 35 | cards 37 ---
+18:03:03 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:03:29 --- tick 938 | cash 35 | cards 37 ---
+18:03:29 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:04:04 --- tick 939 | cash 35 | cards 37 ---
+18:04:04 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:04:33 --- tick 940 | cash 35 | cards 37 ---
+18:04:33 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:04:40 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.54], "uncommon": [18.5, 0.83], "rare": [60.0, 0.83], "epic": [153.0, 0.3], "legendary": [1, 0.8]}
+18:04:58 --- tick 941 | cash 35 | cards 37 ---
+18:04:58 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:05:29 --- tick 942 | cash 35 | cards 37 ---
+18:05:29 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:05:59 --- tick 943 | cash 35 | cards 37 ---
+18:05:59 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:06:07 smart_agent started (deterministic, no LLM)
+18:06:07 --- tick 943 | cash 35 | cards 37 ---
+18:06:07 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:06:29 --- tick 944 | cash 35 | cards 37 ---
+18:06:29 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:06:29 Picaros: skip buying LAT-09: our cap 35 < lowest price it sold a rare to any team (55, 5 deals)
+18:06:29 Picaros: skip buying LAT-10: our cap 35 < lowest price it sold a rare to any team (55, 5 deals)
+18:06:29 Picaros: skip buying MAL-09: our cap 33 < lowest price it sold a rare to any team (55, 5 deals)
+18:06:29 Picaros: skip buying MAL-10: our cap 33 < lowest price it sold a rare to any team (55, 5 deals)
