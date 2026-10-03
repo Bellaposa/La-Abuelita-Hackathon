@@ -1469,6 +1469,31 @@ VAULT_MIN_EDGE = 30            # buy a legendary only if our value is at least t
 VAULT_REFS = ("LAV-12", "SAL-12", "RET-12", "LAT-12", "MAL-12")
 
 
+VAULT_OPEN = 380               # first bid
+VAULT_STEP_MAX = 5             # we creep: a dealer only moves when we do, and a repeated price earns nothing
+
+
+def vault_next(cap, ours, hers):
+    """(action, price, why) for the vault. On Saturday we reached our cap in six rounds (292 -> 541) and Ernesto slowed
+    to a crawl at 729: with no room left we could not move, so neither did he. Here we always keep a new, small step
+    in hand, accept when his ask meets ours (or his final is under our cap), and never walk on a stall."""
+    if not hers:
+        return ("wait", None, "no reply yet") if ours else ("offer", min(cap, VAULT_OPEN), "opening bid")
+    if len(ours) > len(hers):
+        return "wait", None, "he has not answered our last offer"
+    ask, final, _ = hers[-1]
+    last = ours[-1] if ours else 0
+    if ask <= cap and (final or ask <= last + VAULT_STEP_MAX):
+        return "accept", ask, "his final is under our cap" if final else "his ask meets our bid"
+    if final:
+        return "walk", None, f"his final {ask} is over our cap {cap}"
+    step = max(1, min(VAULT_STEP_MAX, round((ask - last) * 0.05)))
+    new = min(cap, last + step)
+    if new <= last:
+        return "wait", None, f"at our cap {cap}; he asks {ask}"
+    return "offer", new, f"creeping +{step} (gap {ask - last})"
+
+
 def phase_vault(b, me, catalog, mem, can_accept):
     """Buy the legendary worth most to us from Don Ernesto, haggling patiently, never at or over our value."""
     dealer, key = "banco", "active_vault"
@@ -1520,7 +1545,7 @@ def phase_vault(b, me, catalog, mem, can_accept):
         return False
     cap = min(me["cash"] - CASH_RESERVE, math.floor(act["value"]) - VAULT_MIN_EDGE)
     ours, hers = read_thread(t, me["id"], dealer)
-    action, price, why = next_offer(cap, VAULT_LIST, ours, hers, {})
+    action, price, why = vault_next(cap, ours, hers)
     log(f"vault: Don Ernesto {tid} {act['ref']}: ours {ours} his {[h[0] for h in hers]} cap {cap} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
         if price is None or price > cap or price >= act["value"]:
@@ -1946,7 +1971,18 @@ def _test_epic_loop_on():
     assert not epic_loop_wants_one(me, mem)[0], "Ernesto's level full: the loop stops"
 
 
+def _test_vault_next():
+    assert vault_next(541, [], []) == ("offer", 380, "opening bid")
+    h = lambda p, f=False: (p, f, "")
+    assert vault_next(541, [380], [h(761)])[0:2] == ("offer", 385), "small steps (at most 5), room kept"
+    assert vault_next(541, [541], [h(729)])[0] == "wait", "at the cap we wait, we do not walk on a stall"
+    assert vault_next(541, [500], [h(503)])[0:2] == ("accept", 503)
+    assert vault_next(541, [500], [h(560, True)])[0] == "walk", "a final over our cap ends it"
+    assert vault_next(541, [500], [h(530, True)])[0:2] == ("accept", 530)
+
+
 def selftest():
+    _test_vault_next()
     global CASH_RESERVE
     CASH_RESERVE = 0                                     # offline fixtures hold little cash: test the logic without the floor
     _test_ladder_open_cap()
