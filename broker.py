@@ -301,12 +301,13 @@ def main():
                 seen = now
                 if bench:                                         # raw record of every bench book state, for offline analysis
                     with open("bench_snapshots.jsonl", "a") as f:
-                        f.write(json.dumps({"tick": tick, "bench": bench, "recent": book.get("recent")}) + "\n")
+                        f.write(json.dumps({"tick": tick, "t": round(time.time(), 2), "bench": bench,
+                                            "recent": book.get("recent")}) + "\n")
                 for sell, buy, price in bench_plan(book, tick, tr, sched) + public_plan(book):
                     try:
-                        broker.match(sell, buy, price)
+                        resp = broker.match(sell, buy, price)
                         matched.update((sell, buy))
-                        log(f"tick {tick}: MATCHED {sell} x {buy} at {price}")
+                        log(f"tick {tick}: MATCHED {sell} x {buy} at {price} -> {json.dumps(resp)[:300]}")
                     except BazaarError as e:
                         log(f"tick {tick}: {sell} x {buy} at {price} refused ({e})")
         except BazaarError as e:
