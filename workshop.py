@@ -40,7 +40,8 @@ RARITY_UP = {"common": "uncommon", "uncommon": "rare", "rare": "epic", "epic": "
 CRAFT_MARGIN = 3.0          # primas of expected trade gain a craft (or a buy-to-craft) must clear
 SINGLE_SELL = (1.1, 1)      # page_hunter sells singles of sets we do not build at >= 1.1 x value + 1
 FOCUS_AFF = 1.0             # sets with affinity >= this are the ones we build (same rule as page_hunter)
-DEALER_P = {"uncommon": 0.5, "rare": 0.5, "epic": 0.3}   # extra sell probability: our agents sell these to Chato/Pilar
+DEALER_P = {"common": 0.4, "uncommon": 0.5, "rare": 0.5, "epic": 0.3}   # extra sell probability when a dealer we sell to buys it
+DEALER_BUYS = {"common": {"picaros"}, "uncommon": {"chato", "pilar", "picaros"}, "rare": {"chato", "pilar"}, "epic": {"pilar"}}
 P_CAP = 0.9
 OBS_KEEP = 120              # dealer/team settlement prices remembered per rarity
 EVERY = 5                   # ticks between Workshop decisions
@@ -72,7 +73,7 @@ def observe_settlements(mem, events, idx):
     mem["ws_seen"] = sorted(seen)[-2000:]
 
 
-def market_model(boards, idx, mem, me_id):
+def market_model(boards, idx, mem, me_id, unlocked=("chato", "pilar")):
     """rarity -> {"price": what we can expect to sell one for, "p": probability it sells, "asks", "bids"}."""
     asks, bids = {}, {}
     for offers in boards.values():
@@ -102,7 +103,8 @@ def market_model(boards, idx, mem, me_id):
             price = 0.0
         if b:
             price = min(price, max(b[0], price * 0.8)) if not s else price
-        p = min(P_CAP, len(b) / (len(a) + len(b) + 1) + DEALER_P.get(r, 0.0))
+        dealer = DEALER_P.get(r, 0.0) if DEALER_BUYS.get(r, set()) & set(unlocked) else 0.0
+        p = min(P_CAP, len(b) / (len(a) + len(b) + 1) + dealer)
         model[r] = {"price": round(price, 1), "p": round(p, 2), "asks": len(a), "bids": len(b), "obs": len(s)}
     return model
 
@@ -283,7 +285,7 @@ def step(b, me, catalog, mem, log, dry=False, blocked_extra=(), allow_buy=True):
             counts[a["ref"]] = counts.get(a["ref"], 0) + 1
             ids.setdefault(a["ref"], []).append(a)
     boards = gather(b, me, idx, mem)
-    model = market_model(boards, idx, mem, me["id"])
+    model = market_model(boards, idx, mem, me["id"], me.get("unlocked", ()))
     mine = b.my_offers().get("offers", [])
     listed = {a["id"]: o["id"] for o in mine if o.get("maker") == me["id"] and o.get("status", "open") == "open"
               for a in (o.get("give") or {}).get("assets") or [] if isinstance(a, dict)}
@@ -409,6 +411,11 @@ def selftest():
                     {"v02": {"fee_bps": 0, "fee_per_card": 0}}) is None, "too expensive: no buy"
     assert plan_buy({"v02": [ask(3, "LAV-07", 1)]}, me, two, two_ids, idx, marg, model, set(), set(), None, {}) is None, \
         "a card we do not hold is not a spare: no buy-to-craft"
+    board = {"rastro": [{"maker": "m1", "status": "open", "give": {"cash": 0, "assets": [{"ref": "LAV-01", "rarity": "common"}]},
+                         "want": {"cash": 10, "types": []}}]}
+    p_before = market_model(board, idx, {}, "t06", ("chato", "pilar"))["common"]["p"]
+    p_after = market_model(board, idx, {}, "t06", ("chato", "pilar", "picaros"))["common"]["p"]
+    assert p_before == 0.0 and p_after == DEALER_P["common"], (p_before, p_after)
     mem = {}
     observe_settlements(mem, [{"id": 1, "type": "settlement", "payload": {"price": 20, "items": [{"kind": "card", "ref": "LAV-06", "rarity": "uncommon"}]}},
                               {"id": 1, "type": "settlement", "payload": {"price": 20, "items": [{"kind": "card", "ref": "LAV-06", "rarity": "uncommon"}]}}], idx)

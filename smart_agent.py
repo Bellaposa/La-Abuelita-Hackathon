@@ -25,7 +25,7 @@ import time
 from bazaar_sdk import Bazaar, BazaarError
 from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per tick across processes
 from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.py is the only trading authority
-from flags import is_lie
+from flags import is_item_lie, is_lie
 import workshop
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
@@ -1092,9 +1092,35 @@ def phase_pilar(b, me, catalog, mem, can_accept):
     return phase_chato(b, me, catalog, mem, can_accept, dealer="pilar", candidate_fn=pilar_candidate)
 
 
+def picaros_candidate(me, catalog):
+    """Los Pícaros buy commons and uncommons of released sets: the outlet our spare commons lack (the boards are flooded).
+    Spares only (never our only copy); their price list is not published, so we ask book and let the floor protect us."""
+    counts, ids = card_counts(me)
+    book = {c["id"]: c for st in catalog["sets"] for c in st["cards"]}
+    best = None
+    for ref, n in counts.items():
+        a = ids[ref][-1]
+        if a["rarity"] not in ("common", "uncommon") or ref not in book or n < 2:
+            continue
+        lp = int(book[ref]["book"])
+        lost = marginal_value(ref, n, catalog, me["affinity"])
+        floor = math.ceil(lost * 1.4 + SELL_MIN_GAIN)
+        if floor <= 0.85 * lp:
+            score = 0.8 * lp - lost
+            if best is None or score > best[0]:
+                best = (score, ref, a, floor, lp, lost)
+    return best
+
+
+def phase_picaros(b, me, catalog, mem, can_accept):
+    return phase_chato(b, me, catalog, mem, can_accept, dealer="picaros", candidate_fn=picaros_candidate)
+
+
 # ---------------------------------------------------------------- buying the cards we value most from dealers
 
-DEALER_SELLS = {"abuela": {"common": 10, "uncommon": 25}, "chato": {"uncommon": 26, "rare": 77}}   # list prices (dealer menus)
+DEALER_SELLS = {"abuela": {"common": 10, "uncommon": 25}, "chato": {"uncommon": 26, "rare": 77},
+                "picaros": {"rare": 63, "epic": 162}}       # list prices (dealer menus). Los Pícaros lie about cards and
+                                                            # deadlines: every accept is re-checked against the exact card
 CARD_EDGE = 0.95          # we pay at most this share of the card's value TO US (server value, page bonus included), and
                           # always at least 1 prima under it. The ladder scores the share of the dealer's range we capture,
                           # so a deal under our value that the dealer can reach is worth more than a tight cap with no deal.
@@ -1227,7 +1253,7 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
 FLAG_EVERY = 4            # ticks between scans of our dealer threads for bad faith
 
 
-def phase_flags(b, me, mem):
+def phase_flags(b, me, mem, catalog=None):
     """Flag a dealer message only when its words state a different (worse for us) price than its own structured offer.
     Each message is judged once; a wrong flag costs score, so flags.is_lie is deliberately strict."""
     if me["tick"] - mem.get("flags_scan_tick", -999) < FLAG_EVERY:
@@ -1251,6 +1277,11 @@ def phase_flags(b, me, mem):
                 continue
             seen.add(mid)
             lie, why = is_lie(m.get("text") or "", price, ours, dealer_sells)
+            if not lie and catalog and dealer_sells and o:                   # bait-and-switch: asked card in words, another given
+                names = {c["id"]: c["name"] for st in catalog["sets"] for c in st["cards"]}
+                topic_card = ((t.get("topic") or {}).get("buy") or {}).get("card")
+                held = {x.get("ref") for x in me["assets"] if x.get("kind") == "card"}
+                lie, why = is_item_lie(m.get("text") or "", o, names, topic_card, held)
             if lie:
                 try:
                     b.flag(mid, f"bad faith: {why}")
@@ -1284,7 +1315,7 @@ def run_agent():
             except BazaarError as e:
                 log("Abuela step:", e.code, e.message)
             busy = {}
-            for d in ("chato", "abuela"):                                  # priority cards first (Abuela: only when no pack talk)
+            for d in ("picaros", "chato", "abuela"):                       # priority cards first (Abuela: only when no pack talk)
                 if d == "abuela" and mem.get("active"):
                     continue
                 try:
@@ -1301,13 +1332,18 @@ def run_agent():
                 accepted = phase_pilar(b, me, catalog, mem, can_accept=not accepted) or accepted
             except BazaarError as e:
                 log("Pilar step:", e.code, e.message)
-            reserved = {aid for d in ("chato", "pilar")                  # cards on the table with a dealer: the market must not sell them
+            try:
+                if not busy.get("picaros") or mem.get("active_picaros"):
+                    accepted = phase_picaros(b, me, catalog, mem, can_accept=not accepted) or accepted
+            except BazaarError as e:
+                log("Picaros step:", e.code, e.message)
+            reserved = {aid for d in ("chato", "pilar", "picaros")       # cards on the table with a dealer: the market must not sell them
                         for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
             me_market = dict(me, assets=[a for a in me["assets"] if a.get("id") not in reserved]) if reserved else me
             if legacy_should_trade():
                 phase_market(b, me_market, catalog, can_accept=not accepted)
             try:
-                phase_flags(b, me, mem)
+                phase_flags(b, me, mem, catalog)
             except BazaarError as e:
                 log("flags step:", e.code, e.message)
             try:                                                           # The Workshop: craft only when the trade value rises

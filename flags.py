@@ -91,7 +91,65 @@ def is_lie(text, offer_price, our_prices, dealer_sells):
     return True, f"words say {q} P, the structured offer is {offer_price} P"
 
 
+def _norm(text):
+    return " ".join(re.findall(r"[a-z0-9ñ]+", (text or "").lower().translate(ACCENTS)))
+
+
+def mentioned_cards(text, names):
+    """Cards the words name, by ref ("LAV-09") or by full card name; `names` is ref -> card name."""
+    t = " " + _norm(text) + " "
+    raw = (text or "").upper()
+    out = set()
+    for ref, name in names.items():
+        n = _norm(name)
+        if ref.upper() in raw or (len(n) >= 6 and f" {n} " in t):
+            out.add(ref)
+    return out
+
+
+def given_cards(offer):
+    """Refs of the cards a structured offer GIVES (types "card:REF" or assets with a ref)."""
+    g = (offer or {}).get("give") or {}
+    refs = [t.split(":", 1)[1] for t in g.get("types") or [] if isinstance(t, str) and t.startswith("card:")]
+    refs += [a.get("ref") for a in g.get("assets") or [] if isinstance(a, dict) and a.get("ref")]
+    return refs
+
+
+def is_item_lie(text, offer, names, topic_card=None, held=()):
+    """(True, reason) only for the bait-and-switch: we asked for card T (thread topic {"buy": {"card": T}}), the words
+    sell T, and the structured offer gives a DIFFERENT single card whose name the words never say. Cards we already hold
+    (gifts, our collection) are context, never the claim. Without a card topic nothing is flagged."""
+    if not topic_card:
+        return False, "no card topic: nothing to compare the words with"
+    given = given_cards(offer)
+    if len(given) != 1:
+        return False, f"offer gives {len(given)} cards (need exactly one)"
+    if given[0] == topic_card:
+        return False, "the offer gives the card we asked for"
+    said = mentioned_cards(text, names) - set(held)
+    if said != {topic_card}:
+        return False, f"the words name {sorted(said) or 'no card'} (need exactly the card we asked for)"
+    if given[0] in mentioned_cards(text, names):
+        return False, "the words also name the card that is given"
+    return True, (f"words sell {topic_card} ({names.get(topic_card)}) as asked, the structured offer gives "
+                  f"{given[0]} ({names.get(given[0])})")
+
+
 def selftest():
+    names = {"LAV-09": "Cine Doré", "LAV-08": "Teatro Valle-Inclán", "SAL-09": "El Marqués"}
+    off = lambda ref: {"give": {"cash": 0, "assets": [], "types": [f"card:{ref}"]}, "want": {"cash": 73}}
+    T = "LAV-09"
+    assert is_item_lie("The Cine Doré, the gem of the case: seventy-three primas", off("LAV-08"), names, T)[0] is True
+    assert is_item_lie("The Cine Doré, the gem of the case", off("LAV-09"), names, T)[0] is False       # honest
+    assert is_item_lie("Cine Doré or Teatro Valle-Inclán, your pick", off("LAV-08"), names, T)[0] is False  # names the given one
+    assert is_item_lie("A beautiful card for you, amigo", off("LAV-08"), names, T)[0] is False          # names none
+    assert is_item_lie("Cine Doré", {"give": {"cash": 50}}, names, T)[0] is False                       # gives cash, no card
+    assert is_item_lie("The Cine Doré, the gem", off("LAV-08"), names, None)[0] is False                # no card topic
+    # real Abuela message (thread 938): selling RET-06 as asked, mentions the LAV-08 she GAVE us earlier: not a lie
+    names["RET-06"] = "La Rosaleda"
+    abuela = "Venga, 22 primas y te la envuelvo bonita. Con tu Teatro Valle-Inclán va a quedar una página preciosa"
+    assert is_item_lie(abuela, off("RET-06"), names, "RET-06", held={"LAV-08"})[0] is False
+    assert is_item_lie(abuela, off("RET-06"), names, "RET-06")[0] is False                              # given == asked
     assert priced("Venga, 22 primas y nos damos un abrazo")[0] == [22]
     assert priced("My offer stands: sixteen primas, paid at once")[0] == [16]
     assert priced("Veintidós, no. Le ofrezco dieciséis primas")[0] == [16]
