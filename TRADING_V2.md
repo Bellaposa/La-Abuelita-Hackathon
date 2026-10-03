@@ -1,6 +1,6 @@
 # TRADING_V2 — estrategia de mercado entre equipos
 
-Un solo proceso (`trading_v2.py`) decide **todo** el trading entre equipos: compras, ventas a pujas, swaps, listados, pujas propias y (opcional) arbitraje. Sustituye a `smart_agent.phase_market` y a `page_hunter` cuando se activa. **Por defecto está apagado.**
+Un solo proceso (`trading_v2.py`) decide **todo** el trading entre equipos: compras, ventas a pujas, swaps, listados, pujas propias y (opcional) arbitraje. Sustituye a `smart_agent.phase_market` y a `page_hunter` cuando se activa (`on`). **Por defecto está en `shadow`: solo observa y registra, no escribe nada.**
 
 ## Cómo se usa
 
@@ -11,8 +11,8 @@ echo shadow > .trading_v2_mode                  # off | shadow | on  (se relee c
 
 | Modo | Qué pasa |
 |---|---|
-| `off` (por defecto) | `trading_v2.py` no hace nada. El trading antiguo sigue como siempre. |
-| `shadow` | Lee los tableros, decide y **solo registra** en `logs/trading_v2_shadow.jsonl`. No escribe nada contra Bazaar. El trading antiguo sigue operando. |
+| `off` | `trading_v2.py` no hace nada. El trading antiguo sigue como siempre. |
+| `shadow` (por defecto) | Lee los tableros, decide y **solo registra** en `logs/trading_v2_shadow.jsonl`. No escribe nada contra Bazaar. El trading antiguo sigue operando. |
 | `on` | Ejecuta. `smart_agent` (fase de mercado) y `page_hunter` se apartan solos, así que hay una única autoridad. |
 
 Volver atrás: `echo off > .trading_v2_mode` (efecto en el siguiente tick). Si el modo es `on` y `trading_v2.py` **no** está corriendo, nadie hace trading entre equipos: arrancad el proceso o poned `off`.
