@@ -1563,7 +1563,10 @@ def phase_vault(b, me, catalog, mem, can_accept):
     if action == "walk":
         b.close_thread(tid)
     elif action == "offer":
-        b.say(tid, chato_text("buy", price, len(ours), act["ref"], "Don Ernesto"), price=price)
+        text = chato_text("buy", price, len(ours), act["ref"], "Don Ernesto")
+        if not ours:   # Abuela's hint (an easter egg trail, no score): "Don Ernesto guarda algo dorado; pregúntale por el oro de Moscú"
+            text += " Y, si me permite, ¿qué hay del oro de Moscú?"
+        b.say(tid, text, price=price)
     return False
 
 
