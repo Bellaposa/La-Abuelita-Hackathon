@@ -26,6 +26,7 @@ from bazaar_sdk import Bazaar, BazaarError
 from bz.core.accept_gate import try_reserve        # hotfix 1.4: one accept per tick across processes
 from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.py is the only trading authority
 from flags import is_lie
+import workshop
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 MEMORY_FILE = os.environ.get("AGENT_MEMORY", "memory.json")
@@ -1207,6 +1208,10 @@ def run_agent():
                 phase_flags(b, me, mem)
             except BazaarError as e:
                 log("flags step:", e.code, e.message)
+            try:                                                           # The Workshop: craft only when the trade value rises
+                workshop.step(b, me, catalog, mem, log, blocked_extra=reserved, allow_buy=legacy_should_trade() and not accepted)
+            except Exception as e:
+                log(f"workshop step: {type(e).__name__}: {e}")
             save_memory(mem)
             b.wait_tick()
         except KeyboardInterrupt:
