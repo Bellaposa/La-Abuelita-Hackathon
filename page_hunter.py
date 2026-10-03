@@ -26,6 +26,7 @@ from bazaar_sdk import Bazaar, BazaarError
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 FOCUS_AFF = float(os.environ.get("FOCUS_AFF", "1.0"))   # sets with affinity >= this are the ones we build
 BID_FRAC = 0.6
+MAX_PAY = json.loads(os.environ.get("MAX_PAY", "{}"))   # optional per-card price ceilings (none by default): the cap comes from our value
 SELL_MARGIN = 1.1          # we ask at least 1.1x what the card is worth to us, plus 1 prima: sell at the price the market pays
 MAX_POSTS = 3
 MAX_MISSING = 3            # count the page bonus only when this few page cards are missing
@@ -63,7 +64,7 @@ def page_targets(catalog, affinity, have):
         share = bonus / (2 * len(missing)) if 0 < len(missing) <= MAX_MISSING else 0.0   # far from done: no bonus credit
         for c in missing:
             v = value_of_card(c, sid, affinity)
-            out.append((c["id"], round(v, 1), v + share, sid))
+            out.append((c["id"], round(v, 1), min(v + share, MAX_PAY.get(c["id"], float("inf"))), sid))
     return out
 
 
@@ -155,6 +156,14 @@ def step(b, me, catalog, venue):
     listed = {a["id"] for o in mine for a in o["give"]["assets"]}
     my_bids = {t.split(":", 1)[1] for o in mine for t in o["want"]["types"] if t.startswith("card:")}
     have = {a["ref"] for a in me["assets"] if a["kind"] == "card"}
+    for o in mine:                                       # a bid for a card we now hold would buy a near-worthless duplicate
+        refs = [t.split(":", 1)[1] for t in o["want"].get("types") or [] if t.startswith("card:")]
+        if refs and not o["give"].get("assets") and all(r in have for r in refs):
+            try:
+                b.cancel(o["id"])
+                log(f"CANCEL bid {o['id']} for {refs}: we already hold it")
+            except BazaarError as e:
+                log("cancel refused:", e.code, e.message)
     targets = page_targets(catalog, me["affinity"], have)
     comp = {}
     for o in offers:
