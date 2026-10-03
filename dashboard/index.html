@@ -133,6 +133,7 @@
     <div class="card c4"><h2>Próximos eventos</h2><div class="cap">Tiempo real estimado según el ritmo de tick actual</div><div id="sched"></div></div>
     <div class="card c12"><div class="head"><div><h2>Market Test</h2><div class="cap">Cada 2 h todos los venues reciben el mismo libro sintético. Puntúa la parte de las ganancias posibles que realizamos casando pares</div></div><button data-toggle="bench">Tabla</button></div><div id="bench"></div></div>
     <div class="card c12"><h2>Duelos</h2><div class="cap">Regla de oro: nunca cruzar nuestro límite. Sin trato, los dos equipos quedan a 0. El valor del trato baja en cada ronda</div><div id="duels"></div></div>
+    <div class="card c12"><h2>Prioridad de compra</h2><div class="cap">Valor para NOSOTROS (servidor, bonus de página incluido). Pagamos como máximo el 60 % de ese valor</div><div id="prio"></div></div>
     <div class="card c7"><h2>Conversaciones con los dealers</h2><div class="cap">Mensajes reales de la conversación abierta o la última</div><div class="tabs" id="dealer-tabs"></div><div id="dealers"></div></div>
     <div class="card c5"><h2>Nuestro mercado</h2><div class="cap">Venue donde comercian los otros equipos</div><div id="venue"></div></div>
     <div class="card c7"><h2>Actividad de los agentes</h2><div class="cap">Últimos eventos de los logs, los más recientes arriba</div><div class="feed scroll" id="feed"></div></div>
@@ -417,6 +418,19 @@ function drawDealers(s) {
   chat.scrollTop = chat.scrollHeight;
 }
 
+function drawPrio(s) {
+  const p = s.priorities; if (!p) return;
+  const sets = table(["Barrio", "Multiplicador", "Página", "Prioridad"], p.sets.map((x, i) => [`${i + 1}. ${x.name}`, `×${x.affinity}`, `${x.have}/${x.of}`, fmt(x.score, 2)]));
+  const cards = table(["Carta", "Rareza", "Libro", "Valor para nosotros", "Tope (60 %)"], p.cards.map((c, i) => [`${i + 1}. ${c.ref} · ${c.name}`, RARITY[c.rarity] || c.rarity, c.book,
+    fmt(c.value, 0) + (c.server ? "" : " (estimado)"), fmt(Math.floor(c.value * 0.6), 0)]));
+  const fl = p.flags.length ? table(["Mensaje", "Dealer", "Motivo"], p.flags.map((f) => [f.message, f.dealer, f.why]))
+    : el("div", { class: "empty", text: `Ningún flag enviado · ${p.flags_checked} mensajes de dealers revisados. Solo marcamos si las palabras dicen otro precio que la oferta.` });
+  const dup = el("div", { class: "seq" }, p.dupes.map((d) => el("span", { class: "chip", text: `${d.ref} ×${d.copies}` })));
+  replace("prio", el("div", { class: "grid" }, [
+    el("div", { class: "c5" }, [el("h2", { text: "Barrios" }), sets, el("h2", { style: "margin-top:12px", text: "Repetidas (para vender o cambiar)" }), dup]),
+    el("div", { class: "c7" }, [el("h2", { text: "Cartas que faltan, por valor" }), cards, el("h2", { style: "margin-top:12px", text: "Flags" }), fl])]));
+}
+
 /* ---------- panels ---------- */
 const RARITY = { common: "común", uncommon: "poco común", rare: "rara", epic: "épica", legendary: "legendaria" };
 const ACTION = { duels: "Duelos", bench: "Market Test", persona_opens: "Se abre un dealer", round: "Nueva ronda", set_release: "Sale un set", persona_announce: "Anuncio de dealer" };
@@ -475,7 +489,7 @@ function render() {
   const el0 = (Date.now() - fetchedAt) / 1000;
   replace("sched", s.schedule.length ? table(["Evento", "En"], s.schedule.map((e) => [ACTION[e.action] || e.action, clock(e.eta_s - el0)])) : el("div", { class: "empty", text: "No hay eventos en el calendario." }));
 
-  drawDealers(s); drawBench(s); drawDuels(s);
+  drawDealers(s); drawBench(s); drawDuels(s); drawPrio(s);
 
   /* venue */
   const v = s.venue;

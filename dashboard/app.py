@@ -171,6 +171,40 @@ def bench_view():
     return out[-8:]
 
 
+def agent_memory():
+    try:
+        with open(os.path.join(ROOT, "memory.json"), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def priorities_view(me, catalog):
+    """Neighbourhood order and missing page cards by their server value to us (cached by smart_agent in memory.json)."""
+    mem, held = agent_memory(), {}
+    for a in me["assets"]:
+        if a["kind"] == "card":
+            held[a["ref"]] = held.get(a["ref"], 0) + 1
+    cache, sets, cards = mem.get("value_cache", {}), [], []
+    for st in catalog["sets"]:
+        if not st.get("released") or st["id"] not in me["affinity"]:
+            continue
+        page = [c for c in st["cards"] if c.get("page")]
+        have = sum(1 for c in page if held.get(c["id"]))
+        sets.append({"id": st["id"], "name": st["name"], "affinity": me["affinity"][st["id"]], "have": have, "of": len(page),
+                     "score": round(me["affinity"][st["id"]] * (1 + have / max(1, len(page))), 2)})
+        for c in page:
+            if not held.get(c["id"]):
+                v = cache.get(c["id"])
+                cards.append({"ref": c["id"], "name": c["name"], "rarity": c["rarity"], "book": c["book"],
+                              "value": v[1] if v else round(c["book"] * me["affinity"][st["id"]], 1), "server": bool(v)})
+    sets.sort(key=lambda r: -r["score"])
+    cards.sort(key=lambda r: -r["value"])
+    dupes = [{"ref": r, "copies": n} for r, n in sorted(held.items()) if n > 1]
+    return {"sets": sets, "cards": cards[:10], "dupes": dupes, "flags": mem.get("flags_sent", []),
+            "flags_checked": len(mem.get("flags_seen", []))}
+
+
 def duel_memory():
     try:
         with open(os.path.join(ROOT, "duels_memory.json"), encoding="utf-8") as f:
@@ -269,7 +303,7 @@ def poll_once(b):
         "album": album(me, catalog), "holdings": holdings(me),
         "offers_open": len([o for o in offers if o["maker"] == me["id"]]),
         "dealers": threads_view(me, threads), "duels": duels_view(duels, clock["tick"]),
-        "venue": my_v, "schedule": schedule_view(sched, clock), "bench": bench_view(),
+        "venue": my_v, "schedule": schedule_view(sched, clock), "bench": bench_view(), "priorities": priorities_view(me, catalog),
         "processes": processes(), "activity": activity(),
     }
 
