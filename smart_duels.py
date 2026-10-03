@@ -26,6 +26,7 @@ import os
 import random
 import re
 import sys
+import tempfile
 import time
 import zlib
 
@@ -515,7 +516,7 @@ class _Fake:
 
 def selftest():
     global MEM_FILE
-    MEM_FILE = "/tmp/duels_selftest.json"
+    MEM_FILE = os.path.join(tempfile.gettempdir(), "duels_selftest.json")
     # unit checks
     assert parse_offer({"price": 7, "days": 3}) == (7.0, 3) and parse_offer(None) == (None, None)
     assert should_accept(0, 5, 10, None, 0.06)[0] is False                     # never accept at/below margin
