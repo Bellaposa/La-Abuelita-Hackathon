@@ -544,3 +544,15 @@ def test_value_requests_per_tick_are_capped_and_the_model_takes_over():
     v = V2Valuer(api, me_with(), cat, 2)
     vals = [v.base(r) for r in ("LAV-09", "LAV-10", "LAT-01", "LAT-02")]
     assert len(api.calls) == 2 and vals[0] == vals[1] == 50.0 and vals[2] == pytest.approx(7.0)     # model: 10 * 0.7
+
+
+def test_a_page_closer_valued_by_the_server_gets_no_extra_page_credit():
+    """Live server, 2026-10-03: b.value() of the LAST missing card of a page already includes the page bonus
+    (LAV-09 = 218 = 112 + bonus); adding the policy credit on top would count the bonus twice and overpay."""
+    cat = toy_catalog()
+    me = me_with(lav=[i for i in range(1, 11) if i != 9])                  # LAV page: only LAV-09 missing
+    server = V2Valuer(CountingValueAPI(218.0), me, cat, 8)
+    model = V2Valuer(None, me, cat, 8)
+    assert server.page_credit("LAV-09", 1, 106.0, CFG) == 0.0, "server value of a closer already holds the bonus"
+    assert model.page_credit("LAV-09", 1, 106.0, CFG) == policy.page_credit(1, 106.0, CFG) > 0, "model value: keep credit"
+    assert server.page_credit("LAV-09", 2, 106.0, CFG) == policy.page_credit(2, 106.0, CFG), "2+ missing: server has no bonus"

@@ -25,13 +25,16 @@ from bz.trading import policy
 
 
 class V2Valuer(pf.Valuer):
-    """Adds `base(ref)`: value of one more copy WITHOUT the page credit (the policy adds its own, so it is not counted twice).
-    Server value (b.value) when available, within the call cap; the model otherwise. NOTE: if the server's value already
-    includes some page effect, the credit is partly double counted; shadow logs carry both so this can be checked."""
+    """Adds `base(ref)`: value of one more copy, and `page_credit(...)`: the page credit the policy may add on top.
+    Server value (b.value) when available, within the call cap; the model otherwise. Measured on the live server
+    (2026-10-03): for the LAST missing card of a page b.value() already includes the whole page bonus (LAV-09 = 218 =
+    112 + bonus); with 2+ cards missing it includes none (RET-09 = 63 = book x affinity). So a server value of a page
+    closer gets no extra credit; a model value, or a page with 2+ missing, keeps the policy's credit."""
 
     def __init__(self, b, me, catalog, max_calls=12, shared=None, ttl=20):
         super().__init__(b, me, catalog, max_calls)
         self.base_cache = {}
+        self.server = {}                                                     # ref -> True if base() came from b.value()
         self.shared, self.ttl, self.tick = shared, ttl, me.get("tick", 0)    # shared: runner-level cache, saves requests
 
     def base(self, ref):
@@ -41,6 +44,7 @@ class V2Valuer(pf.Valuer):
         hit = (self.shared or {}).get(ref)
         if hit and hit[1] == held and 0 <= self.tick - hit[0] < self.ttl:
             self.base_cache[ref] = hit[2]                                    # same holdings, fresh enough: no request
+            self.server[ref] = True                                          # the shared cache only keeps server values
             return hit[2]
         v, from_server = None, False
         if self.b is not None and self.calls < self.max_calls:
@@ -54,9 +58,18 @@ class V2Valuer(pf.Valuer):
             marg = pf.marginals(self.catalog)
             v = pf.base_value(ref, self.catalog, self.aff, self.idx) * marg[min(held, len(marg) - 1)]
         self.base_cache[ref] = float(v)
+        self.server[ref] = from_server
         if from_server and self.shared is not None:
             self.shared[ref] = (self.tick, held, float(v))
         return self.base_cache[ref]
+
+
+    def page_credit(self, ref, n_missing, bonus, cfg):
+        """Policy page credit, except for a page closer valued by the server (its value already holds the bonus)."""
+        self.base(ref)
+        if self.server.get(ref) and n_missing == 1:
+            return 0.0
+        return policy.page_credit(n_missing, bonus, cfg)
 
 
 def _page_info(valuer, ref):
@@ -154,7 +167,7 @@ def _eval_buy(o, vid, v, g, w, valuer, intel, spendable, free_ratio, press, cfg,
         return None
     v_base = valuer.base(ref)
     is_page, n_missing, bonus = _page_info(valuer, ref)
-    credit = policy.page_credit(n_missing, bonus, cfg) if is_page else 0.0
+    credit = valuer.page_credit(ref, n_missing, bonus, cfg) if is_page else 0.0
     v_eff = v_base + credit
     gain = v_eff - cost
     margin = policy.min_margin(intel.liquidity(ref), press, free_ratio, cfg)
@@ -215,7 +228,7 @@ def _eval_swap(o, vid, v, g, w, valuer, spendable, press, cfg, counts, ids, list
     if not spare or fees > spendable:
         return None
     is_page, n_missing, bonus = _page_info(valuer, their)
-    v_in = valuer.base(their) + (policy.page_credit(n_missing, bonus, cfg) if is_page else 0.0)
+    v_in = valuer.base(their) + (valuer.page_credit(their, n_missing, bonus, cfg) if is_page else 0.0)
     loss = valuer.loss(ours, counts[ours])                   # marginal: a spare copy costs us little, our last copy costs its full value
     gain = v_in - loss - fees
     late = press >= cfg["late_pressure"]
@@ -278,7 +291,7 @@ def _bids(me, catalog, valuer, intel, cfg, press, free_ratio, counts, my_open, s
             continue
         is_page, n_missing, bonus = _page_info(valuer, ref)
         is_last = bool(is_page and n_missing == 1)
-        v_eff = valuer.base(ref) + (policy.page_credit(n_missing, bonus, cfg) if is_page else 0.0)
+        v_eff = valuer.base(ref) + (valuer.page_credit(ref, n_missing, bonus, cfg) if is_page else 0.0)
         margin = cfg["closer_min"] if is_last else policy.min_margin(intel.liquidity(ref), press, free_ratio, cfg)
         p_max = policy.max_price(v_eff, rastro, margin)
         asks = [p for p, _ in intel.asks(ref)]
