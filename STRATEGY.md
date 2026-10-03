@@ -51,3 +51,15 @@ No hay suelo de caja por defecto (`CASH_RESERVE=0`). El sábado a las ~21:50 se 
 - **Market Test (09:35 el difícil, 22,5 puntos):** sin cambios salvo evidencia nueva de `logs/bench_watch.jsonl`.
 - **Mercado:** el deck pide intercambios carta por carta y terminar páginas; el broker aún no cruza intercambios sin dinero.
 - **15:00:** cierre. La caja que sobre no vale nada; gastarla solo en tratos por debajo de nuestro valor.
+
+## Easter eggs (no puntúan; sirven para la presentación)
+
+Los encontramos escuchando a los dealers con `dealer_listener.py`.
+
+| Dealer | Disparador | Resultado |
+|---|---|---|
+| Los Pícaros | Nombrar el viejo timo: "conozco el timo de la estampita, como el Lazarillo y Rinconete" | `egg.found` + badge **Trickster tricked** (sábado, tick 1336) |
+| Abuela Carmen | Preguntarle por la historia de La Chulapa Dorada (pista de Doña Pilar) | `egg.found` + badge **Sharp ear** + regalo SAL-02 (tick 1337) |
+| Don Ernesto | "el oro de Moscú" (pista de Abuela): llevaba a La Chulapa Dorada, que ya encontró el Team 2 | sin huevo |
+| El Chato | Probados sin éxito: su nombre de verdad, invitarle a un chato de vino | pendiente |
+| Doña Pilar | Probados sin éxito: La Chulapa Dorada (repite la pista), Galdós (otro equipo), Lázaro Galdiano | pendiente |
