@@ -212,6 +212,9 @@ def main():
             now = (tick, [o["id"] for o in bench + (book.get("offers") or [])])
             if now != seen:                                       # decide again every tick, not every poll
                 seen = now
+                if bench:                                         # raw record of every bench book state, for offline analysis
+                    with open("bench_snapshots.jsonl", "a") as f:
+                        f.write(json.dumps({"tick": tick, "bench": bench, "recent": book.get("recent")}) + "\n")
                 for sell, buy, price in bench_plan(book, tick, tr, sched) + public_plan(book):
                     try:
                         broker.match(sell, buy, price)

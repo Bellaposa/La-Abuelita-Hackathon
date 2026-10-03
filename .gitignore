@@ -12,3 +12,4 @@ broker_memory.json
 bz/tests/fixtures/_private/
 backup/
 .pytest_cache/
+bench_snapshots.jsonl

@@ -773,7 +773,7 @@ def chato_candidate(me, catalog):
     for ref, n in counts.items():
         a = ids[ref][-1]
         lp = CHATO.get(a["rarity"])
-        if not lp:
+        if not lp or n < 2:                               # never our only copy: the page bonus is not in its value
             continue
         lost = marginal_value(ref, n, catalog, me["affinity"])
         floor = math.ceil(lost * 1.4 + SELL_MIN_GAIN)
@@ -816,6 +816,15 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
         _, ref, asset, floor, lp, lost = cand
         if me["tick"] - mem.get(f"{dealer}_tried", {}).get(ref, -999) < 90:
             return False                                          # same card, no new reason: stay quiet for a while
+        try:                                                      # a market listing of this copy would sell it under the dealer
+            for o in b.my_offers().get("offers", []):
+                if o.get("maker") == me["id"] and o.get("status", "open") == "open" and \
+                        any(isinstance(a, dict) and a.get("id") == asset["id"] for a in (o.get("give") or {}).get("assets") or []):
+                    b.cancel(o["id"])
+                    log(f"{name}: cancelled listing {o['id']} of {ref} before offering it")
+        except BazaarError as e:
+            log(f"{name}: could not clear listings of {ref}: {e.code}")
+            return False
         try:
             th = b.open_thread(dealer, topic={"sell": {"assets": [asset["id"]]}})
         except BazaarError as e:
@@ -840,7 +849,15 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
         offer = next((o for o in reversed(t["standing_offers"]) if o["maker"] == dealer and o["status"] == "open"), None)
         if offer is None:
             return True
-        b.accept(offer["id"])
+        try:
+            b.accept(offer["id"])
+        except BazaarError as e:
+            if e.code in ("asset_gone", "not_owner", "asset_locked"):     # the card left (sold elsewhere): end cleanly
+                log(f"{name}: {act['ref']} is no longer ours ({e.code}); closing thread {tid}")
+                b.close_thread(tid)
+                mem[f"active_{dealer}"] = None
+                return False
+            raise
         if price < act["floor"]:
             mem[f"{dealer}_soft_done"] = True
         log(f"{name.upper()} SELL {act['ref']} at {price}: it was worth {act['lost']} to us")
@@ -860,7 +877,7 @@ def pilar_candidate(me, catalog):
     best = None
     for ref, n in counts.items():
         a = ids[ref][-1]
-        if a["rarity"] not in ("uncommon", "rare", "epic") or ref not in book:
+        if a["rarity"] not in ("uncommon", "rare", "epic") or ref not in book or n < 2:   # never our only copy
             continue
         lp = int(book[ref]["book"] * (1.1 if ref.split("-")[0] in ("SAL", "RET") else 1.0))
         lost = marginal_value(ref, n, catalog, me["affinity"])
@@ -900,7 +917,10 @@ def run_agent():
                 accepted = phase_pilar(b, me, catalog, mem, can_accept=not accepted) or accepted
             except BazaarError as e:
                 log("Pilar step:", e.code, e.message)
-            phase_market(b, me, catalog, can_accept=not accepted)
+            reserved = {aid for d in ("chato", "pilar")                  # cards on the table with a dealer: the market must not sell them
+                        for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
+            me_market = dict(me, assets=[a for a in me["assets"] if a.get("id") not in reserved]) if reserved else me
+            phase_market(b, me_market, catalog, can_accept=not accepted)
             save_memory(mem)
             b.wait_tick()
         except KeyboardInterrupt:
@@ -992,9 +1012,12 @@ def selftest():
     catalog2 = {"sets": [{"id": "MAL", "cards": [{"id": "MAL-07", "book": 25}, {"id": "LAT-10", "book": 70}]},
                          {"id": "LAT", "cards": [{"id": "LAT-10", "book": 70}]}], "values": {"copy_marginals": [1.0, 0.25, 0.1]}}
     me2 = {"affinity": {"MAL": 0.5, "LAT": 0.7}, "assets": [{"id": 9, "kind": "card", "ref": "MAL-07", "serial": 1, "rarity": "uncommon"},
+                                                          {"id": 7, "kind": "card", "ref": "MAL-07", "serial": 2, "rarity": "uncommon"},
                                                           {"id": 8, "kind": "card", "ref": "LAT-10", "serial": 1, "rarity": "rare"}]}
     cand = chato_candidate(me2, catalog2)
     assert cand and cand[1] == "MAL-07", "only the card that is cheap for us and realistic for him"
+    me2["assets"] = [a for a in me2["assets"] if a["id"] != 7]
+    assert chato_candidate(me2, catalog2) is None, "never our only copy"
     cat3 = {"sets": [{"id": "LAV", "released": True, "cards": [{"id": f"LAV-{i:02d}", "book": 10, "rarity": "common"} for i in range(1, 6)]}],
             "packs": [{"id": "sobre_barrio", "slots": [{"common": 1.0}, {"common": 1.0}]}], "values": {"copy_marginals": [1.0, 0.25, 0.1]}}
     empty = {"affinity": {"LAV": 1.0}, "assets": []}
