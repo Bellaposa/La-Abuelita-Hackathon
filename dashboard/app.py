@@ -285,6 +285,7 @@ def poll_once(b):
     lb = cached("lb", 20, b.leaderboard)
     venues = cached("venues", 20, b.venues)
     sched = cached("sched", 60, b.schedule)
+    news = cached("news", 30, lambda: b.call("GET", "/api/news")).get("news", [])
     mine = next((t for t in lb["teams"] if t["team"] == me["id"]), me["score"] or {})
     leader = lb["teams"][0] if lb["teams"] else {}
     my_v = next((v for v in venues["venues"] if v.get("owner") == me["id"]), None)
@@ -304,6 +305,7 @@ def poll_once(b):
         "offers_open": len([o for o in offers if o["maker"] == me["id"]]),
         "dealers": threads_view(me, threads), "duels": duels_view(duels, clock["tick"]),
         "venue": my_v, "schedule": schedule_view(sched, clock), "bench": bench_view(), "priorities": priorities_view(me, catalog),
+        "news": [{k: n.get(k) for k in ("id", "tick", "source", "source_name", "headline", "body")} for n in news[:15]],
         "processes": processes(), "activity": activity(),
     }
 

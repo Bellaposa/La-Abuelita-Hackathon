@@ -133,6 +133,7 @@
     <div class="card c4"><h2>Próximos eventos</h2><div class="cap">Tiempo real estimado según el ritmo de tick actual</div><div id="sched"></div></div>
     <div class="card c12"><div class="head"><div><h2>Market Test</h2><div class="cap">Cada 2 h todos los venues reciben el mismo libro sintético. Puntúa la parte de las ganancias posibles que realizamos casando pares</div></div><button data-toggle="bench">Tabla</button></div><div id="bench"></div></div>
     <div class="card c12"><h2>Duelos</h2><div class="cap">Regla de oro: nunca cruzar nuestro límite. Sin trato, los dos equipos quedan a 0. El valor del trato baja en cada ronda</div><div id="duels"></div></div>
+    <div class="card c12"><h2>Noticias</h2><div class="cap">Boletín = oficial · Radio = mezcla verdad y ambiente · Tablón = rumores. Ninguna se cree sin comprobarla en datos reales</div><div id="news"></div></div>
     <div class="card c12"><h2>Prioridad de compra</h2><div class="cap">Valor para NOSOTROS (servidor, bonus de página incluido). Pagamos como máximo el 60 % de ese valor</div><div id="prio"></div></div>
     <div class="card c7"><h2>Conversaciones con los dealers</h2><div class="cap">Mensajes reales de la conversación abierta o la última</div><div class="tabs" id="dealer-tabs"></div><div id="dealers"></div></div>
     <div class="card c5"><h2>Nuestro mercado</h2><div class="cap">Venue donde comercian los otros equipos</div><div id="venue"></div></div>
@@ -490,6 +491,9 @@ function render() {
   replace("sched", s.schedule.length ? table(["Evento", "En"], s.schedule.map((e) => [ACTION[e.action] || e.action, clock(e.eta_s - el0)])) : el("div", { class: "empty", text: "No hay eventos en el calendario." }));
 
   drawDealers(s); drawBench(s); drawDuels(s); drawPrio(s);
+  const TRUST = { boletin: "oficial", radio: "a veces", tablon: "rumor" };
+  replace("news", (s.news || []).length ? table(["Tick", "Fuente", "Fiabilidad", "Noticia"], s.news.map((n) => [n.tick, n.source_name || n.source,
+    TRUST[n.source] || "?", `${n.headline}${n.body ? " — " + n.body : ""}`])) : el("div", { class: "empty", text: "Sin noticias." }));
 
   /* venue */
   const v = s.venue;
