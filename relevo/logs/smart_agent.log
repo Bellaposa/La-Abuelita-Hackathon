@@ -1834,3 +1834,27 @@
 18:06:29 Picaros: skip buying LAT-10: our cap 35 < lowest price it sold a rare to any team (55, 5 deals)
 18:06:29 Picaros: skip buying MAL-09: our cap 33 < lowest price it sold a rare to any team (55, 5 deals)
 18:06:29 Picaros: skip buying MAL-10: our cap 33 < lowest price it sold a rare to any team (55, 5 deals)
+18:06:58 --- tick 945 | cash 35 | cards 37 ---
+18:06:58 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:07:08 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.56], "uncommon": [18.5, 0.77], "rare": [59.5, 0.83], "epic": [153.0, 0.3], "legendary": [1, 0.75]}
+18:07:29 --- tick 946 | cash 35 | cards 37 ---
+18:07:29 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:07:59 --- tick 947 | cash 35 | cards 37 ---
+18:07:59 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:08:31 --- tick 948 | cash 35 | cards 37 ---
+18:08:31 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:09:00 --- tick 949 | cash 35 | cards 37 ---
+18:09:00 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:09:29 --- tick 950 | cash 35 | cards 37 ---
+18:09:29 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:09:37 workshop: no craft clears the margin 3.0 | market {"common": [6.0, 0.55], "uncommon": [19.0, 0.77], "rare": [59.5, 0.83], "epic": [153.0, 0.55], "legendary": [1, 0.75]}
+18:10:02 --- tick 951 | cash 35 | cards 37 ---
+18:10:02 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:10:07 smart_agent started (deterministic, no LLM)
+18:10:08 --- tick 951 | cash 35 | cards 37 ---
+18:10:08 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:10:29 --- tick 952 | cash 35 | cards 37 ---
+18:10:29 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal
+18:10:43 smart_agent started (deterministic, no LLM)
+18:10:43 --- tick 952 | cash 35 | cards 37 ---
+18:10:43 Abuela: a pack is worth 10.7 to us (cap 9) and she never goes under 20: no deal

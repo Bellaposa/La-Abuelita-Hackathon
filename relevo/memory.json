@@ -1718,7 +1718,7 @@
    149.9
   ],
   "RET-09": [
-   925,
+   946,
    63.0
   ],
   "RET-10": [
@@ -1742,23 +1742,23 @@
    9.0
   ],
   "RET-05": [
-   925,
+   946,
    9.0
   ],
   "LAT-09": [
-   925,
+   946,
    49.0
   ],
   "LAT-10": [
-   925,
+   946,
    49.0
   ],
   "LAT-06": [
-   925,
+   946,
    17.5
   ],
   "LAT-07": [
-   925,
+   946,
    17.5
   ],
   "RET-06": [
@@ -1766,7 +1766,7 @@
    22.5
   ],
   "LAT-03": [
-   928,
+   949,
    7.0
   ],
   "MAL-09": [
@@ -1774,15 +1774,15 @@
    35.0
   ],
   "MAL-10": [
-   928,
+   949,
    35.0
   ],
   "MAL-06": [
-   924,
+   945,
    12.5
   ],
   "MAL-07": [
-   929,
+   950,
    12.5
   ],
   "MAL-08": [
@@ -1791,7 +1791,7 @@
   ]
  },
  "active_buy_chato": null,
- "flags_scan_tick": 941,
+ "flags_scan_tick": 949,
  "flags_seen": [
   5,
   19,
@@ -2002,7 +2002,7 @@
  },
  "abuela_buy_block_until": 736,
  "chato_buy_block_until": 776,
- "ws_tick": 940,
+ "ws_tick": 950,
  "ws_obs": {
   "common": [
    5.0,
@@ -2048,7 +2048,9 @@
    9.0,
    3.0,
    6.0,
-   9.0
+   9.0,
+   9.0,
+   7.0
   ],
   "rare": [
    70.0,
@@ -2075,7 +2077,8 @@
    57.0,
    60.0,
    57.0,
-   55.0
+   55.0,
+   56.0
   ],
   "uncommon": [
    16.0,
@@ -2122,7 +2125,13 @@
    17.0,
    19.0,
    15.0,
-   19.0
+   19.0,
+   27.0,
+   27.0,
+   28.0,
+   29.0,
+   30.0,
+   28.0
   ],
   "epic": [
    167.0,
@@ -2249,7 +2258,16 @@
   47088,
   47123,
   47232,
-  47382
+  47382,
+  47643,
+  47702,
+  47760,
+  47761,
+  47829,
+  47884,
+  47885,
+  47886,
+  47932
  ],
  "ws_out": {
   "LAV-08": 1,
@@ -2426,491 +2444,178 @@
   "RET-09": 904
  },
  "picaros_buy_block_until": 924,
- "feed_intel_tick": 943,
+ "feed_intel_tick": 952,
  "feed_intel": {
-  "threads": {
-   "1282": {
-    "dealer": "pilar",
-    "side": "buys",
-    "first": 19
-   },
-   "1317": {
-    "dealer": "picaros",
-    "side": "buys",
-    "first": 4
-   },
-   "1324": {
-    "dealer": "picaros",
-    "side": "buys",
-    "first": 4
-   },
-   "1330": {
-    "dealer": "abuela",
-    "side": "buys",
-    "first": 5
-   },
-   "1327": {
-    "dealer": "picaros",
-    "side": "sells",
-    "first": 73
-   },
-   "1328": {
-    "dealer": "picaros",
-    "side": "sells",
-    "first": 73
-   },
-   "1331": {
-    "dealer": "picaros",
-    "side": "buys",
-    "first": 4
-   },
-   "1332": {
-    "dealer": "picaros",
-    "side": "sells",
-    "first": 187
-   },
-   "1333": {
-    "dealer": "picaros",
-    "side": "buys",
-    "first": 4
-   },
-   "1334": {
-    "dealer": "abuela",
-    "side": "buys",
-    "first": 5
-   },
-   "1338": {
-    "dealer": "chato",
-    "side": "sells",
-    "first": 33
-   },
-   "1340": {
-    "dealer": "picaros",
-    "side": "sells",
-    "first": 73
-   },
-   "1341": {
-    "dealer": "picaros",
-    "side": "sells",
-    "first": 73
-   },
-   "1339": {
-    "dealer": "abuela",
-    "side": "sells",
-    "first": 12
-   },
-   "1342": {
-    "dealer": "picaros",
-    "side": "buys",
-    "first": 4
-   },
-   "1344": {
-    "dealer": "abuela",
-    "side": "sells",
-    "first": 12
-   },
-   "1345": {
-    "dealer": "abuela",
-    "side": "sells",
-    "first": 12
-   },
-   "1346": {
-    "dealer": "picaros",
-    "side": "sells",
-    "first": 73
-   },
-   "1348": {
-    "dealer": "abuela",
-    "side": "buys",
-    "first": 5
-   },
-   "1347": {
-    "dealer": "picaros",
-    "side": "buys",
-    "first": 4
-   },
-   "1350": {
-    "dealer": "chato",
-    "side": "sells",
-    "first": 33
-   },
-   "1351": {
-    "dealer": "abuela",
-    "side": "sells",
-    "first": 12
-   },
-   "1352": {
-    "dealer": "picaros",
-    "side": "sells",
-    "first": 73
-   },
-   "1354": {
-    "dealer": "abuela",
-    "side": "buys",
-    "first": 5
-   },
-   "1355": {
-    "dealer": "pilar",
-    "side": "buys",
-    "first": 151
-   },
-   "1353": {
-    "dealer": "picaros",
-    "side": "buys",
-    "first": 4
-   },
-   "1358": {
-    "dealer": "pilar",
-    "side": "buys",
-    "first": 25
-   },
-   "1357": {
-    "dealer": "pilar",
-    "side": "buys",
-    "first": 25
-   },
-   "1356": {
-    "dealer": "pilar",
-    "side": "buys",
-    "first": 25
-   },
-   "1361": {
-    "dealer": "pilar",
-    "side": "buys",
-    "first": 25
-   },
-   "1360": {
-    "dealer": "abuela",
-    "side": "buys",
-    "first": 12
-   },
-   "1362": {
-    "dealer": "pilar",
-    "side": "buys",
-    "first": 25
-   },
-   "1359": {
-    "dealer": "picaros",
-    "side": "buys",
-    "first": 4
-   },
-   "1363": {
-    "dealer": "chato",
-    "side": "buys",
-    "first": 13
-   },
-   "1365": {
-    "dealer": "pilar",
-    "side": "buys",
-    "first": 25
-   },
-   "1364": {
-    "dealer": "abuela",
-    "side": "sells",
-    "first": 12
-   },
-   "1366": {
-    "dealer": "pilar",
-    "side": "buys",
-    "first": 70
-   }
-  },
   "deals": {
    "picaros|sells|rare": [
-    [
-     "LAV",
-     63.0
-    ],
-    [
-     "RET",
-     57.0
-    ],
-    [
-     "MAL",
-     60.0
-    ],
-    [
-     "RET",
-     57.0
-    ],
-    [
-     "RET",
-     55.0
-    ]
+    {
+     "t": null,
+     "ref": null,
+     "set": "LAV",
+     "price": 63.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "RET",
+     "price": 57.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "MAL",
+     "price": 60.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "RET",
+     "price": 57.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "RET",
+     "price": 55.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "SAL",
+     "price": 56.0,
+     "team": null
+    }
    ],
    "chato|sells|rare": [
-    [
-     "LAV",
-     75.0
-    ]
+    {
+     "t": null,
+     "ref": null,
+     "set": "LAV",
+     "price": 75.0,
+     "team": null
+    }
    ],
    "pilar|buys|uncommon": [
-    [
-     "LAV",
-     19.0
-    ]
+    {
+     "t": null,
+     "ref": null,
+     "set": "LAV",
+     "price": 19.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "SAL",
+     "price": 27.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "SAL",
+     "price": 27.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "SAL",
+     "price": 28.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "SAL",
+     "price": 29.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "SAL",
+     "price": 30.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "SAL",
+     "price": 28.0,
+     "team": null
+    }
    ],
    "picaros|buys|common": [
-    [
-     "RET",
-     5.0
-    ]
+    {
+     "t": null,
+     "ref": null,
+     "set": "RET",
+     "price": 5.0,
+     "team": null
+    }
    ],
    "abuela|buys|common": [
-    [
-     "LAV",
-     6.0
-    ],
-    [
-     "LAT",
-     6.0
-    ]
+    {
+     "t": null,
+     "ref": null,
+     "set": "LAV",
+     "price": 6.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "LAT",
+     "price": 6.0,
+     "team": null
+    }
    ],
    "picaros|sells|epic": [
-    [
-     "SAL",
-     139.0
-    ]
+    {
+     "t": null,
+     "ref": null,
+     "set": "SAL",
+     "price": 139.0,
+     "team": null
+    }
    ],
    "abuela|sells|common": [
-    [
-     "RET",
-     9.0
-    ],
-    [
-     "RET",
-     9.0
-    ]
-   ]
-  },
-  "openings": {
-   "pilar|buys|uncommon": [
-    [
-     "LAV",
-     19.0
-    ],
-    [
-     "SAL",
-     25.0
-    ],
-    [
-     "SAL",
-     25.0
-    ],
-    [
-     "SAL",
-     25.0
-    ],
-    [
-     "SAL",
-     25.0
-    ],
-    [
-     "SAL",
-     25.0
-    ],
-    [
-     "SAL",
-     25.0
-    ]
-   ],
-   "picaros|buys|common": [
-    [
-     "RET",
-     4.0
-    ],
-    [
-     "RET",
-     4.0
-    ],
-    [
-     "MAL",
-     4.0
-    ],
-    [
-     "MAL",
-     4.0
-    ],
-    [
-     "LAT",
-     4.0
-    ],
-    [
-     "MAL",
-     4.0
-    ],
-    [
-     "MAL",
-     4.0
-    ],
-    [
-     "MAL",
-     4.0
-    ]
-   ],
-   "abuela|buys|common": [
-    [
-     "LAV",
-     5.0
-    ],
-    [
-     "LAT",
-     5.0
-    ],
-    [
-     "MAL",
-     5.0
-    ],
-    [
-     "MAL",
-     5.0
-    ]
-   ],
-   "picaros|sells|uncommon": [
-    [
-     "RET",
-     73.0
-    ],
-    [
-     "MAL",
-     73.0
-    ],
-    [
-     "RET",
-     73.0
-    ]
-   ],
-   "picaros|sells|rare": [
-    [
-     "SAL",
-     187.0
-    ],
-    [
-     "RET",
-     73.0
-    ],
-    [
-     "LAT",
-     73.0
-    ],
-    [
-     "SAL",
-     73.0
-    ]
-   ],
-   "chato|sells|uncommon": [
-    [
-     "LAV",
-     33.0
-    ],
-    [
-     "RET",
-     33.0
-    ]
-   ],
-   "abuela|sells|common": [
-    [
-     "RET",
-     12.0
-    ],
-    [
-     "SAL",
-     12.0
-    ],
-    [
-     "RET",
-     12.0
-    ],
-    [
-     "RET",
-     12.0
-    ],
-    [
-     "RET",
-     12.0
-    ]
-   ],
-   "pilar|buys|epic": [
-    [
-     "SAL",
-     151.0
-    ]
-   ],
-   "abuela|buys|uncommon": [
-    [
-     "SAL",
-     12.0
-    ]
-   ],
-   "chato|buys|uncommon": [
-    [
-     "SAL",
-     13.0
-    ]
+    {
+     "t": null,
+     "ref": null,
+     "set": "RET",
+     "price": 9.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "RET",
+     "price": 9.0,
+     "team": null
+    },
+    {
+     "t": null,
+     "ref": null,
+     "set": "RET",
+     "price": 9.0,
+     "team": null
+    }
    ],
    "pilar|buys|rare": [
-    [
-     "SAL",
-     70.0
-    ]
-   ]
-  },
-  "finals": {
-   "pilar|buys|uncommon": [
-    [
-     "LAV",
-     19.0
-    ]
-   ],
-   "picaros|buys|common": [
-    [
-     "RET",
-     4.0
-    ],
-    [
-     "RET",
-     5.0
-    ],
-    [
-     "MAL",
-     5.0
-    ],
-    [
-     "MAL",
-     4.0
-    ],
-    [
-     "MAL",
-     4.0
-    ],
-    [
-     "MAL",
-     5.0
-    ]
-   ],
-   "picaros|sells|rare": [
-    [
-     "RET",
-     57.0
-    ],
-    [
-     "LAT",
-     58.0
-    ]
-   ],
-   "abuela|buys|common": [
-    [
-     "LAT",
-     6.0
-    ],
-    [
-     "MAL",
-     5.0
-    ],
-    [
-     "MAL",
-     5.0
-    ]
+    {
+     "t": 951,
+     "ref": "SAL-09",
+     "set": "SAL",
+     "price": 77.0,
+     "team": "t08"
+    }
    ]
   },
   "seen": [
@@ -3413,7 +3118,204 @@
    47625,
    47628,
    47631,
-   47635
+   47635,
+   47636,
+   47639,
+   47642,
+   47643,
+   47645,
+   47648,
+   47651,
+   47654,
+   47657,
+   47660,
+   47663,
+   47664,
+   47667,
+   47670,
+   47673,
+   47676,
+   47679,
+   47680,
+   47683,
+   47686,
+   47687,
+   47690,
+   47693,
+   47696,
+   47699,
+   47702,
+   47704,
+   47707,
+   47710,
+   47711,
+   47714,
+   47718,
+   47719,
+   47722,
+   47723,
+   47724,
+   47727,
+   47730,
+   47733,
+   47736,
+   47739,
+   47742,
+   47745,
+   47746,
+   47749,
+   47753,
+   47756,
+   47757,
+   47760,
+   47761,
+   47763,
+   47766,
+   47769,
+   47772,
+   47775,
+   47778,
+   47781,
+   47785,
+   47786,
+   47787,
+   47788,
+   47791,
+   47792,
+   47795,
+   47798,
+   47801,
+   47804,
+   47807,
+   47810,
+   47811,
+   47812,
+   47813,
+   47816,
+   47819,
+   47822,
+   47823,
+   47824,
+   47829,
+   47831,
+   47834,
+   47837,
+   47840,
+   47843,
+   47846,
+   47849,
+   47850,
+   47851,
+   47852,
+   47855,
+   47858,
+   47861,
+   47864,
+   47865,
+   47866,
+   47867,
+   47868,
+   47871,
+   47874,
+   47877,
+   47880,
+   47883,
+   47884,
+   47885,
+   47886,
+   47888,
+   47891,
+   47894,
+   47897,
+   47903,
+   47904,
+   47905,
+   47906,
+   47907,
+   47910,
+   47913,
+   47916,
+   47917,
+   47920,
+   47923,
+   47927,
+   47928,
+   47932,
+   47934,
+   47937,
+   47940,
+   47943,
+   47944,
+   47947,
+   47950,
+   47953,
+   47954,
+   47957,
+   47959,
+   47960,
+   47961,
+   47962,
+   47963,
+   47965,
+   47968,
+   47971,
+   47974,
+   47977,
+   47980,
+   47983,
+   47984,
+   47987,
+   47990,
+   47991,
+   47994,
+   47997,
+   47998,
+   47999,
+   48000,
+   48001,
+   48004,
+   48007,
+   48010,
+   48013,
+   48015,
+   48018,
+   48021,
+   48024,
+   48025,
+   48028,
+   48031,
+   48034,
+   48037,
+   48040,
+   48043,
+   48046,
+   48049,
+   48052,
+   48055,
+   48058,
+   48060,
+   48063,
+   48066,
+   48069,
+   48070,
+   48071,
+   48072,
+   48075,
+   48078,
+   48079,
+   48082,
+   48083,
+   48086,
+   48087,
+   48090,
+   48093,
+   48096
   ]
+ },
+ "feed_futile_logged": {
+  "picaros|LAT-09": 35,
+  "picaros|LAT-10": 35,
+  "picaros|MAL-09": 33,
+  "picaros|MAL-10": 33
  }
 }
