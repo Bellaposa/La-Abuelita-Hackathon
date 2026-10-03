@@ -1463,7 +1463,9 @@ def phase_epic_buy(b, me, catalog, mem, can_accept):
 
 # Don Ernesto's vault: a legendary for a patient negotiator (Payday deck: ~470; list 585). Bought only under our value,
 # so the deal has no loss, and it is a level-5 ladder deal (the heaviest level). One legendary per team per hour.
-VAULT = os.environ.get("VAULT", "1") == "1"
+# OFF by default (Sat ~22:12): in two talks Ernesto conceded ~5 a round whatever our step, then named a final at 729 and
+# 731, so a legendary costs ~720-730; LAV-12 is worth 720 to us: no margin, and the rule is to never lose money.
+VAULT = os.environ.get("VAULT", "0") == "1"
 VAULT_LIST = 585
 VAULT_MIN_EDGE = 30            # buy a legendary only if our value is at least this much over the price we may pay
 VAULT_REFS = ("LAV-12", "SAL-12", "RET-12", "LAT-12", "MAL-12")
@@ -1487,7 +1489,16 @@ def vault_next(cap, ours, hers):
         return "accept", ask, "his final is under our cap" if final else "his ask meets our bid"
     if final:
         return "walk", None, f"his final {ask} is over our cap {cap}"
-    step = max(1, min(VAULT_STEP_MAX, round((ask - last) * 0.05)))
+    # Learned from our two talks with him: his concession per round is nearly fixed (~1-14), whatever our step, so the
+    # smaller our step the more he gives per prima of ours (+117 -> -1, +44 -> -14, +5 -> ~-3, +1 -> -5). Creep by 1;
+    # if he has not moved for 3 rounds, step up one prima (at most VAULT_STEP_MAX); when he moves again, back to 1.
+    his = [h[0] for h in hers]
+    stalled = 0
+    for a, b in zip(reversed(his[:-1]), reversed(his[1:])):
+        if b < a:
+            break
+        stalled += 1
+    step = max(1, min(VAULT_STEP_MAX, 1 + stalled // 3))
     new = min(cap, last + step)
     if new <= last:
         return "wait", None, f"at our cap {cap}; he asks {ask}"
@@ -1977,7 +1988,10 @@ def _test_epic_loop_on():
 def _test_vault_next():
     assert vault_next(541, [], []) == ("offer", 380, "opening bid")
     h = lambda p, f=False: (p, f, "")
-    assert vault_next(541, [380], [h(761)])[0:2] == ("offer", 385), "small steps (at most 5), room kept"
+    assert vault_next(541, [380], [h(761)])[0:2] == ("offer", 381), "creep by one prima"
+    assert vault_next(541, [380, 381, 382], [h(761), h(761), h(761)])[0:2] == ("offer", 383), "2 stalled rounds: still +1"
+    assert vault_next(541, [380] * 4, [h(761)] * 4)[0:2] == ("offer", 382), "3 stalled rounds: step up to +2"
+    assert vault_next(541, [400, 401], [h(761), h(756)])[0:2] == ("offer", 402), "he moved: back to +1"
     assert vault_next(541, [541], [h(729)])[0] == "wait", "at the cap we wait, we do not walk on a stall"
     assert vault_next(541, [500], [h(503)])[0:2] == ("accept", 503)
     assert vault_next(541, [500], [h(560, True)])[0] == "walk", "a final over our cap ends it"
