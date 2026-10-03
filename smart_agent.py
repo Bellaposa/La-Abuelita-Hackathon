@@ -33,7 +33,10 @@ import workshop
 
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 MEMORY_FILE = os.environ.get("AGENT_MEMORY", "memory.json")
-CASH_RESERVE = int(os.environ.get("CASH_RESERVE", "0"))  # primas never spent (e.g. 270 for a venue bond)
+# Organiser's rule (Sat 2026-10-03 ~21:50, the key one): never lose, make money. Every deal must gain value AND we must
+# end with more cash than the 541 P we held then. So 541 P are never spent: only what we earn above them (sales over
+# our value, Sunday's +150) can buy, and a buy must still be under our value.
+CASH_RESERVE = int(os.environ.get("CASH_RESERVE", "541"))  # primas never spent
 DEFAULT_K = dparams.SPEC["default_k"][0]      # kept for compatibility; the strategy reads dparams.static("default_k")
 MIN_SAMPLES = 3           # observations per step-size bucket before we trust a response ratio (was 5: we have so little data
                           # that nothing was ever inferred; the choice it drives, k in {0.1, 0.25, 0.5}, is bounded anyway)
@@ -1839,7 +1842,7 @@ def run_agent():
             except BazaarError as e:
                 log("flags step:", e.code, e.message)
             try:                                                           # The Workshop: craft only when the trade value rises
-                workshop.step(b, me, catalog, mem, log, blocked_extra=reserved, allow_buy=legacy_should_trade() and not accepted)
+                workshop.step(b, dict(me, cash=max(0, me["cash"] - CASH_RESERVE)), catalog, mem, log, blocked_extra=reserved, allow_buy=legacy_should_trade() and not accepted)
             except Exception as e:
                 log(f"workshop step: {type(e).__name__}: {e}")
             save_memory(mem)
@@ -1943,6 +1946,8 @@ def _test_epic_loop_on():
 
 
 def selftest():
+    global CASH_RESERVE
+    CASH_RESERVE = 0                                     # offline fixtures hold little cash: test the logic without the floor
     _test_ladder_open_cap()
     _test_epic_loop()
     _test_pilar_one_prima()

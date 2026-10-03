@@ -28,6 +28,14 @@ from bz.trading.mode import legacy_should_trade    # TRADING_V2=on: trading_v2.p
 URL = os.environ.get("BAZAAR_URL", "https://bazaar.causaprima.ai")
 FOCUS_AFF = float(os.environ.get("FOCUS_AFF", "1.0"))   # sets with affinity >= this are the ones we build
 BID_FRAC = 0.6
+# Organiser's rule (Sat 2026-10-03 ~21:50): never lose, make money; we must end with more than the 541 P held then.
+CASH_RESERVE = int(os.environ.get("CASH_RESERVE", "541"))
+
+
+def spendable(me, mine):
+    """Cash we may commit: over the reserve, minus what our own open bids already promise."""
+    committed = sum((o.get("give") or {}).get("cash") or 0 for o in mine or [] if o.get("maker") == me.get("id"))
+    return max(0, me["cash"] - CASH_RESERVE - committed)
 MAX_PAY = json.loads(os.environ.get("MAX_PAY", "{}"))   # optional per-card price ceilings (none by default): the cap comes from our value
 SELL_MARGIN = 1.1          # we ask at least 1.1x what the card is worth to us, plus 1 prima: sell at the price the market pays
 MAX_POSTS = 3
@@ -172,7 +180,7 @@ def step(b, me, catalog, venue):
         if o["maker"] != me["id"] and len(o["give"]["assets"]) == 1 and o["want"]["cash"]:
             comp.setdefault(o["give"]["assets"][0]["ref"], []).append(o["want"]["cash"])
     log(f"cash {me['cash']} | missing page cards {[(t[0], t[1], round(t[2])) for t in targets]} | open offers {len(mine)}")
-    best = buy_choice(targets, offers + directed, venue, me["cash"], me["id"])
+    best = buy_choice(targets, offers + directed, venue, spendable(me, mine), me["id"])
     if best:
         if not try_reserve(me["tick"]):
             log("buy skipped: another process already used this tick's accept")
@@ -203,7 +211,7 @@ def step(b, me, catalog, venue):
         except BazaarError as e:
             log("sell refused:", e.code, e.message)
             break
-    for ref, price in bid_plan(targets, me["cash"], my_bids):
+    for ref, price in bid_plan(targets, spendable(me, mine), my_bids):
         if posted >= MAX_POSTS or len(mine) + posted >= MAX_OPEN:
             break
         try:

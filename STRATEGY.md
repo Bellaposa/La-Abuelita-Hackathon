@@ -2,6 +2,12 @@
 
 Revisar antes de la ronda del domingo (09:00). Base: RULES.md y los decks de la organización ("Duels" y "Payday").
 
+## NORMA CLAVE del organizador (sábado ~21:50): no perder, ganar dinero
+
+1. **Ningún trato puede perder valor:** se compra por debajo de nuestro `your_value` y se vende por encima.
+2. **Hay que terminar con más caja de la que teníamos entonces (541 P).** Esos 541 P no se gastan nunca (`CASH_RESERVE=541` por defecto en `smart_agent` y `page_hunter`, y también en el Taller). Solo se puede comprar con lo ganado por encima (ventas por encima de nuestro valor, el +150 del domingo), y cualquier compra debe seguir siendo por debajo de nuestro valor. Las pujas abiertas cuentan como caja comprometida.
+3. Por eso la compra de la legendaria de Ernesto (~470–541) queda fuera mientras no ganemos esa caja por encima del suelo, y se cancelaron las 10 pujas abiertas (639 P comprometidos).
+
 ## La regla que lo decide todo (deck "Payday")
 
 - **Un trato vale = valor que añade a tu colección − precio pagado + precio cobrado** (`your_value` del servidor, con el bonus de página).
