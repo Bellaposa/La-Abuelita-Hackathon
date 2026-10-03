@@ -23,7 +23,7 @@ import json
 import statistics
 import sys
 
-DEALERS = ("abuela", "chato", "pilar", "picaros")
+DEALERS = ("abuela", "chato", "pilar", "picaros", "banco")   # banco = Don Ernesto (level 5)
 EVERY = 3                    # ticks between feed reads (the feed keeps ~30-40 ticks)
 MIN_DEALS = 3                # observations before a hint is used
 KEEP = 200                   # observations kept per dealer/side/rarity
