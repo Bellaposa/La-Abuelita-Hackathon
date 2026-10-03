@@ -47,7 +47,7 @@ No hay suelo de caja por defecto (`CASH_RESERVE=0`). El sábado a las ~21:50 se 
 
 - **09:00:** +150 P, Ernesto abierto a todos y ronda nueva (la escalera vuelve a cero).
 - **Cámara de Ernesto:** con la caja que quede, la siguiente legendaria solo si vale más que su precio para nosotros (SAL-12 = 495 no deja margen a ~470).
-- **~11:00, Duelos III:** reloj más corto y más decay. Revisar `SPEED_HORIZON` (quizá 5–6) y ver los resultados de los Duelos II en `duels_memory.json`.
+- **~11:00, Duelos III:** reloj más corto y más decay. **Antes, ejecutar `python3 duel_tuner.py`**: recalibra el simulador con los resultados reales, busca los mejores parámetros por rol con los datos de los Duelos I y II, y los escribe en `duel_params.json`. Luego reiniciar `smart_duels` para que los cargue. El sábado mejoró el resultado simulado un +7 % a +29 %, comprobado con otra semilla.
 - **Market Test (09:35 el difícil, 22,5 puntos):** sin cambios salvo evidencia nueva de `logs/bench_watch.jsonl`.
 - **Mercado:** el deck pide intercambios carta por carta y terminar páginas; el broker aún no cruza intercambios sin dinero.
 - **15:00:** cierre. La caja que sobre no vale nada; gastarla solo en tratos por debajo de nuestro valor.

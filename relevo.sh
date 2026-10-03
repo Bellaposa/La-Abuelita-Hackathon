@@ -4,7 +4,7 @@
 set -e
 cd "$(dirname "$0")"
 mkdir -p relevo/logs relevo/dashboard
-cp memory.json duels_memory.json broker_memory.json bench_model.json bench_snapshots.jsonl historial_abuela.txt team_profiles.json relevo/ 2>/dev/null || true
+cp memory.json duels_memory.json broker_memory.json bench_model.json bench_snapshots.jsonl historial_abuela.txt team_profiles.json duel_params.json relevo/ 2>/dev/null || true
 cp dashboard/history.json relevo/dashboard/ 2>/dev/null || true
 for f in smart_agent.log smart_duels.log page_hunter.log broker.log; do [ -f "$f" ] && cp "$f" relevo/logs/; done
 [ -f dashboard/dashboard.log ] && cp dashboard/dashboard.log relevo/logs/dashboard.log

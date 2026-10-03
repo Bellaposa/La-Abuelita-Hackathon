@@ -1,0 +1,103 @@
+{
+ "note": "smart_duels parameters tuned by duel_tuner.py on our finished duels (simulated rivals)",
+ "params": {
+  "duels2": {
+   "seller": {
+    "SPEED_HORIZON": 6,
+    "BETA": 1.0,
+    "OPEN_ANCHOR": 0.5,
+    "OFFER_KEEP": 0.2
+   },
+   "buyer": {
+    "SPEED_HORIZON": 10,
+    "BETA": 1.5,
+    "OPEN_ANCHOR": 0.5,
+    "OFFER_KEEP": 0.2
+   }
+  },
+  "duels3": {
+   "seller": {
+    "SPEED_HORIZON": 10,
+    "BETA": 0.8,
+    "OPEN_ANCHOR": 0.5,
+    "OFFER_KEEP": 0.2
+   },
+   "buyer": {
+    "SPEED_HORIZON": 6,
+    "BETA": 0.8,
+    "OPEN_ANCHOR": 0.5,
+    "OFFER_KEEP": 0.2
+   }
+  }
+ },
+ "detail": {
+  "duels2": {
+   "seller": {
+    "params": {
+     "SPEED_HORIZON": 6,
+     "BETA": 1.0,
+     "OPEN_ANCHOR": 0.5,
+     "OFFER_KEEP": 0.2
+    },
+    "score": 10.47,
+    "current": {
+     "SPEED_HORIZON": 8,
+     "BETA": 1.5,
+     "OPEN_ANCHOR": 0.5,
+     "OFFER_KEEP": 0.1
+    },
+    "current_score": 8.18
+   },
+   "buyer": {
+    "params": {
+     "SPEED_HORIZON": 10,
+     "BETA": 1.5,
+     "OPEN_ANCHOR": 0.5,
+     "OFFER_KEEP": 0.2
+    },
+    "score": 9.04,
+    "current": {
+     "SPEED_HORIZON": 8,
+     "BETA": 1.5,
+     "OPEN_ANCHOR": 0.5,
+     "OFFER_KEEP": 0.1
+    },
+    "current_score": 7.16
+   }
+  },
+  "duels3": {
+   "seller": {
+    "params": {
+     "SPEED_HORIZON": 10,
+     "BETA": 0.8,
+     "OPEN_ANCHOR": 0.5,
+     "OFFER_KEEP": 0.2
+    },
+    "score": 8.52,
+    "current": {
+     "SPEED_HORIZON": 8,
+     "BETA": 1.5,
+     "OPEN_ANCHOR": 0.5,
+     "OFFER_KEEP": 0.1
+    },
+    "current_score": 6.07
+   },
+   "buyer": {
+    "params": {
+     "SPEED_HORIZON": 6,
+     "BETA": 0.8,
+     "OPEN_ANCHOR": 0.5,
+     "OFFER_KEEP": 0.2
+    },
+    "score": 7.78,
+    "current": {
+     "SPEED_HORIZON": 8,
+     "BETA": 1.5,
+     "OPEN_ANCHOR": 0.5,
+     "OFFER_KEEP": 0.1
+    },
+    "current_score": 6.68
+   }
+  }
+ }
+}

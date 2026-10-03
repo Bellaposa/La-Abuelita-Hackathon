@@ -353,7 +353,43 @@ def message(role, price, days, accept_hint=False, n=0):
 
 # ---------------------------------------------------------------- one duel, one tick
 
+PARAMS_FILE = os.environ.get("DUEL_PARAMS", "duel_params.json")
+DEFAULTS = {}                      # the constants above, captured once, so a duel without tuned params plays them
+
+
+def load_tuned(path=PARAMS_FILE):
+    """duel_tuner.py's output: {condition: {role: {param: value}}}; {} when absent or unreadable."""
+    try:
+        with open(path) as f:
+            return (json.load(f) or {}).get("params") or {}
+    except (OSError, ValueError):
+        return {}
+
+
+TUNED = load_tuned()
+
+
+def apply_tuned(duel, role):
+    """Set the module's strategy parameters for this duel: duel_tuner's best for its role and conditions (Duels III =
+    a shorter clock or a harder decay than Duels II), else the defaults. Returns the condition used or None."""
+    if not DEFAULTS:
+        DEFAULTS.update(SPEED_HORIZON=SPEED_HORIZON, BETA=BETA, OPEN_ANCHOR=OPEN_ANCHOR, OFFER_KEEP=OFFER_KEEP)
+    ticks = int(duel.get("duel_ticks") or DEFAULT_TICKS)
+    decay = duel.get("decay_per_round") or duel.get("decay") or DEFAULT_DECAY
+    cond = "duels3" if (decay >= 0.1 or ticks < 16) else ("duels2" if "days" in (duel.get("issues") or []) else None)
+    p = dict(DEFAULTS)
+    p.update((TUNED.get(cond) or {}).get(role) or {})
+    g = globals()
+    for k, v in p.items():
+        g[k] = v
+    return cond if (TUNED.get(cond) or {}).get(role) else None
+
+
 def act(b, duel, tick, mem):
+    tuned = apply_tuned(duel, duel.get("role"))
+    if tuned and not mem.setdefault("tuned_logged", {}).get(f"{tuned}|{duel.get('role')}"):
+        mem["tuned_logged"][f"{tuned}|{duel.get('role')}"] = True
+        log(f"tuned parameters for {tuned} as {duel.get('role')}: {TUNED[tuned][duel['role']]}")
     rid = duel_id(duel)
     did = str(rid)
     role, limit = duel["role"], float(duel["your_limit"])
