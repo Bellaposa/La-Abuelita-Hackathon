@@ -4,6 +4,12 @@ La carpeta `relevo/` del repo (privado) trae una foto del estado aprendido por l
 con `./relevo.sh` en la máquina que tiene los agentes corriendo, justo antes de apagarla; la hora de la foto está en
 `relevo/SNAPSHOT_TIME`. Si el repo vuelve a ser público, borrad `relevo/`: lleva valores privados y límites.
 
+## 0. Regla para quien arranque (persona o Claude)
+
+**No arranques ningún agente si no existe `relevo/STOPPED`** o si es más antiguo que `relevo/SNAPSHOT_TIME`:
+`relevo/STOPPED` lo escribe la máquina que tenía los agentes justo después de pararlos. Sin él, la otra máquina
+puede seguir corriendo con la misma key y los dos controladores se pisan.
+
 ## 1. Antes de arrancar
 
 - **Una sola máquina a la vez.** Si este ordenador sigue encendido con los agentes, apágalos antes
