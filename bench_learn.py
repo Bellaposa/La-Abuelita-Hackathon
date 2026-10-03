@@ -41,7 +41,7 @@ def load_sessions(snaps_path=SNAPS, log_path=LOG):
         t = snap["tick"]
         for o in snap.get("bench") or []:
             run = o["id"].split("-")[0]
-            r = runs.setdefault(run, {"traders": {}, "matched": {}, "ticks": set()})
+            r = runs.setdefault(run, {"traders": {}, "matched": {}, "ticks": set(), "last_snap": {}})
             r["ticks"].add(t)
             ask = bool((o.get("want") or {}).get("cash"))
             q = o["want"]["cash"] if ask else o["give"]["cash"]
@@ -51,6 +51,10 @@ def load_sessions(snaps_path=SNAPS, log_path=LOG):
             else:
                 tr["path"][-1][1] = q
             tr["last"] = max(tr["last"], t)
+        for run in {o["id"].split("-")[0] for o in snap.get("bench") or []}:      # the book as it stood at the END of tick t
+            runs[run]["last_snap"][t] = {o["id"]: (("ask" if (o.get("want") or {}).get("cash") else "bid"),
+                                                   (o["want"]["cash"] or o["give"]["cash"]))
+                                         for o in snap["bench"] if o["id"].startswith(run + "-")}
     try:
         for line in open(log_path, encoding="utf-8", errors="replace"):
             m = re.search(r"tick (\d+): MATCHED (b\d+-\d+) x (b\d+-\d+)", line)
@@ -157,12 +161,11 @@ def learn(snaps_path=SNAPS, log_path=LOG, model_path=MODEL, write=True):
     report, totals = {}, {h: [0.0, 0.0] for h in HOLDS}
     for name, run in runs.items():
         missed = 0
-        for t in run["ticks"]:                                         # crossings we left on the table (should be 0)
-            q = {i: next((x for tt, x in tr["path"] if tt == t), None) for i, tr in run["traders"].items()}
-            live = {i: v for i, v in q.items() if v is not None and run["matched"].get(i, 10 ** 9) > t}
-            a = [v for i, v in live.items() if run["traders"][i]["side"] == "ask"]
-            b = [v for i, v in live.items() if run["traders"][i]["side"] == "bid"]
-            if a and b and min(a) <= max(b) and t not in run["matched"].values():
+        for t, book in run["last_snap"].items():                       # crossings we left on the table (should be 0):
+            live = {i: v for i, v in book.items() if run["matched"].get(i, 10 ** 9) > t}   # ONE book state, never mixed
+            a = [q for side, q in live.values() if side == "ask"]
+            b = [q for side, q in live.values() if side == "bid"]
+            if a and b and min(a) <= max(b):
                 missed += 1
         row = {"traders": len(run["traders"]), "our_pairs": len(run["matched"]) // 2, "ticks_with_unlocked_cross": missed}
         for h in HOLDS:
@@ -192,7 +195,12 @@ def selftest():
             f.write(json.dumps({"tick": t, "bench": [A(1, 60 - 3 * (t - 1)), B(2, 40 + 3 * (t - 1)), A(3, 90)]}) + "\n")
     with open(log, "w") as f:
         f.write("12:00:00 tick 4: MATCHED b9-1 x b9-2 at 50\n")
+    with open(snaps, "a") as f:   # same tick, two states: bid 56 vs ask 57 (no cross), then the bid leaves and the ask drops
+        a8 = lambda p: {"id": "b8-5", "want": {"cash": p}, "give": {"cash": 0}}
+        f.write(json.dumps({"tick": 9, "bench": [a8(57), {"id": "b8-6", "want": {"cash": 0}, "give": {"cash": 56}}]}) + "\n")
+        f.write(json.dumps({"tick": 9, "bench": [a8(55)]}) + "\n")
     m = learn(snaps, log, os.path.join(d, "m.json"))
+    assert m["sessions"]["b8"]["ticks_with_unlocked_cross"] == 0, "states of one tick must never be mixed into a cross"
     assert m["relax"]["ask"] == 1.5 and m["relax"]["bid"] == 3.0, m["relax"]   # trader 3 never moves: median of 0 and 3
     assert m["sessions"]["b9"]["our_pairs"] == 1 and m["sessions"]["b9"]["hold0"]["pairs"] == 1
     assert m["best_hold"] in HOLDS
