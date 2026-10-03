@@ -34,6 +34,27 @@ SESSION_TICKS = int(os.environ.get("SESSION_TICKS", "16"))   # last-resort defau
 URGENT_AGE_FRAC = 0.5      # with no lifetime data: a trader older than this share of the session may leave soon
 LATE_TICKS = 2             # this close to the end of a session, match everything that crosses
 WAIT_ENABLED = os.environ.get("BROKER_WAIT", "1") != "0"   # BROKER_WAIT=0: never wait, match crossing pairs at once
+WAIT_FORCED_OFF = not WAIT_ENABLED                          # an explicit BROKER_WAIT=0 always wins over what we learn
+
+
+def apply_learned(model, why):
+    """bench_learn.py replays our recorded sessions and picks the best HOLD; 0 = lock every crossing pair at once."""
+    global WAIT_ENABLED
+    if not model:
+        return
+    hold = model.get("best_hold", 0)
+    WAIT_ENABLED = (hold > 0) and not WAIT_FORCED_OFF
+    log(f"learned ({why}): best hold {hold} -> waiting {'on' if WAIT_ENABLED else 'off'}; est. eff by hold "
+        f"{model.get('est_eff_by_hold')}; relax {model.get('relax')}; lifetime {model.get('lifetime')} "
+        f"over {model.get('n_sessions')} sessions")
+
+
+def relearn(why):
+    try:
+        import bench_learn
+        apply_learned(bench_learn.learn(), why)
+    except Exception as e:                       # learning must never stop the broker
+        log(f"learning failed ({type(e).__name__}: {e}); keeping the current policy")
 MIN_LIFETIMES = 5          # observed lifetimes needed before we trust the leave-time estimate
 
 
@@ -148,6 +169,20 @@ def decide(tr, ask_o, bid_o, tick, left, total_len):
     return "MATCH", f"ask {a['status']}, bid {b['status']}: not both observed relaxing"
 
 
+def max_pairs(asks, bids):
+    """Most crossing pairs, and among those the widest total spread: the k cheapest asks with the k highest bids,
+    both ascending, paired in order (ask_i <= bid_i for every i), for the largest feasible k. Every crossing pair adds
+    real gains (bids sit under values, asks over costs), so more pairs never lose; zipping cheapest ask with highest bid
+    can strand a pair (asks 28, 73 / bids 29, 76: zip gives 1 pair, this gives 2)."""
+    a = sorted(asks, key=lambda o: o["want"]["cash"])
+    b = sorted(bids, key=lambda o: -o["give"]["cash"])
+    for k in range(min(len(a), len(b)), 0, -1):
+        ca, cb = a[:k], sorted(b[:k], key=lambda o: o["give"]["cash"])
+        if all(x["want"]["cash"] <= y["give"]["cash"] for x, y in zip(ca, cb)):
+            return list(zip(ca, cb))
+    return []
+
+
 def bench_plan(book, tick, tr, sched_ticks=None, quiet=False):
     """[(sell id, buy id, price)] for pairs we decide to lock now. Highest bids against lowest asks, per run."""
     plan, runs = [], {}
@@ -157,10 +192,8 @@ def bench_plan(book, tick, tr, sched_ticks=None, quiet=False):
     for run, (asks, bids) in runs.items():
         left, src = session_left(tr, run, tick, asks + bids, sched_ticks)
         total = (tick - tr.run_first.get(run, tick)) + left
-        for s, bu in zip(sorted(asks, key=lambda o: o["want"]["cash"]), sorted(bids, key=lambda o: -o["give"]["cash"])):
+        for s, bu in max_pairs(asks, bids):
             ask, bid = s["want"]["cash"], bu["give"]["cash"]
-            if bid < ask:
-                break
             action, why = decide(tr, s, bu, tick, left, max(1, total))
             if not quiet:
                 log(f"tick {tick} {run}: {s['id']}@{ask} x {bu['id']}@{bid} -> {action} ({why}; left from {src})")
@@ -194,6 +227,8 @@ def main():
     broker = Broker(URL, os.environ["BROKER_KEY"])
     tr, seen, sched, matched, t_sched = Track(load_mem()), None, None, set(), 0
     logged_keys = False
+    relearn("startup")
+    run_deadline, pending = {}, set()           # a run is over only after its offers' expires_tick, not when the book empties
     while True:
         try:
             tick, book = broker.clock()["tick"], broker.book()
@@ -203,12 +238,22 @@ def main():
             if time.time() - t_sched > 120:                       # the schedule drops past events: remember the last value
                 sched, t_sched = schedule_ticks(broker) or sched, time.time()
             bench = book.get("bench_offers") or []
+            for o in bench:
+                if isinstance(o.get("expires_tick"), int):
+                    r = o["id"].split("-")[0]
+                    run_deadline[r] = max(run_deadline.get(r, 0), o["expires_tick"])
             before = set(tr.hist)
             tr.update(tick, bench, matched)
             for run in {i.split("-")[0] for i in before} - {i.split("-")[0] for i in tr.hist}:
                 tr.end_session(run)
                 with open(MEM_FILE, "w") as f:
                     json.dump(tr.dump(), f, indent=1)
+                pending.add(run)
+            live_runs = {o["id"].split("-")[0] for o in bench}
+            for run in sorted(pending):
+                if run not in live_runs and tick > run_deadline.get(run, 0):
+                    pending.discard(run)
+                    relearn(f"session {run} ended")
             now = (tick, [o["id"] for o in bench + (book.get("offers") or [])])
             if now != seen:                                       # decide again every tick, not every poll
                 seen = now
@@ -228,6 +273,17 @@ def main():
 
 
 # ---------------------------------------------------------------- offline simulation (made-up trader dynamics)
+
+def _test_max_pairs():
+    A = lambda i, p: {"id": f"b1-{i}", "want": {"cash": p}, "give": {"cash": 0}}
+    B = lambda i, p: {"id": f"b1-{i}", "want": {"cash": 0}, "give": {"cash": p}}
+    got = max_pairs([A(1, 28), A(2, 73), A(3, 87)], [B(4, 76), B(5, 29)])
+    assert [(x["id"], y["id"]) for x, y in got] == [("b1-1", "b1-5"), ("b1-2", "b1-4")], got   # 2 pairs, not 1
+    assert max_pairs([A(1, 50)], [B(2, 40)]) == []
+    assert len(max_pairs([A(1, 10), A(2, 20), A(3, 30)], [B(4, 35), B(5, 25), B(6, 15)])) == 3
+    for x, y in max_pairs([A(1, 10), A(2, 60), A(3, 30)], [B(4, 35), B(5, 70), B(6, 5)]):
+        assert x["want"]["cash"] <= y["give"]["cash"]
+
 
 def _simulate(policy, seed, n=10, ticks=16):
     """Synthetic session: n sellers + n buyers, quotes shaded away from hidden limits, firm or relaxing, some leaving early."""
@@ -266,6 +322,7 @@ def _simulate(policy, seed, n=10, ticks=16):
 
 
 def selftest():
+    _test_max_pairs()
     # unit checks of the decision rules
     tr = Track()
     def offs(t, aq, bq):
