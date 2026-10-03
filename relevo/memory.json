@@ -1720,7 +1720,7 @@
    149.9
   ],
   "RET-09": [
-   967,
+   988,
    63.0
   ],
   "RET-10": [
@@ -1744,23 +1744,23 @@
    9.0
   ],
   "RET-05": [
-   967,
+   988,
    9.0
   ],
   "LAT-09": [
-   967,
+   988,
    49.0
   ],
   "LAT-10": [
-   967,
+   988,
    49.0
   ],
   "LAT-06": [
-   967,
+   988,
    17.5
   ],
   "LAT-07": [
-   967,
+   988,
    17.5
   ],
   "RET-06": [
@@ -1780,7 +1780,7 @@
    35.0
   ],
   "MAL-06": [
-   966,
+   987,
    12.5
   ],
   "MAL-07": [
@@ -1793,7 +1793,7 @@
   ]
  },
  "active_buy_chato": null,
- "flags_scan_tick": 981,
+ "flags_scan_tick": 989,
  "flags_seen": [
   5,
   19,
@@ -2004,7 +2004,7 @@
  },
  "abuela_buy_block_until": 736,
  "chato_buy_block_until": 776,
- "ws_tick": 980,
+ "ws_tick": 985,
  "ws_obs": {
   "common": [
    5.0,
@@ -2148,7 +2148,8 @@
    11.0,
    26.0,
    24.0,
-   14.0
+   14.0,
+   26.0
   ],
   "epic": [
    167.0,
@@ -2299,7 +2300,8 @@
   48944,
   48985,
   49142,
-  49276
+  49276,
+  49350
  ],
  "ws_out": {
   "LAV-08": 1,
@@ -2487,7 +2489,7 @@
   "RET-09": 904
  },
  "picaros_buy_block_until": 924,
- "feed_intel_tick": 982,
+ "feed_intel_tick": 988,
  "feed_intel": {
   "deals": {
    "picaros|sells|rare": [
@@ -2634,6 +2636,20 @@
      "set": "RET",
      "price": 26.0,
      "team": "t07"
+    },
+    {
+     "t": 986,
+     "ref": "MAL-07",
+     "set": "MAL",
+     "price": 18.0,
+     "team": "t04"
+    },
+    {
+     "t": 988,
+     "ref": "LAT-06",
+     "set": "LAT",
+     "price": 19.0,
+     "team": "t12"
     }
    ],
    "picaros|buys|common": [
@@ -2673,6 +2689,13 @@
      "set": "MAL",
      "price": 6.0,
      "team": "t07"
+    },
+    {
+     "t": 987,
+     "ref": "LAT-05",
+     "set": "LAT",
+     "price": 5.0,
+     "team": "t16"
     }
    ],
    "picaros|sells|epic": [
@@ -2771,6 +2794,13 @@
      "set": "LAT",
      "price": 14.0,
      "team": "t07"
+    },
+    {
+     "t": 986,
+     "ref": "LAV-07",
+     "set": "LAV",
+     "price": 14.0,
+     "team": "t10"
     }
    ]
   },
@@ -4042,163 +4072,137 @@
    49363,
    49366,
    49367,
-   49370
+   49370,
+   49373,
+   49374,
+   49375,
+   49376,
+   49379,
+   49381,
+   49385,
+   49388,
+   49391,
+   49394,
+   49397,
+   49400,
+   49403,
+   49406,
+   49409,
+   49412,
+   49413,
+   49414,
+   49416,
+   49419,
+   49422,
+   49425,
+   49426,
+   49429,
+   49430,
+   49432,
+   49434,
+   49437,
+   49438,
+   49439,
+   49442,
+   49445,
+   49448,
+   49449,
+   49452,
+   49455,
+   49458,
+   49459,
+   49460,
+   49463,
+   49466,
+   49467,
+   49471,
+   49474,
+   49476,
+   49477,
+   49480,
+   49483,
+   49484,
+   49487,
+   49490,
+   49493,
+   49496,
+   49499,
+   49500,
+   49503,
+   49504,
+   49505,
+   49506,
+   49509,
+   49510,
+   49513,
+   49514,
+   49515,
+   49516,
+   49518,
+   49521,
+   49524,
+   49527,
+   49530,
+   49533,
+   49536,
+   49539,
+   49542,
+   49545,
+   49548,
+   49551,
+   49554,
+   49557,
+   49558,
+   49560,
+   49563,
+   49566,
+   49568,
+   49571,
+   49572,
+   49573,
+   49574,
+   49575,
+   49578,
+   49581,
+   49584,
+   49587,
+   49588,
+   49589,
+   49592,
+   49593,
+   49596,
+   49597,
+   49600,
+   49603,
+   49604,
+   49607,
+   49608,
+   49609,
+   49612,
+   49615,
+   49616,
+   49617,
+   49620,
+   49621,
+   49622,
+   49623,
+   49625,
+   49626,
+   49627,
+   49628,
+   49631,
+   49634,
+   49637,
+   49641,
+   49644,
+   49647,
+   49650,
+   49653,
+   49656,
+   49659,
+   49662
   ],
   "open": {
-   "1410": {
-    "dealer": "pilar",
-    "team": "t18",
-    "last": 973,
-    "side": "buys",
-    "topic_card": null,
-    "d": [
-     [
-      967,
-      172,
-      false,
-      "SAL-11"
-     ],
-     [
-      969,
-      175,
-      false,
-      "SAL-11"
-     ],
-     [
-      970,
-      179,
-      false,
-      "SAL-11"
-     ],
-     [
-      971,
-      184,
-      false,
-      "SAL-11"
-     ],
-     [
-      972,
-      189,
-      false,
-      "SAL-11"
-     ],
-     [
-      973,
-      194,
-      true,
-      "SAL-11"
-     ]
-    ],
-    "deal": null
-   },
-   "1414": {
-    "dealer": "pilar",
-    "team": "t07",
-    "last": 975,
-    "side": "buys",
-    "topic_card": null,
-    "d": [
-     [
-      970,
-      16,
-      false,
-      "LAT-06"
-     ],
-     [
-      971,
-      16,
-      false,
-      "LAT-06"
-     ],
-     [
-      972,
-      17,
-      false,
-      "LAT-06"
-     ],
-     [
-      973,
-      18,
-      false,
-      "LAT-06"
-     ],
-     [
-      974,
-      19,
-      false,
-      "LAT-06"
-     ],
-     [
-      975,
-      19,
-      false,
-      "LAT-06"
-     ]
-    ],
-    "deal": null
-   },
-   "1415": {
-    "dealer": "picaros",
-    "team": "t16",
-    "last": 973,
-    "side": "buys",
-    "topic_card": null,
-    "d": [
-     [
-      971,
-      4,
-      false,
-      "LAV-02"
-     ],
-     [
-      973,
-      4,
-      false,
-      "LAV-02"
-     ]
-    ],
-    "deal": null
-   },
-   "1418": {
-    "dealer": "pilar",
-    "team": "t08",
-    "last": 972,
-    "side": null,
-    "topic_card": null,
-    "d": [],
-    "deal": null
-   },
-   "1421": {
-    "dealer": "abuela",
-    "team": "t08",
-    "last": 976,
-    "side": "buys",
-    "topic_card": null,
-    "d": [
-     [
-      974,
-      5,
-      false,
-      "LAV-04"
-     ],
-     [
-      976,
-      5,
-      false,
-      "LAV-04"
-     ]
-    ],
-    "deal": null
-   },
-   "1423": {
-    "dealer": "pilar",
-    "team": "t08",
-    "last": 975,
-    "side": null,
-    "topic_card": null,
-    "d": [],
-    "deal": null
-   },
    "1426": {
     "dealer": "picaros",
     "team": "t10",
@@ -4227,60 +4231,10 @@
     ],
     "deal": null
    },
-   "1427": {
-    "dealer": "chato",
-    "team": "t10",
-    "last": 981,
-    "side": "buys",
-    "topic_card": null,
-    "d": [
-     [
-      978,
-      13,
-      false,
-      "LAV-07"
-     ],
-     [
-      979,
-      13,
-      false,
-      "LAV-07"
-     ],
-     [
-      981,
-      13,
-      false,
-      "LAV-07"
-     ]
-    ],
-    "deal": null
-   },
-   "1428": {
-    "dealer": "pilar",
-    "team": "t04",
-    "last": 982,
-    "side": "buys",
-    "topic_card": null,
-    "d": [
-     [
-      980,
-      16,
-      false,
-      "MAL-07"
-     ],
-     [
-      981,
-      16,
-      false,
-      "MAL-07"
-     ]
-    ],
-    "deal": null
-   },
    "1429": {
     "dealer": "picaros",
     "team": "t16",
-    "last": 982,
+    "last": 987,
     "side": "buys",
     "topic_card": null,
     "d": [
@@ -4292,6 +4246,30 @@
      ],
      [
       981,
+      4,
+      false,
+      "LAV-02"
+     ],
+     [
+      983,
+      4,
+      false,
+      "LAV-02"
+     ],
+     [
+      985,
+      4,
+      false,
+      "LAV-02"
+     ],
+     [
+      986,
+      4,
+      false,
+      "LAV-02"
+     ],
+     [
+      987,
       4,
       false,
       "LAV-02"
@@ -4306,28 +4284,6 @@
     "side": null,
     "topic_card": null,
     "d": [],
-    "deal": null
-   },
-   "1431": {
-    "dealer": "pilar",
-    "team": "t12",
-    "last": 982,
-    "side": "buys",
-    "topic_card": null,
-    "d": [
-     [
-      981,
-      16,
-      false,
-      "LAT-06"
-     ],
-     [
-      982,
-      16,
-      false,
-      "LAT-06"
-     ]
-    ],
     "deal": null
    },
    "1432": {
@@ -4349,12 +4305,18 @@
    "1433": {
     "dealer": "abuela",
     "team": "t08",
-    "last": 982,
+    "last": 984,
     "side": "buys",
     "topic_card": null,
     "d": [
      [
       982,
+      5,
+      false,
+      "LAV-04"
+     ],
+     [
+      984,
       5,
       false,
       "LAV-04"
@@ -4365,10 +4327,257 @@
    "1434": {
     "dealer": "pilar",
     "team": "t07",
-    "last": 982,
-    "side": null,
+    "last": 988,
+    "side": "buys",
     "topic_card": null,
-    "d": [],
+    "d": [
+     [
+      983,
+      61,
+      false,
+      "RET-09"
+     ],
+     [
+      984,
+      63,
+      false,
+      "RET-09"
+     ],
+     [
+      985,
+      66,
+      false,
+      "RET-09"
+     ],
+     [
+      986,
+      70,
+      false,
+      "RET-09"
+     ],
+     [
+      987,
+      74,
+      false,
+      "RET-09"
+     ],
+     [
+      988,
+      78,
+      false,
+      "RET-09"
+     ]
+    ],
+    "deal": null
+   },
+   "1435": {
+    "dealer": "pilar",
+    "team": "t13",
+    "last": 983,
+    "side": "buys",
+    "topic_card": null,
+    "d": [
+     [
+      983,
+      47,
+      false,
+      "LAV-09"
+     ]
+    ],
+    "deal": null
+   },
+   "1436": {
+    "dealer": "picaros",
+    "team": "t10",
+    "last": 986,
+    "side": "buys",
+    "topic_card": null,
+    "d": [
+     [
+      983,
+      4,
+      false,
+      "MAL-02"
+     ],
+     [
+      984,
+      4,
+      false,
+      "MAL-02"
+     ],
+     [
+      986,
+      4,
+      true,
+      "MAL-02"
+     ]
+    ],
+    "deal": null
+   },
+   "1437": {
+    "dealer": "picaros",
+    "team": "t02",
+    "last": 988,
+    "side": "buys",
+    "topic_card": null,
+    "d": [
+     [
+      984,
+      10,
+      false,
+      "RET-08"
+     ],
+     [
+      986,
+      10,
+      false,
+      "RET-08"
+     ],
+     [
+      987,
+      11,
+      false,
+      "RET-08"
+     ],
+     [
+      988,
+      11,
+      false,
+      "RET-08"
+     ]
+    ],
+    "deal": null
+   },
+   "1438": {
+    "dealer": "pilar",
+    "team": "t18",
+    "last": 988,
+    "side": "buys",
+    "topic_card": null,
+    "d": [
+     [
+      985,
+      172,
+      false,
+      "SAL-11"
+     ],
+     [
+      987,
+      175,
+      false,
+      "SAL-11"
+     ],
+     [
+      988,
+      179,
+      false,
+      "SAL-11"
+     ]
+    ],
+    "deal": null
+   },
+   "1440": {
+    "dealer": "pilar",
+    "team": "t02",
+    "last": 988,
+    "side": "buys",
+    "topic_card": null,
+    "d": [
+     [
+      986,
+      47,
+      false,
+      "LAV-09"
+     ],
+     [
+      987,
+      49,
+      false,
+      "LAV-09"
+     ],
+     [
+      988,
+      51,
+      false,
+      "LAV-09"
+     ]
+    ],
+    "deal": null
+   },
+   "1441": {
+    "dealer": "pilar",
+    "team": "t13",
+    "last": 988,
+    "side": "buys",
+    "topic_card": null,
+    "d": [
+     [
+      986,
+      16,
+      false,
+      "LAV-08"
+     ],
+     [
+      987,
+      16,
+      false,
+      "LAV-08"
+     ],
+     [
+      988,
+      17,
+      false,
+      "LAV-08"
+     ]
+    ],
+    "deal": null
+   },
+   "1442": {
+    "dealer": "chato",
+    "team": "t08",
+    "last": 988,
+    "side": "buys",
+    "topic_card": null,
+    "d": [
+     [
+      988,
+      39,
+      false,
+      "SAL-09"
+     ]
+    ],
+    "deal": null
+   },
+   "1443": {
+    "dealer": "picaros",
+    "team": "t10",
+    "last": 988,
+    "side": "buys",
+    "topic_card": null,
+    "d": [
+     [
+      988,
+      4,
+      false,
+      "LAV-04"
+     ]
+    ],
+    "deal": null
+   },
+   "1444": {
+    "dealer": "abuela",
+    "team": "t08",
+    "last": 988,
+    "side": "buys",
+    "topic_card": null,
+    "d": [
+     [
+      988,
+      5,
+      false,
+      "LAV-04"
+     ]
+    ],
     "deal": null
    }
   },
@@ -4443,6 +4652,46 @@
      "switch": null,
      "deal": true,
      "deal_vs_first": 1.182
+    },
+    {
+     "rounds": 6,
+     "fixed": false,
+     "conc": 0.02558139534883721,
+     "final_seen": true,
+     "final_broken": false,
+     "switch": null,
+     "deal": false,
+     "deal_vs_first": null
+    },
+    {
+     "rounds": 4,
+     "fixed": false,
+     "conc": 0.041666666666666664,
+     "final_seen": false,
+     "final_broken": null,
+     "switch": null,
+     "deal": true,
+     "deal_vs_first": 1.125
+    },
+    {
+     "rounds": 7,
+     "fixed": false,
+     "conc": 0.03125,
+     "final_seen": true,
+     "final_broken": false,
+     "switch": null,
+     "deal": true,
+     "deal_vs_first": 1.188
+    },
+    {
+     "rounds": 6,
+     "fixed": false,
+     "conc": 0.0375,
+     "final_seen": false,
+     "final_broken": null,
+     "switch": null,
+     "deal": false,
+     "deal_vs_first": null
     }
    ],
    "abuela|buys": [
@@ -4535,6 +4784,26 @@
      "switch": null,
      "deal": false,
      "deal_vs_first": null
+    },
+    {
+     "rounds": 2,
+     "fixed": true,
+     "conc": 0.0,
+     "final_seen": false,
+     "final_broken": null,
+     "switch": null,
+     "deal": false,
+     "deal_vs_first": null
+    },
+    {
+     "rounds": 1,
+     "fixed": false,
+     "conc": null,
+     "final_seen": false,
+     "final_broken": null,
+     "switch": null,
+     "deal": true,
+     "deal_vs_first": 1.0
     },
     {
      "rounds": 2,
@@ -4751,6 +5020,16 @@
      "switch": null,
      "deal": false,
      "deal_vs_first": null
+    },
+    {
+     "rounds": 2,
+     "fixed": true,
+     "conc": 0.0,
+     "final_seen": false,
+     "final_broken": null,
+     "switch": null,
+     "deal": false,
+     "deal_vs_first": null
     }
    ],
    "chato|sells": [
@@ -4792,6 +5071,16 @@
      "conc": 0.015384615384615385,
      "final_seen": true,
      "final_broken": false,
+     "switch": null,
+     "deal": true,
+     "deal_vs_first": 1.077
+    },
+    {
+     "rounds": 5,
+     "fixed": false,
+     "conc": 0.019230769230769232,
+     "final_seen": false,
+     "final_broken": null,
      "switch": null,
      "deal": true,
      "deal_vs_first": 1.077
@@ -5541,7 +5830,135 @@
    49363,
    49366,
    49367,
-   49370
+   49370,
+   49373,
+   49374,
+   49375,
+   49376,
+   49379,
+   49381,
+   49385,
+   49388,
+   49391,
+   49394,
+   49397,
+   49400,
+   49403,
+   49406,
+   49409,
+   49412,
+   49413,
+   49414,
+   49416,
+   49419,
+   49422,
+   49425,
+   49426,
+   49429,
+   49430,
+   49432,
+   49434,
+   49437,
+   49438,
+   49439,
+   49442,
+   49445,
+   49448,
+   49449,
+   49452,
+   49455,
+   49458,
+   49459,
+   49460,
+   49463,
+   49466,
+   49467,
+   49471,
+   49474,
+   49476,
+   49477,
+   49480,
+   49483,
+   49484,
+   49487,
+   49490,
+   49493,
+   49496,
+   49499,
+   49500,
+   49503,
+   49504,
+   49505,
+   49506,
+   49509,
+   49510,
+   49513,
+   49514,
+   49515,
+   49516,
+   49518,
+   49521,
+   49524,
+   49527,
+   49530,
+   49533,
+   49536,
+   49539,
+   49542,
+   49545,
+   49548,
+   49551,
+   49554,
+   49557,
+   49558,
+   49560,
+   49563,
+   49566,
+   49568,
+   49571,
+   49572,
+   49573,
+   49574,
+   49575,
+   49578,
+   49581,
+   49584,
+   49587,
+   49588,
+   49589,
+   49592,
+   49593,
+   49596,
+   49597,
+   49600,
+   49603,
+   49604,
+   49607,
+   49608,
+   49609,
+   49612,
+   49615,
+   49616,
+   49617,
+   49620,
+   49621,
+   49622,
+   49623,
+   49625,
+   49626,
+   49627,
+   49628,
+   49631,
+   49634,
+   49637,
+   49641,
+   49644,
+   49647,
+   49650,
+   49653,
+   49656,
+   49659,
+   49662
   ]
  },
  "feed_futile_logged": {
