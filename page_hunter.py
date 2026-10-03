@@ -84,8 +84,8 @@ def sell_stock(catalog, affinity, assets, competitors, listed):
         if affinity.get(sid, 1.0) >= FOCUS_AFF:
             continue
         card = next(c for c in cards_of(catalog, sid) if c["id"] == a["ref"])
-        v = value_of_card(card, sid, affinity)
-        floor = math.ceil(v * SELL_MARGIN + 1)
+        v = max(value_of_card(card, sid, affinity), float(a.get("your_value") or 0))   # the server's value has the
+        floor = math.ceil(v * SELL_MARGIN + 1)                                        # page bonus ours lacks
         comp = competitors.get(a["ref"])
         target = (min(comp) - 1) if comp else math.ceil(card["book"] * 1.2)
         ask = max(floor, min(target, math.ceil(card["book"] * 1.2)))

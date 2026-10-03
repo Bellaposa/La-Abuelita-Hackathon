@@ -1211,6 +1211,13 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
         if not cand:
             return False
         _, ref, asset, floor, lp, lost = cand
+        server_value = float(asset.get("your_value") or 0)        # has the page bonus our marginal_value lacks
+        if server_value > lost:                                   # a dealer-deal loss counts in full (Payday deck)
+            lost, floor = server_value, max(floor, math.ceil(server_value) + 1)
+            if floor > dparams.static("cand_floor_share") * lp and floor > lp:
+                mem.setdefault(f"{dealer}_tried", {})[ref] = me["tick"]
+                log(f"{name}: not offering {ref}: it is worth {server_value:.0f} to us, over what the dealer pays ({lp})")
+                return False
         if me["tick"] - mem.get(f"{dealer}_tried", {}).get(ref, -999) < dparams.static("retry_same_card"):
             return False                                          # same card, no new reason: stay quiet for a while
         fh = feed_intel.hints(mem, dealer, "buys", asset.get("rarity"), ref.split("-")[0], ref)
@@ -1250,6 +1257,9 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     soft = None if (mem.get(f"{dealer}_soft_done") or dealer == "banco") else math.ceil(act["lost"] + dparams.static("soft_add"))     # one firm-bid deal per dealer, for the ladder
     fh = range_hints(mem, dealer, "buys", act.get("rarity"), act["ref"].split("-")[0], act["ref"])
     floor = sell_floor_with_ladder(mem, me, dealer, act.get("rarity"), fh, act["floor"], hers, act["ref"])
+    sold = ((act.get("topic") or {}).get("sell") or {}).get("assets") or []
+    now_value = max([float(a.get("your_value") or 0) for a in me["assets"] if a.get("id") in sold] or [0.0])
+    floor = max(floor, math.ceil(now_value) + 1) if now_value else floor   # never under the server's value, every round
     action, price, why = next_offer_sell(floor, act["lp"], ours, hers, inferred, soft_floor=soft, hold=(dealer in ("pilar", "banco")))
     log(f"{name} thread {tid}: ours {ours} his {[h[0] for h in hers]} floor {floor} -> {action} {price} ({why})")
     if action == "accept" and can_accept:
@@ -1445,6 +1455,87 @@ def phase_epic_buy(b, me, catalog, mem, can_accept):
     elif action == "offer":
         b.say(tid, chato_text("buy", price, len(ours), act["ref"], "amigos"), price=price)
     return False, True
+
+
+# Don Ernesto's vault: a legendary for a patient negotiator (Payday deck: ~470; list 585). Bought only under our value,
+# so the deal has no loss, and it is a level-5 ladder deal (the heaviest level). One legendary per team per hour.
+VAULT = os.environ.get("VAULT", "1") == "1"
+VAULT_LIST = 585
+VAULT_MIN_EDGE = 30            # buy a legendary only if our value is at least this much over the price we may pay
+VAULT_REFS = ("LAV-12", "SAL-12", "RET-12", "LAT-12", "MAL-12")
+
+
+def phase_vault(b, me, catalog, mem, can_accept):
+    """Buy the legendary worth most to us from Don Ernesto, haggling patiently, never at or over our value."""
+    dealer, key = "banco", "active_vault"
+    if not VAULT or dealer not in me.get("unlocked", []) or ladder_round(mem) is None:
+        return False
+    act = mem.get(key)
+    tid = next((t for t in me.get("open_threads", []) if b.thread(t).get("with") == dealer), None)
+    if act and (tid is None or act["thread"] != tid):
+        t = b.thread(act["thread"])
+        ours, hers = read_thread(t, me["id"], dealer)
+        paid = deal_price(t, me["id"]) if t["status"] == "deal" else None
+        log(f"vault: Don Ernesto {t['id']} ({act['ref']}) ended: {t['status']} {t.get('closed_reason') or ''} paid {paid} "
+            f"(worth {act['value']:.0f} to us)")
+        if t["status"] == "deal":
+            ladder_record(mem, dealer, t["id"], "legendary", act["ref"].split("-")[0], act["ref"], hers, paid, True)
+        mem["vault_block_until"] = me["tick"] + (120 if t["status"] == "deal" else 30)   # one an hour; else let him rest
+        mem[key], act = None, None
+    if tid is not None and act is None:
+        return False                                              # another talk with him is open
+    if tid is None:
+        if mem.get("vault_block_until", -1) > me["tick"]:
+            return False
+        owned = {a.get("ref") for a in me["assets"]}
+        best = None
+        for ref in VAULT_REFS:
+            if ref in owned:
+                continue
+            try:
+                v = float(b.value(ref).get("your_value") or 0)
+            except BazaarError:
+                continue
+            cap = min(me["cash"] - CASH_RESERVE, math.floor(v) - VAULT_MIN_EDGE)
+            if cap >= 470 and (best is None or v > best[1]):     # ~470 is what a patient negotiator pays (deck)
+                best = (ref, v)
+        if not best:
+            return False
+        ref, v = best
+        try:
+            th = b.open_thread(dealer, topic={"buy": {"card": ref}})
+        except BazaarError as e:
+            log(f"vault: Don Ernesto unavailable: {e.code} {e.message}")
+            mem["vault_block_until"] = me["tick"] + 30
+            return False
+        tid = th["id"]
+        act = mem[key] = {"thread": tid, "ref": ref, "value": v}
+        log(f"vault: buying {ref} from Don Ernesto, worth {v:.0f} to us")
+    t = b.thread(tid)
+    if t["status"] != "open":
+        return False
+    cap = min(me["cash"] - CASH_RESERVE, math.floor(act["value"]) - VAULT_MIN_EDGE)
+    ours, hers = read_thread(t, me["id"], dealer)
+    action, price, why = next_offer(cap, VAULT_LIST, ours, hers, {})
+    log(f"vault: Don Ernesto {tid} {act['ref']}: ours {ours} his {[h[0] for h in hers]} cap {cap} -> {action} {price} ({why})")
+    if action == "accept" and can_accept:
+        if price is None or price > cap or price >= act["value"]:
+            return False
+        offer_id, why = fresh_accept_target(b, tid, dealer, me["id"], _key(types=[f"card:{act['ref']}"]), _key(cash=price),
+                                            ("item", "price"))
+        if offer_id is None:
+            log(f"vault: accept blocked: {why} (decided {price})")
+            return False
+        if not try_reserve(me["tick"]):
+            return False
+        b.accept(offer_id)
+        log(f"VAULT BUY {act['ref']} at {price} from Don Ernesto: worth {act['value']:.0f} to us")
+        return True
+    if action == "walk":
+        b.close_thread(tid)
+    elif action == "offer":
+        b.say(tid, chato_text("buy", price, len(ours), act["ref"], "Don Ernesto"), price=price)
+    return False
 
 
 def banco_candidate(me, catalog, menu=None, mem=None):
@@ -1720,7 +1811,12 @@ def run_agent():
             except BazaarError as e:
                 log("Pilar step:", e.code, e.message)
             try:
-                accepted = phase_banco(b, me, catalog, mem, can_accept=not accepted) or accepted
+                accepted = phase_vault(b, me, catalog, mem, can_accept=not accepted) or accepted
+            except BazaarError as e:
+                log("vault step:", e.code, e.message)
+            try:
+                if not mem.get("active_vault"):
+                    accepted = phase_banco(b, me, catalog, mem, can_accept=not accepted) or accepted
             except BazaarError as e:
                 log("Don Ernesto step:", e.code, e.message)
             try:
