@@ -290,7 +290,11 @@ def step(b, mem, tick, strict=False):
 
 def record_finished(b, mem):
     for d in duel_list(b.duels(done=True)):
-        mem["finished"].setdefault(str(d.get("id")), d)
+        rid = d.get("duel") if "duel" in d else d.get("id")      # same precedence as duel_id(): `duel` is the live key
+        if rid is None:
+            log("record_finished: finished duel without an id, not recorded:", sorted(d))
+            continue
+        mem["finished"].setdefault(str(rid), d)
 
 
 def main():
