@@ -431,7 +431,13 @@ def next_offer(cap, list_price, ours, hers, inferred, open_cap=None):
     last = ours[-1] if ours else 0
     mood = tone(ours, hers)
     tol = max(1, int((inferred.get("params") or {}).get("tol_share", dparams.static("tol_share")) * list_price))
-    if ask <= cap and (ask <= last + tol or final):
+    # RULES: "a deal at the dealer's opening price does not count", and a dealer deal scores only through the ladder
+    # (share of its range captured): taking its opening price scores 0 and spends its hourly allotment (Sunday 09:44:
+    # CHA-01 from Abuela at 12, opened 12). Keep haggling; a final still at the opening ends the talk.
+    at_opening = ask >= hers[0][0]
+    if at_opening and final:
+        return "walk", None, f"her final {ask} is her opening price: a deal there scores nothing"
+    if ask <= cap and (ask <= last + tol or final) and not at_opening:
         return "accept", ask, ("her final is under our cap" if final else "her ask is within reach of our own bid")
     if final and not inferred.get("final_unreliable"):
         return "walk", None, f"her final {ask} is above our cap {cap}"
@@ -500,14 +506,18 @@ def next_offer_sell(floor, list_price, ours, hers, inferred, k0=None, soft_floor
     tol = 0 if hold else max(1, int((inferred.get("params") or {}).get("tol_share", dparams.static("tol_share")) * list_price))
     if hold:
         soft_floor = None
+    # RULES: a deal at the dealer's opening price does not count and a dealer deal scores only on the ladder: never
+    # take its opening bid (a fixed bidder never leaves it, so it is a walk), and a final still at it ends the talk.
+    at_opening = bid <= hers[0][0]
     if inferred.get("fixed_bidder"):                       # all teams saw it never move from its first bid: no haggling
-        return (("accept", bid, f"fixed bidder: {bid} clears our floor {floor}") if bid >= floor
-                else ("walk", None, f"fixed bidder: {bid} under our floor {floor}, it will not move"))
+        return "walk", None, f"fixed bidder: {bid} is its opening, a deal there scores nothing"
+    if at_opening and final:
+        return "walk", None, f"his final {bid} is his opening bid: a deal there scores nothing"
     if last is None and not (bid >= floor and final):
         return "offer", max(floor, ask0), "opening ask (he spoke first)"
-    if soft_floor is not None and bid >= soft_floor and len(hers) >= dparams.static("firm_rounds") and len({h[0] for h in hers[-dparams.static("firm_rounds"):]}) == 1:
+    if soft_floor is not None and bid >= soft_floor and not at_opening and len(hers) >= dparams.static("firm_rounds") and len({h[0] for h in hers[-dparams.static("firm_rounds"):]}) == 1:
         return "accept", bid, f"he repeated {bid} three times and it clears our soft floor {soft_floor}"
-    if bid >= floor and (final or bid >= last - tol):          # `final` first: with ours empty `last` is None (he spoke first)
+    if bid >= floor and (final or bid >= last - tol) and not at_opening:   # `final` first: with ours empty `last` is None
         return "accept", bid, "his final is over our floor" if final else "his bid is within reach of our ask"
     if final and not inferred.get("final_unreliable"):
         return "walk", None, f"his final {bid} is below our floor {floor}"
@@ -1944,7 +1954,7 @@ def _test_pilar_one_prima():
 
 def _test_behaviour_flags():
     hers = [(13, False, ""), (13, False, "")]
-    assert next_offer_sell(10, 26, [26], hers[:1], {"fixed_bidder": True})[0] == "accept", "fixed 13 >= floor 10: close"
+    assert next_offer_sell(10, 26, [26], hers[:1], {"fixed_bidder": True})[0] == "walk", "fixed 13 is its opening: scores nothing, leave"
     assert next_offer_sell(16, 26, [26], hers[:1], {"fixed_bidder": True})[0] == "walk", "fixed 13 < floor 16: leave"
     fin = [(70, False, ""), (66, True, "")]
     assert next_offer(60, 63, [40, 50], fin, {})[0] == "walk", "a trusted final over our cap: walk"
@@ -1959,6 +1969,15 @@ def _test_ladder_open_cap():
     inf = {"open_bid": 59, "params": {"open_scale": 1.0}}                  # a profile learned on rares, used on an uncommon
     assert next_offer(26, 26, [], [], inf, open_cap=16) == ("offer", 16, "opening bid"), "never open into the ladder premium"
     assert next_offer(26, 26, [], [], inf)[1] == 26, "without open_cap the old behaviour stands"
+
+
+def _test_never_at_opening():
+    h = lambda p, f=False: (p, f, "")
+    assert next_offer(30, 26, [10], [h(12)], {})[0] != "accept", "her ask is still her opening: keep haggling"
+    assert next_offer(30, 26, [10], [h(12, True)], {})[0] == "walk", "a final at her opening scores nothing"
+    assert next_offer(30, 26, [10, 11], [h(14), h(12)], {})[0] == "accept", "she moved from 14 to 12: a real deal"
+    assert next_offer_sell(10, 30, [30], [h(16, True)], {})[0] == "walk", "his final at his opening bid: leave"
+    assert next_offer_sell(10, 30, [30, 22], [h(16), h(22)], {})[0] == "accept", "he moved from 16 to 22 and met our ask"
 
 
 def _test_epic_loop():
@@ -2011,6 +2030,7 @@ def selftest():
     CASH_RESERVE = 0                                     # offline fixtures hold little cash: test the logic without the floor
     _test_ladder_open_cap()
     _test_epic_loop()
+    _test_never_at_opening()
     _test_pilar_one_prima()
     _test_candidates_take_menu()
     _test_behaviour_flags()
