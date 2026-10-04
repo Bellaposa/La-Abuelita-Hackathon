@@ -1450,7 +1450,9 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
                      for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
         rnd = ladder_round(mem)
         room = rnd is not None and ladder.worst_of_best3(mem, rnd, dealer) <= 0.0     # an empty slot in its best three
-        cand = candidate_fn(dict(me, assets=[a for a in me["assets"] if a.get("id") not in on_tables]), catalog,
+        recent = {r for r, t in mem.get(f"{dealer}_tried", {}).items() if me["tick"] - t < dparams.static("retry_same_card")}
+        cand = candidate_fn(dict(me, assets=[a for a in me["assets"] if a.get("id") not in on_tables  # a card tried lately
+                                             and a.get("ref") not in recent]), catalog,              # leaves room for the next
                             menu_rarity_prices(mem, dealer), room=room)
         if not cand:
             return False
