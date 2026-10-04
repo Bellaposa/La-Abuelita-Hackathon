@@ -293,6 +293,7 @@ def endgame_price(side, limit, our_last, rival_price, remaining, next_price):
 
 
 RIVAL_DAYS_W = {"seller": 4.46, "buyer": 2.22}   # |day weight| typical of the RIVAL's role (medians of ours in Duels II)
+SILENT_LAST = 2          # ticks left in which a rival that never spoke gets our last package (limit + 2, its days)
 SILENT_DAYS_FRAC = 0.25  # share of our concession curve after which a silent rival gets its days
 
 
@@ -329,13 +330,13 @@ def plan_days(duel, limit, frac, rival_days_hist, last_rival_days):
     return int(round(min(10, max(0, ours + (last_rival_days - ours) * day_frac)))), 1.0
 
 
-def bound_days(side, limit, w, price, days):
+def bound_days(side, limit, w, price, days, keep=None):
     """The days we offer, moved only as far as our whole offer (price AND days) still keeps the reservation surplus.
     Days used to drift toward the rival's while the price conceded too, and a buyer with 4.43 a day offered 58 at day 9
     on a limit of 71 (-26.9: duel 5770). Buyer (w < 0): days <= (surplus - keep) / |w|; seller (w > 0): days >= ..."""
     if days is None or not w:
         return days
-    keep = max(MIN_MARGIN, round(OFFER_KEEP * limit))
+    keep = max(MIN_MARGIN, round(OFFER_KEEP * limit)) if keep is None else keep
     surplus = side * (price - limit)
     if w < 0:
         return int(max(0, min(days, math.floor((surplus - keep) / -w))))
@@ -459,6 +460,15 @@ def act(b, duel, tick, mem):
     next_price = jitter_price(side, limit, st["our_last"], next_price, did, tick, remaining)
     if use_days:
         next_days = bound_days(side, limit, w, next_price, next_days)     # the whole package keeps our margin
+    if rival_price is None and st["rival_last"] is None and remaining <= SILENT_LAST:
+        # Silent to the end (Final duels, Sunday 14:17: duel 15946 sat at 54 d10 for 12 rounds and ended at 0). No deal is
+        # 0 for both: in the last ticks offer a package it can take, price at our limit + MIN_MARGIN + 1 and its days,
+        # as long as the WHOLE offer still clears MIN_MARGIN for us.
+        last = limit + side * (MIN_MARGIN + 1)
+        next_price = int(min(next_price, last) if side > 0 else max(next_price, last))
+        if use_days:
+            ours = 10 if DAYS_SIGN * w > 0 else 0
+            next_days = bound_days(side, limit, w, next_price, 10 - ours, keep=MIN_MARGIN)
     rival_prices = [h["rival_price"] for h in hist if h.get("rival_price") is not None]
     if rival_price is not None and (not rival_prices or rival_prices[-1] != rival_price):
         rival_prices.append(rival_price)
