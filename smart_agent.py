@@ -695,8 +695,8 @@ def market_opportunities(me, catalog, venue, offers, value_of, free_cash=None):
         elif g_cash > 0 and not g_assets and len(refs) == 1 and not w_cash and not w_assets:  # they bid for a card
             ref, bid = refs[0], g_cash
             n = counts.get(ref, 0)
-            if n < 2:
-                continue                                   # never sell our only copy
+            if n < 2 and ref not in dealer_copies(me):
+                continue                                   # never sell our only copy of a page we build
             lost = marginal_value(ref, n, catalog, me["affinity"])
             net = bid - fee_of(fees, bid)
             gain = net - lost
@@ -800,28 +800,84 @@ def bids_to_free(need, my_bids, gain):
 COUNTER_SKIP = {int(x) for x in os.environ.get("COUNTER_SKIP", "").split(",") if x.strip().isdigit()}   # offers we chose not to answer
 
 
-def counter_plan(offers, me, cash, value_of, mine):
-    """(offer, ref, price, value, maker, venue) for a card a team offers ONLY TO US above all the cash we hold but under
-    our value: we answer with a directed bid of what we can pay. None if there is none or we already answered."""
+COUNTER_BUY = (0.70, 0.80, 0.90)    # share of our value we bid for a card a team offers us too dear, step by step
+COUNTER_SELL = (1.60, 1.40, 1.20)   # multiple of our value we ask for a card a team bids too little for
+COUNTER_EVERY = 20                  # ticks without an answer before the next step (~5 min at 15 s)
+
+
+def counter_steps(side, v):
+    """Our counter prices for a card worth v to us, from the hard first one to the last one that still pays.
+    Buys stop at bid_price(v); sells never under v + SELL_MIN_GAIN. In a team trade the price splits the value created:
+    each step gives the other team a little more of it, so we start where it gives it least."""
+    if side == "buy":
+        cap = bid_price(v)
+        return sorted({min(cap, int(v * f)) for f in COUNTER_BUY} - {0})
+    floor = math.ceil(v + SELL_MIN_GAIN)
+    return sorted({max(floor, math.ceil(v * f)) for f in COUNTER_SELL}, reverse=True)
+
+
+def counter_plan(offers, me, cash, value_of, mine, tick=0):
+    """The best counter to an offer a team made ONLY TO US that we cannot take as it stands: (offer, side, ref, price,
+    value, maker, venue, our previous counter id or None). Buy: their ask is over what pays us (or over our cash) ->
+    a directed bid. Sell: their bid is under our floor for a copy we may sell -> a directed ask. One step at a time,
+    moved only after COUNTER_EVERY ticks without an answer; never past what still pays.
+    Sunday 11:50: t10 offered RET-11 at 250 (worth 162 to us) "open to negotiate", and the agent said nothing."""
     counts, _ = card_counts(me)
-    asked = {(o.get("to"), r) for o in mine if o.get("maker") == me["id"] for r in card_refs(o.get("want") or {})}
+    sellable = dealer_copies(me)
+    ours = {}                                          # (to, ref) -> our latest open directed offer
+    for o in mine:
+        if o.get("maker") != me["id"] or o.get("status", "open") != "open" or not o.get("to"):
+            continue
+        g, w = o.get("give") or {}, o.get("want") or {}
+        refs = card_refs(w) or [a.get("ref") for a in g.get("assets") or [] if isinstance(a, dict)]
+        price = g.get("cash") or w.get("cash")
+        for r in refs:
+            if r and price and (o.get("created_tick") or 0) >= ours.get((o["to"], r), {}).get("created_tick", -1):
+                ours[(o["to"], r)] = {"id": o["id"], "price": int(price), "created_tick": o.get("created_tick") or 0}
     best = None
     for o in offers:
         g, w = o.get("give") or {}, o.get("want") or {}
-        assets = g.get("assets") or []
-        if o.get("to") != me["id"] or o.get("maker") == me["id"] or o.get("status", "open") != "open" or o.get("thread") \
-                or len(assets) != 1 or not isinstance(assets[0], dict) or g.get("cash") or not w.get("cash") or card_refs(w):
+        maker = o.get("maker")
+        if o.get("to") != me["id"] or maker == me["id"] or o.get("status", "open") != "open" or o.get("thread") \
+                or o.get("id") in COUNTER_SKIP:
             continue
-        ref, maker = assets[0].get("ref"), o.get("maker")
-        if not ref or o.get("id") in COUNTER_SKIP or (maker, ref) in asked or w["cash"] + fee_of(o.get("_venue") or {}, w["cash"]) <= cash:
-            continue                                   # affordable ones go through market_opportunities
-        v = value_of(ref, counts.get(ref, 0))
-        if v is None:
+        assets, refs = g.get("assets") or [], card_refs(w)
+        if len(assets) == 1 and isinstance(assets[0], dict) and assets[0].get("ref") and not g.get("cash") \
+                and w.get("cash") and not refs:
+            side, ref, theirs = "buy", assets[0]["ref"], int(w["cash"])
+            v = value_of(ref, counts.get(ref, 0))
+            if v is None:
+                continue
+            cost = theirs + fee_of(o.get("_venue") or {}, theirs)
+            if cost <= cash and v - cost >= max(BUY_MIN_GAIN, 0.1 * cost):
+                continue                               # good as it stands: market_opportunities accepts it
+            steps = [p for p in counter_steps("buy", v) if p < theirs and p <= cash]
+        elif g.get("cash") and not assets and len(refs) == 1 and not w.get("cash"):
+            side, ref, theirs = "sell", refs[0], int(g["cash"])
+            if ref not in sellable:
+                continue                               # never the last copy of a page we build
+            v = float(sellable[ref][-1].get("your_value") or 0)
+            if v <= 0 or theirs - fee_of(o.get("_venue") or {}, theirs) - v >= SELL_MIN_GAIN:
+                continue                               # unknown value, or good as it stands: accepted elsewhere
+            steps = [p for p in counter_steps("sell", v) if p > theirs]
+        else:
             continue
-        price = min(cash, bid_price(v))
-        if price >= 1 and v - price >= max(BUY_MIN_GAIN, 0.1 * price) and (best is None or v - price > best[3] - best[2]):
-            best = (o["id"], ref, price, round(v, 1), maker, o.get("venue"))
-    return best
+        if not steps:
+            continue
+        prev = ours.get((maker, ref))
+        if prev is None:
+            price = steps[0]
+        elif tick - prev["created_tick"] < COUNTER_EVERY:
+            continue                                   # give it time to answer
+        else:
+            later = [p for p in steps if (p > prev["price"] if side == "buy" else p < prev["price"])]
+            if not later:
+                continue                               # already at our last step
+            price = later[0]
+        gain = (v - price) if side == "buy" else (price - v)
+        if best is None or gain > best[-1]:
+            best = (o["id"], side, ref, price, round(v, 1), maker, o.get("venue"), prev and prev["id"], gain)
+    return best and best[:-1]
 
 
 EPIC_BUY_RESERVE = int(os.environ.get("EPIC_BUY_RESERVE", "170"))   # ~ Los Picaros' epic list (162) + a little
@@ -1077,16 +1133,28 @@ def phase_market(b, me, catalog, can_accept):
     if accepted and best["kind"] == "buy":
         free = max(0, free - best["cost"])
     got = {best["ref"]} if accepted else set()
-    counter = None if accepted else counter_plan(offers, me, total, value_of, mine)
-    if counter:                                        # a team offers us a card above our cash: bid what we hold, to it
-        oid, ref, price, v, maker, vid = counter
-        if take_back(price - free, v - price, f"a counter to {maker}'s {ref}"):
-            try:
+    counter = None if accepted else counter_plan(offers, me, total, value_of, mine, me["tick"])
+    if counter:                                        # a team offered us something we cannot take as it stands: answer it
+        oid, side, ref, price, v, maker, vid, prev = counter
+        try:
+            if prev is not None:                       # the next step replaces our previous counter
+                b.cancel(prev)
+                row = next((r for r in my_bids if r[0] == prev), None)
+                if row:
+                    my_bids.remove(row)
+                    free, committed = free + row[2], committed - row[2]
+            if side == "buy" and take_back(price - free, v - price, f"a counter to {maker}'s {ref}"):
                 b.list_offer({"cash": price}, {"cards": [ref]}, venue=vid or FAIR, to=maker, expires_in_ticks=BOARD_TTL)
                 free, got = max(0, free - price), got | {ref}
-                log(f"COUNTER {price} for {ref} to {maker} on {vid} (its offer {oid} is above our cash); worth {v} to us")
-            except BazaarError as e:
-                log("counter refused:", e.code, e.message)
+                log(f"COUNTER bid {price} for {ref} to {maker} on {vid} (its offer {oid}); worth {v} to us")
+            elif side == "sell":
+                asset = dealer_copies(me)[ref][-1]["id"]
+                if asset not in listed:
+                    b.list_offer({"assets": [asset]}, {"cash": price}, venue=vid or FAIR, to=maker, expires_in_ticks=BOARD_TTL)
+                    listed.add(asset)
+                    log(f"COUNTER ask {price} for {ref} to {maker} on {vid} (its bid {oid}); worth {v} to us")
+        except BazaarError as e:
+            log("counter refused:", e.code, e.message)
     holders = holders_from(offers, me["id"])
     # One spare becomes a swap when we are missing something; the other spares stay cash asks.
     raw_swaps = swap_plan(me, catalog, listed, open_wants | got, holders, 1)
@@ -2190,17 +2258,27 @@ def _test_free_cash_for_better_deal():
     assert bids_to_free(40, bids, 45) == [2, 3], "weakest first, until enough is free"
     assert bids_to_free(300, bids, 45) == [2, 3, 1]
     assert bids_to_free(300, bids, 20) is None, "never cancel a bid worth more than the new deal"
-    me = {"id": "t06", "cash": 444, "assets": []}
-    offer = {"id": 22048, "maker": "t12", "to": "t06", "status": "open", "venue": "v21", "_venue": {"fee_bps": 0},
-             "give": {"cash": 0, "assets": [{"id": 9, "ref": "SAL-12"}]}, "want": {"cash": 450}}
-    got = counter_plan([offer], me, 444, lambda ref, n: 495.0, [])
-    assert got and got[1:3] == ("SAL-12", 444) and got[4:] == ("t12", "v21"), got
-    mine = [{"maker": "t06", "to": "t12", "want": {"types": ["card:SAL-12"]}}]
-    assert counter_plan([offer], me, 444, lambda ref, n: 495.0, mine) is None, "answered once"
-    low = counter_plan([offer], me, 444, lambda ref, n: 446.0, [])
-    assert low and low[2] < 444 and 446 - low[2] >= 0.1 * low[2], "worth just over our cash: bid lower, keep the margin"
-    assert counter_plan([offer], me, 444, lambda ref, n: 2.0, []) is None, "no gain: no counter"
-    assert counter_plan([dict(offer, to=None)], me, 444, lambda ref, n: 495.0, []) is None, "only offers made to us"
+    me = {"id": "t06", "cash": 352, "assets": []}
+    offer = {"id": 24582, "maker": "t10", "to": "t06", "status": "open", "venue": "v19", "_venue": {"fee_bps": 0},
+             "give": {"cash": 0, "assets": [{"id": 9, "ref": "RET-11"}]}, "want": {"cash": 250}}
+    val = lambda ref, n: 162.0
+    got = counter_plan([offer], me, 352, val, [], 100)
+    assert got and got[1:4] == ("buy", "RET-11", 113) and got[5:] == ("t10", "v19", None), got
+    mine = [{"id": 1, "maker": "t06", "to": "t10", "status": "open", "give": {"cash": 113}, "want": {"types": ["card:RET-11"]},
+             "created_tick": 100}]
+    assert counter_plan([offer], me, 352, val, mine, 110) is None, "give it time to answer"
+    got = counter_plan([offer], me, 352, val, mine, 100 + COUNTER_EVERY)
+    assert got[3] == 129 and got[7] == 1, ("next step replaces the first counter", got)
+    mine[0]["give"]["cash"] = bid_price(162)
+    assert counter_plan([offer], me, 352, val, mine, 200) is None, "at our last step we stop"
+    assert counter_plan([dict(offer, to=None)], me, 352, val, [], 100) is None, "only offers made to us"
+    assert all(p <= bid_price(162) for p in counter_steps("buy", 162))
+    me2 = {"id": "t06", "cash": 0, "affinity": {"LAT": 0.7}, "album": {"pages": []},
+           "assets": [{"id": 5, "kind": "card", "ref": "LAT-04", "serial": 1, "your_value": 7.0}]}
+    bid = {"id": 24686, "maker": "t01", "to": "t06", "status": "open", "venue": "v05", "_venue": {"fee_bps": 0},
+           "give": {"cash": 3}, "want": {"types": ["card:LAT-04"]}}
+    got = counter_plan([bid], me2, 0, val, [], 100)
+    assert got and got[1:4] == ("sell", "LAT-04", 12), got
     cat = {"sets": [{"id": "LAV", "cards": [{"id": "LAV-01", "rarity": "common"}, {"id": "LAV-11", "rarity": "epic"}]}]}
     me = {"assets": [{"kind": "card", "ref": "LAV-01"}], "album": {"pages": [{"set": "LAV", "complete": True}]}}
     assert epic_reserve(me, cat) == EPIC_BUY_RESERVE, "page complete, epic missing: keep cash for the dealer buy"
@@ -2297,7 +2375,10 @@ def selftest():
               mk(13, {"cash": 50, "assets": [], "types": []}, {"cash": 0, "assets": [], "types": ["card:LAT-05"]})]
     opps = market_opportunities(me, catalog, venue, offers, lambda ref, n: 16.0 if ref == "LAV-03" else None)
     kinds = sorted((o["kind"], o["offer"]) for o in opps)
-    assert kinds == [("buy", 10), ("sell", 12)], kinds
+    assert kinds == [("buy", 10), ("sell", 12), ("sell", 13)], kinds    # LAT is not a set we build: its single sells too
+    me_b = dict(me, affinity={"LAT": 1.6, "LAV": 1.6})
+    kinds_b = sorted((o["kind"], o["offer"]) for o in market_opportunities(me_b, catalog, venue, offers, lambda ref, n: 16.0 if ref == "LAV-03" else None))
+    assert ("sell", 13) not in kinds_b, "never the only copy of a set we build"
     plan = listing_plan(me, catalog, venue, offers, set())
     assert [p[0] for p in plan] == [2], "list the higher serial, keep the lowest"
     dem = demand_from(offers, me["id"])
