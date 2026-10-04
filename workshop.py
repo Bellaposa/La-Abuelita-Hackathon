@@ -196,7 +196,7 @@ def buy_cap(rarity, counts, ids, idx, affinity, marginals, model, ref, blocked=(
     e_out, _ = expected_output(RARITY_UP[rarity], counts, idx, affinity, marginals, model, weights)
     room = e_out - sum(g for g, *_ in sp[:2]) - CRAFT_MARGIN
     v_new = copy_value(ref, counts[ref] + 1, idx, affinity, marginals)     # what the bought copy is worth to us
-    cap = v_new + room - fee
+    cap = min(v_new, v_new + room) - fee     # never above our value: that loss counts in full and the craft scores nothing
     return math.floor(cap) if cap >= 1 else None
 
 
@@ -406,7 +406,7 @@ def selftest():
                                "want": {"cash": p, "types": []}}
     cheap = plan_buy({"v02": [ask(1, "LAV-01", 2), ask(2, "MAL-01", 40)]}, me, two, two_ids, idx, marg, model, set(), set(), None,
                      {"v02": {"fee_bps": 0, "fee_per_card": 0}})
-    assert cheap and cheap["offer"] == 1, cheap                               # 2 spares + a cheap 3rd: buy it
+    assert cheap is None or cheap["price"] <= 1, cheap          # a 3rd copy is worth ~1 to us: never pay over our value to craft
     assert plan_buy({"v02": [ask(2, "MAL-01", 40)]}, me, two, two_ids, idx, marg, model, set(), set(), None,
                     {"v02": {"fee_bps": 0, "fee_per_card": 0}}) is None, "too expensive: no buy"
     assert plan_buy({"v02": [ask(3, "LAV-07", 1)]}, me, two, two_ids, idx, marg, model, set(), set(), None, {}) is None, \

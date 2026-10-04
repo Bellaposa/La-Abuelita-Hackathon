@@ -218,19 +218,33 @@ def step(b, me, catalog, venue):
     worth = {a["id"]: float(a.get("your_value") or 0) for a in me["assets"]}
     for o in list(mine):
         ga = o["give"].get("assets") or []
-        if len(ga) != 1 or not o["want"].get("cash") or o.get("status", "open") != "open":
+        if len(ga) != 1 or o.get("status", "open") != "open" or o.get("thread"):
             continue
-        stale = o["want"]["cash"] < math.ceil(worth.get(ga[0]["id"], 0) * SELL_MARGIN + 1)
-        if stale or ga[0].get("ref", "").split("-")[0] in complete:
+        ref = ga[0].get("ref", "")
+        if not o["want"].get("cash"):                 # smart_agent's swap: only a true spare may leave (2+ copies held)
+            stale, why = sum(a.get("ref") == ref for a in me["assets"]) < 2, "it is no longer a spare"
+        else:
+            under = o["want"]["cash"] < math.ceil(worth.get(ga[0]["id"], 0) * SELL_MARGIN + 1)
+            stale, why = under or ref.split("-")[0] in complete, ("under its value now" if under else "its page is complete")
+        if stale:
             try:
                 b.cancel(o["id"])
                 mine.remove(o)
                 listed.discard(ga[0]["id"])
-                log(f"CANCEL sell {o['id']} {ga[0].get('ref')}: " + ("under its value now" if stale else "its page is complete"))
+                log(f"CANCEL offer {o['id']} {ref}: {why}")
             except BazaarError as e:
                 log("cancel refused:", e.code, e.message)
     me = dict(me, assets=[a for a in me["assets"] if a.get("ref", "").split("-")[0] not in complete])  # never sold
     targets = page_targets(catalog, me["affinity"], have)
+    # Our cap spread the page bonus over every missing card (CHA-04: 35), but the server puts it only on the LAST missing
+    # card (CHA-04: your_value 13), and a team-trade loss counts in full: the cap never goes over the server's value.
+    sv = {}
+    for t in targets[:2 * MAX_MISSING]:
+        try:
+            sv[t[0]] = float(b.value(t[0]).get("your_value") or 0)
+        except BazaarError:
+            sv[t[0]] = t[1]
+    targets = [(r, v, min(cap, sv.get(r, v)), sid) for r, v, cap, sid in targets]
     comp = {}
     for o in offers:
         if o["maker"] != me["id"] and len(o["give"]["assets"]) == 1 and o["want"]["cash"]:

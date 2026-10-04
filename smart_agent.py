@@ -943,7 +943,8 @@ def phase_market(b, me, catalog, can_accept):
 
     free = max(0, me["cash"] - CASH_RESERVE - committed)
     accepted, best = False, None
-    opps = market_opportunities(me, catalog, rastro, offers, value_of, free_cash=free)
+    me_free = dict(me, assets=[a for a in me["assets"] if a.get("id") not in listed])   # a listed copy is not a free spare
+    opps = market_opportunities(me_free, catalog, rastro, offers, value_of, free_cash=free)
     if opps:
         log("market opportunities:", json.dumps(sorted(opps, key=lambda o: -o["gain"])[:5]))
     if can_accept:
@@ -1252,8 +1253,8 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
         try:                                                      # a market listing of this copy would sell it under the dealer
             for o in b.my_offers().get("offers", []):
                 if o.get("maker") == me["id"] and o.get("status", "open") == "open" and \
-                        any(isinstance(a, dict) and a.get("id") == asset["id"] for a in (o.get("give") or {}).get("assets") or []):
-                    b.cancel(o["id"])
+                        any(isinstance(a, dict) and a.get("ref") == ref for a in (o.get("give") or {}).get("assets") or []):
+                    b.cancel(o["id"])     # any copy of this card on offer: selling one to the dealer could leave the last
                     log(f"{name}: cancelled listing {o['id']} of {ref} before offering it")
         except BazaarError as e:
             log(f"{name}: could not clear listings of {ref}: {e.code}")
@@ -1737,6 +1738,10 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
         log(f"{name}: buying {ref} ({rarity}), worth {value:.0f} to us, cap {cap}, his list {lp}")
     t = b.thread(tid)
     if t["status"] != "open":
+        return False, True
+    if any(a.get("ref") == act["ref"] for a in me["assets"]):     # it reached us another way: a 2nd copy is worth ~1/4
+        b.close_thread(tid)
+        log(f"{name} buy {tid}: we already hold {act['ref']}; walking")
         return False, True
     cap = min(me["cash"] - CASH_RESERVE, min(int(dparams.static("card_edge") * act["value"]), int(act["value"]) - dparams.static("card_margin")), MAX_PAY.get(act["ref"], 10 ** 9))
     ours, hers = read_thread(t, me["id"], dealer)
