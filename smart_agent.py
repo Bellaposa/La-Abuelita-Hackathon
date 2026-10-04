@@ -1380,12 +1380,16 @@ def dealer_copies(me):
     return out
 
 
+LADDER_MAX_LOSS = float(os.environ.get("LADDER_MAX_LOSS", "0"))   # primas under our value we accept to fill an EMPTY ladder slot
+DEALER_RUSH = os.environ.get("DEALER_RUSH", "0") == "1"           # final minutes: no pauses between dealer talks
+
+
 def sell_floor(lost, room):
     """Least price for a dealer sale. With an empty slot in that dealer's best three this round, any deal over what the
     copy is worth to us (no loss) lifts the ladder, so the floor is value + soft_add instead of value x floor_mult.
     Sunday 10:54: Pilar reached 19 for LAT-06 (worth 17.5) and we walked at a floor of 20; her slot stayed empty."""
     if room:
-        return math.ceil(lost + dparams.static("soft_add"))
+        return max(1, math.ceil(lost + dparams.static("soft_add") - LADDER_MAX_LOSS))
     return math.ceil(lost * dparams.static("floor_mult") + dparams.static("floor_add"))
 
 
@@ -1423,7 +1427,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     name = DEALER_NAMES.get(dealer, dealer.title())
     if dealer not in me.get("unlocked", []):
         return False
-    if mem.get(f"{dealer}_block_until", -1) > me["tick"] and not mem.get(f"active_{dealer}"):
+    if not DEALER_RUSH and mem.get(f"{dealer}_block_until", -1) > me["tick"] and not mem.get(f"active_{dealer}"):
         return False                       # the pause stops new talks, never one already open (Sunday 10:55: Pilar left hanging)
     inferred = learned(mem, dealer)
     log_param_changes(mem, dealer)
@@ -1451,7 +1455,8 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
                      for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
         rnd = ladder_round(mem)
         room = rnd is not None and ladder.worst_of_best3(mem, rnd, dealer) <= 0.0     # an empty slot in its best three
-        recent = {r for r, t in mem.get(f"{dealer}_tried", {}).items() if me["tick"] - t < dparams.static("retry_same_card")}
+        recent = set() if DEALER_RUSH else {r for r, t in mem.get(f"{dealer}_tried", {}).items()
+                                            if me["tick"] - t < dparams.static("retry_same_card")}
         cand = candidate_fn(dict(me, assets=[a for a in me["assets"] if a.get("id") not in on_tables  # a card tried lately
                                              and a.get("ref") not in recent]), catalog,              # leaves room for the next
                             menu_rarity_prices(mem, dealer), room=room)
@@ -1465,7 +1470,7 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
                 mem.setdefault(f"{dealer}_tried", {})[ref] = me["tick"]
                 log(f"{name}: not offering {ref}: it is worth {server_value:.0f} to us, over what the dealer pays ({lp})")
                 return False
-        if me["tick"] - mem.get(f"{dealer}_tried", {}).get(ref, -999) < dparams.static("retry_same_card"):
+        if not DEALER_RUSH and me["tick"] - mem.get(f"{dealer}_tried", {}).get(ref, -999) < dparams.static("retry_same_card"):
             return False                                          # same card, no new reason: stay quiet for a while
         fh = feed_intel.hints(mem, dealer, "buys", asset.get("rarity"), ref.split("-")[0], ref)
         if feed_intel.sell_is_futile(fh, floor):                  # it never paid that much to any team: do not ask
