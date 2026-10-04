@@ -49,9 +49,10 @@ LISTINGS_PER_TICK = 3
 BUYER_MULT = 1.3          # ask for a duplicate with no competition: book x this (upper half of the buyers' multipliers)
 MAX_VALUE_CHECKS = 12     # b.value() calls per tick (rate limit friendly)
 BOARD_TTL = 120           # board offers; an offer inside a thread dies after 2 ticks
-DUENDE = "v02"            # El Duende: 0% and 0 P per card; swaps live here
+DUENDE = os.environ.get("SWAP_VENUE", "v13")   # swaps (no cash, so no % fee): Team 11, last (was v02, Team 12: a top-3 rival)
 TRECE = "v03"             # Mercado Trece: 1% , 0 P per card (swaps are free)
-FAIR = os.environ.get("FAIR_VENUE", "v21")   # 0% broker venue for our cash bids/asks: Team 9 (v21). Not v07: a trade there scores for Team 10, our closest rival
+FAIR = os.environ.get("FAIR_VENUE", "v11")   # 0 % venue for our cash bids/asks. A trade scores market points for the venue's owner:
+                                             # Sunday 13:15 v21 (Team 9) was 8th, right behind us; v11 (Team 7) is 16th
 
 
 # ---------------------------------------------------------------- memory: observed vs inferred
@@ -2500,7 +2501,7 @@ def selftest():
             self.boards.append(vid)
             if vid == "v01":
                 raise AssertionError("must not scan our own venue")
-            if vid == "v02":
+            if vid == DUENDE:
                 return {"offers": [{"id": 7, "maker": "t03", "to": None, "status": "open", "thread": None,
                                     "give": {"cash": 0, "assets": [{"id": 70, "ref": "LAV-03"}], "types": []},
                                     "want": {"cash": 0, "assets": [], "cards": ["LAT-04"]}}]}
@@ -2530,12 +2531,12 @@ def selftest():
     mkt = _Mkt()
     assert phase_market(mkt, mkt_me, mkt_cat, True) is True
     assert mkt.accepted == [(8, None)], mkt.accepted          # one accept, and it is the ask that gains at our value
-    assert "v01" not in mkt.boards and {"v02", "v03", FAIR} <= set(mkt.boards)
+    assert "v01" not in mkt.boards and {DUENDE, "v03", FAIR} <= set(mkt.boards)
     asks = [p for p in mkt.posts if p[0].get("assets") and "cash" in p[1]]
     bids = [p for p in mkt.posts if p[0].get("cash")]
     swaps = [p for p in mkt.posts if p[0].get("assets") and p[1].get("cards")]
     assert asks and asks[0][0]["assets"] == [4] and asks[0][1] == {"cash": math.ceil(10 * BUYER_MULT)} and asks[0][2] == FAIR and asks[0][4] == 120, asks
-    assert swaps and swaps[0][0] == {"assets": [2]} and swaps[0][1] == {"cards": ["LAV-03"]} and swaps[0][2] == "v02" and swaps[0][3] == "t03", swaps
+    assert swaps and swaps[0][0] == {"assets": [2]} and swaps[0][1] == {"cards": ["LAV-03"]} and swaps[0][2] == DUENDE and swaps[0][3] == "t03", swaps
     assert bids and bids[0][1] == {"cards": ["LAV-01"]} and bids[0][2] == FAIR and bids[0][3] is None and bids[0][4] == 120, bids
     assert len({p[1]["cards"][0] for p in bids}) == len(bids), "the same bid is not posted twice"
     assert phase_market(mkt, mkt_me, mkt_cat, False) is False and len(mkt.accepted) == 1, "a second call must not take the accept"
@@ -2552,8 +2553,8 @@ def selftest():
             return {"ok": True}
     cash, swap, down = _Book(), _Book(), _Book((FAIR,))
     assert place_board(cash, {"cash": 5}, {"cards": ["LAT-04"]}) == FAIR and cash.calls == [FAIR]
-    assert place_board(swap, {"assets": [2]}, {"cards": ["LAV-03"]}) == "v02" and swap.calls == ["v02"]
-    assert place_board(down, {"cash": 5}, {"cards": ["LAT-04"]}) == "v02" and down.calls == [FAIR, "v02"]
+    assert place_board(swap, {"assets": [2]}, {"cards": ["LAV-03"]}) == DUENDE and swap.calls == [DUENDE]
+    assert place_board(down, {"cash": 5}, {"cards": ["LAT-04"]}) == DUENDE and down.calls == [FAIR, DUENDE]
     print("selftest OK")
 
 
