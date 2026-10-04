@@ -1251,17 +1251,43 @@ def menu_rarity_prices(mem, dealer):
     return {k.split(":", 1)[1]: v for k, v in ((mem.get("dealer_menu") or {}).get(dealer) or {}).items() if k.startswith("rarity:")}
 
 
-def chato_candidate(me, catalog, menu=None):
-    """The card to offer him: worth little to us (we ask 1.4x our value + margin) and realistic for him (<= 85% of his list)."""
+BUILD_AFF = 1.0            # sets under this affinity with an incomplete page are not built: their single copies are for sale
+
+
+def dealer_copies(me):
+    """{ref: [assets]} a card dealer may take: spare copies (never the last), and also the single copy of a card in a
+    set we do not build (affinity < BUILD_AFF, page incomplete): page_hunter already sells those on the boards.
+    Sunday 10:50: every page we build was complete, so with spares only Pilar had nothing to buy and her level sat at 0."""
     counts, ids = card_counts(me)
-    best = None
+    complete = {p["set"] for p in (me.get("album") or {}).get("pages", []) if p.get("complete")}
+    out = {}
     for ref, n in counts.items():
-        a = ids[ref][-1]
+        sid = ref.split("-")[0]
+        single_ok = me.get("affinity", {}).get(sid, 1.0) < BUILD_AFF and sid not in complete
+        if n >= 2 or single_ok:
+            out[ref] = ids[ref]
+    return out
+
+
+def sell_floor(lost, room):
+    """Least price for a dealer sale. With an empty slot in that dealer's best three this round, any deal over what the
+    copy is worth to us (no loss) lifts the ladder, so the floor is value + soft_add + 1 instead of value x floor_mult."""
+    if room:
+        return math.ceil(lost + dparams.static("soft_add") + 1)
+    return math.ceil(lost * dparams.static("floor_mult") + dparams.static("floor_add"))
+
+
+def chato_candidate(me, catalog, menu=None, room=False):
+    """The card to offer him: worth little to us (we ask 1.4x our value + margin) and realistic for him (<= 85% of his list)."""
+    counts, _ = card_counts(me)
+    best = None
+    for ref, copies in dealer_copies(me).items():
+        a, n = copies[-1], counts[ref]
         lp = (menu or {}).get(a["rarity"]) or CHATO.get(a["rarity"])      # published menu first, the old table as a fallback
-        if not lp or n < 2:                               # never our only copy: the page bonus is not in its value
+        if not lp:
             continue
         lost = marginal_value(ref, n, catalog, me["affinity"])
-        floor = math.ceil(lost * dparams.static("floor_mult") + dparams.static("floor_add"))
+        floor = sell_floor(lost, room)
         if floor <= dparams.static("cand_floor_share") * lp:
             score = dparams.static("cand_score_share") * lp - lost
             if best is None or score > best[0]:
@@ -1309,8 +1335,10 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     if tid is None:
         on_tables = {aid for d in ("chato", "pilar", "picaros", "banco") if d != dealer        # a card is on ONE dealer's table at a time
                      for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
+        rnd = ladder_round(mem)
+        room = rnd is not None and ladder.worst_of_best3(mem, rnd, dealer) <= 0.0     # an empty slot in its best three
         cand = candidate_fn(dict(me, assets=[a for a in me["assets"] if a.get("id") not in on_tables]), catalog,
-                            menu_rarity_prices(mem, dealer))
+                            menu_rarity_prices(mem, dealer), room=room)
         if not cand:
             return False
         _, ref, asset, floor, lp, lost = cand
@@ -1398,19 +1426,19 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     return False
 
 
-def pilar_candidate(me, catalog, menu=None):
+def pilar_candidate(me, catalog, menu=None, room=False):
     """Doña Pilar buys uncommon, rare and epic cards over book (SAL and RET most). Her prices are not published:
     we assume her list at book (x1.1 for SAL/RET) and let next_offer_sell protect the floor."""
-    counts, ids = card_counts(me)
+    counts, _ = card_counts(me)
     book = {c["id"]: c for st in catalog["sets"] for c in st["cards"]}
     best = None
-    for ref, n in counts.items():
-        a = ids[ref][-1]
-        if a["rarity"] not in ("uncommon", "rare", "epic") or ref not in book or n < 2:   # never our only copy
+    for ref, copies in dealer_copies(me).items():
+        a, n = copies[-1], counts[ref]
+        if a["rarity"] not in ("uncommon", "rare", "epic") or ref not in book:
             continue
         lp = int(book[ref]["book"] * dparams.static("pilar_list_mult") * (dparams.static("pilar_focus_mult") if ref.split("-")[0] in ("SAL", "RET") else 1.0))
         lost = marginal_value(ref, n, catalog, me["affinity"])
-        floor = math.ceil(lost * dparams.static("floor_mult") + dparams.static("floor_add"))
+        floor = sell_floor(lost, room)
         if floor <= dparams.static("cand_floor_share") * lp:
             score = dparams.static("cand_score_share") * lp - lost
             if best is None or score > best[0]:
@@ -1422,19 +1450,19 @@ def phase_pilar(b, me, catalog, mem, can_accept):
     return phase_chato(b, me, catalog, mem, can_accept, dealer="pilar", candidate_fn=pilar_candidate)
 
 
-def picaros_candidate(me, catalog, menu=None):
+def picaros_candidate(me, catalog, menu=None, room=False):
     """Los Pícaros buy commons and uncommons of released sets: the outlet our spare commons lack (the boards are flooded).
     Spares only (never our only copy); their price list is not published, so we ask book and let the floor protect us."""
-    counts, ids = card_counts(me)
+    counts, _ = card_counts(me)
     book = {c["id"]: c for st in catalog["sets"] for c in st["cards"]}
     best = None
-    for ref, n in counts.items():
-        a = ids[ref][-1]
-        if a["rarity"] != "common" or ref not in book or n < 2:     # feed: they pay 10-11 for uncommons, Pilar 16-23
+    for ref, copies in dealer_copies(me).items():
+        a, n = copies[-1], counts[ref]
+        if a["rarity"] != "common" or ref not in book:              # feed: they pay 10-11 for uncommons, Pilar 16-23
             continue
         lp = int((menu or {}).get(a["rarity"]) or book[ref]["book"])           # published menu price if any, else book
         lost = marginal_value(ref, n, catalog, me["affinity"])
-        floor = math.ceil(lost * 1.4 + SELL_MIN_GAIN)
+        floor = sell_floor(lost, room) if room else math.ceil(lost * 1.4 + SELL_MIN_GAIN)
         if floor <= 0.85 * lp:
             score = 0.8 * lp - lost
             if best is None or score > best[0]:
@@ -1696,7 +1724,7 @@ def banco_candidate(me, catalog, menu=None, mem=None):
 def phase_banco(b, me, catalog, mem, can_accept):
     """Sell the loop's epic to Don Ernesto: one prima a round from BANCO_ASK, his `final` taken over BANCO_FLOOR."""
     return phase_chato(b, me, catalog, mem, can_accept, dealer="banco",
-                       candidate_fn=lambda me_, cat_, menu=None: banco_candidate(me_, cat_, menu, mem))
+                       candidate_fn=lambda me_, cat_, menu=None, room=False: banco_candidate(me_, cat_, menu, mem))
 
 
 def phase_picaros(b, me, catalog, mem, can_accept):
@@ -1736,12 +1764,14 @@ def buy_priorities(b, me, catalog, mem, limit=6):
     cache = mem.setdefault("value_cache", {})
     order = {sid: i for i, (sid, *_r) in enumerate(set_priority(me, catalog))}
     cands = []
+    complete = {p["set"] for p in (me.get("album") or {}).get("pages", []) if p.get("complete")}
     for st in catalog["sets"]:
         if st["id"] not in order:
             continue
-        for c in st["cards"]:
-            if c.get("page") and not counts.get(c["id"], 0):
-                cands.append((order[st["id"]], -c["book"] * me["affinity"][st["id"]], c["id"], c["rarity"]))
+        for c in st["cards"]:                          # missing page cards; with the page complete, also its epic
+            epic_on_top = c.get("rarity") == "epic" and st["id"] in complete
+            if (c.get("page") or epic_on_top) and not counts.get(c["id"], 0):
+                cands.append((-1 if epic_on_top else order[st["id"]], -c["book"] * me["affinity"][st["id"]], c["id"], c["rarity"]))
     out = []
     for _o, _v, ref, rarity in sorted(cands)[:limit * 2]:
         hit = cache.get(ref)
@@ -1786,12 +1816,14 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
             return False, False
         sells = {**DEALER_SELLS.get(dealer, {}), **menu_rarity_prices(mem, dealer)}      # published menu wins over the old table
         pick = None
+        committed = sum(int((o.get("give") or {}).get("cash") or 0) for o in b.my_offers().get("offers", [])
+                        if o.get("maker") == me["id"] and o.get("status", "open") == "open")   # cash our bids may still need
         busy_refs = {(mem.get(f"active_buy_{d}") or {}).get("ref") for d in DEALER_SELLS if d != dealer}
         for ref, rarity, value in buy_priorities(b, me, catalog, mem):
             lp = sells.get(rarity)
             if not lp or ref in busy_refs or me["tick"] - mem.get(f"{dealer}_buy_tried", {}).get(ref, -999) < dparams.static("buy_retry"):
                 continue                                                  # one dealer per card: never buy it twice
-            cap = min(me["cash"] - CASH_RESERVE, min(int(dparams.static("card_edge") * value), int(value) - dparams.static("card_margin")), MAX_PAY.get(ref, 10 ** 9))
+            cap = min(me["cash"] - CASH_RESERVE - committed, min(int(dparams.static("card_edge") * value), int(value) - dparams.static("card_margin")), MAX_PAY.get(ref, 10 ** 9))
             fh = feed_intel.hints(mem, dealer, "sells", rarity, ref.split("-")[0], ref)
             cap = buy_cap_with_ladder(mem, me, dealer, rarity, lp, fh, cap, None, ref)
             if feed_intel.buy_is_futile(fh, cap):                      # every team paid more: this talk cannot end in a deal
@@ -2235,7 +2267,12 @@ def selftest():
     cand = chato_candidate(me2, catalog2)
     assert cand and cand[1] == "MAL-07", "only the card that is cheap for us and realistic for him"
     me2["assets"] = [a for a in me2["assets"] if a["id"] != 7]
-    assert chato_candidate(me2, catalog2) is None, "never our only copy"
+    assert chato_candidate(me2, catalog2) is not None, "a single copy of a set we do not build is for sale"
+    me2["album"] = {"pages": [{"set": "MAL", "complete": True}, {"set": "LAT", "complete": True}]}
+    assert chato_candidate(me2, catalog2) is None, "never our only copy of a complete page"
+    me2["album"], me2["affinity"] = {}, {"MAL": 1.3, "LAT": 1.6}
+    assert chato_candidate(me2, catalog2) is None, "never our only copy of a set we build"
+    me2["affinity"] = {"MAL": 0.5, "LAT": 0.7}
     cat3 = {"sets": [{"id": "LAV", "released": True, "cards": [{"id": f"LAV-{i:02d}", "book": 10, "rarity": "common"} for i in range(1, 6)]}],
             "packs": [{"id": "sobre_barrio", "slots": [{"common": 1.0}, {"common": 1.0}]}], "values": {"copy_marginals": [1.0, 0.25, 0.1]}}
     empty = {"affinity": {"LAV": 1.0}, "assets": []}
