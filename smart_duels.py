@@ -293,6 +293,7 @@ def endgame_price(side, limit, our_last, rival_price, remaining, next_price):
 
 
 RIVAL_DAYS_W = {"seller": 4.46, "buyer": 2.22}   # |day weight| typical of the RIVAL's role (medians of ours in Duels II)
+SILENT_DAYS_FRAC = 0.25  # share of our concession curve after which a silent rival gets its days
 
 
 def plan_days(duel, limit, frac, rival_days_hist, last_rival_days):
@@ -302,6 +303,12 @@ def plan_days(duel, limit, frac, rival_days_hist, last_rival_days):
     w = signed_days_weight(duel)
     ours = 10 if DAYS_SIGN * w > 0 else 0          # the extreme that favours us
     if last_rival_days is None:
+        # A silent rival only accepts or not, judging our WHOLE package. Duels III, Sunday 11:05: 6 of 23 duels ended
+        # with no deal, all against silent rivals, while we kept d10 as seller (1.39 a day to us, ~4.5 to a typical
+        # buyer). After a couple of silent rounds, when the rival's role typically weighs a day more than we do, give it
+        # its days and hold price: the pie grows and our package becomes one it can take.
+        if frac >= SILENT_DAYS_FRAC and abs(w) < RIVAL_DAYS_W.get(duel.get("role"), 10 ** 9):
+            return 10 - ours, 0.8
         return ours, 1.0
     if duel.get("role") == "seller":
         # Who cares more about time, with the rival's typical weight as prior: in Duels II buyers weighed a day ~2x what
@@ -590,6 +597,17 @@ class _Fake:
         self.deal = self.rp
 
 
+def _test_silent_days():
+    sell = {"issues": ["price", "days"], "role": "seller", "your_days_weight": 1.39,
+            "days_meaning": "each delivery day adds this much cash to your side"}
+    assert plan_days(sell, 105, 0.1, [], None) == (10, 1.0), "first rounds: our days"
+    assert plan_days(sell, 105, 0.4, [], None) == (0, 0.8), "silent buyer, we care less about time: its days"
+    assert plan_days(dict(sell, your_days_weight=7.3), 67, 0.4, [], None) == (10, 1.0), "we care more: keep them"
+    buy = {"issues": ["price", "days"], "role": "buyer", "your_days_weight": 1.05,
+           "days_meaning": "each delivery day costs you this much cash"}
+    assert plan_days(buy, 122, 0.4, [], None) == (10, 0.8), "silent seller gains per day more than we lose"
+
+
 def _test_days_sign():
     buyer = {"role": "buyer", "issues": ["price", "days"], "your_days_weight": 1.46,
              "days_meaning": "each delivery day costs you this much cash"}
@@ -613,6 +631,7 @@ def _test_days_sign():
 
 def selftest():
     _test_days_sign()
+    _test_silent_days()
     global MEM_FILE
     MEM_FILE = os.path.join(tempfile.gettempdir(), "duels_selftest.json")
     # unit checks
