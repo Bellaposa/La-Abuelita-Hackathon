@@ -1315,8 +1315,8 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
     name = DEALER_NAMES.get(dealer, dealer.title())
     if dealer not in me.get("unlocked", []):
         return False
-    if mem.get(f"{dealer}_block_until", -1) > me["tick"]:
-        return False
+    if mem.get(f"{dealer}_block_until", -1) > me["tick"] and not mem.get(f"active_{dealer}"):
+        return False                       # the pause stops new talks, never one already open (Sunday 10:55: Pilar left hanging)
     inferred = learned(mem, dealer)
     log_param_changes(mem, dealer)
     act = mem.get(f"active_{dealer}")
