@@ -51,8 +51,8 @@ MAX_VALUE_CHECKS = 12     # b.value() calls per tick (rate limit friendly)
 BOARD_TTL = 120           # board offers; an offer inside a thread dies after 2 ticks
 DUENDE = os.environ.get("SWAP_VENUE", "v13")   # swaps (no cash, so no % fee): Team 11, last (was v02, Team 12: a top-3 rival)
 TRECE = "v03"             # Mercado Trece: 1% , 0 P per card (swaps are free)
-FAIR = os.environ.get("FAIR_VENUE", "v11")   # 0 % venue for our cash bids/asks. A trade scores market points for the venue's owner:
-                                             # Sunday 13:15 v21 (Team 9) was 8th, right behind us; v11 (Team 7) is 16th
+FAIR = os.environ.get("FAIR_VENUE", "v24")   # 0 % venue for our cash bids/asks. A trade scores market points for the venue's owner:
+                                             # Sunday 13:15 v21 (Team 9) was 8th, right behind us; v24 (Team 13) is 17th (v11 closed)
 
 
 # ---------------------------------------------------------------- memory: observed vs inferred
