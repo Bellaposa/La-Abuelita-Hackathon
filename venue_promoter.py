@@ -13,6 +13,8 @@ pulled which card from a pack or a gift) we find, per card:
   HOLDER  a team bids for a card another team just pulled       -> "t13 just pulled it: list it on v01"
 
 and announce the best few, naming the teams (as Team 10 does on v07). An item is not repeated for REPEAT_TICKS.
+Pairs where the buyer lacks only this card of a page (or this and one more), going by the cards the feed has shown it
+holding, go first: the server puts the page bonus on the last missing card, so that trade creates the most value.
 Our own offers and v01 itself are skipped: we cannot trade on our venue, and our broker already crosses what is there.
 """
 import json
@@ -27,6 +29,8 @@ RETRY_TICKS = 3            # after a refused announcement
 REPEAT_TICKS = 30          # the same pair is not announced again for this long
 PULL_TTL = 80              # ticks a pulled card still counts as "just pulled"
 MAX_ITEMS = 3
+PAGE_LAST = 1500           # score boost: the buyer lacks only this page card (a near pair then beats a plain cross)
+PAGE_NEAR = 50             # the buyer lacks this page card and one more: a nudge within its tier, the bonus is not yet earned
 MAX_CHARS = 480
 HEAD = "v01 (Team 6): 0 % fee, 0 P a card; post PUBLIC and our broker crosses bid and ask card by card at the midpoint next tick."
 
@@ -82,8 +86,40 @@ def pulls_from(feed_events, now, exclude_teams=()):
     return out
 
 
-def opportunities(offers, pulls=None):
-    """Scored items, best first: [(score, key, text)]. Score ~ value that could change hands."""
+def page_refs(catalog):
+    """{ref: [page refs of its set]} for the page cards of released sets."""
+    out = {}
+    for s in (catalog or {}).get("sets", []):
+        if s.get("released"):
+            refs = [c["id"] for c in s.get("cards", []) if c.get("page")]
+            out.update({r: refs for r in refs})
+    return out
+
+
+def page_gap(profiles, team, ref, pages):
+    """Page cards of ref's set the team still lacks, ref included, by the copies the feed showed it holding.
+    None: not a page card, unknown team, or it already holds one. Unseen holdings only make the gap look bigger."""
+    refs, pr = (pages or {}).get(ref), ((profiles or {}).get("teams") or {}).get(team)
+    if not refs or not pr:
+        return None
+    held = set(pr.get("holds", {}).values())
+    return None if ref in held else sum(r not in held for r in refs)
+
+
+def page_note(profiles, pages, buyer, ref):
+    """(score boost, text) when this card completes or nearly completes the buyer's page."""
+    gap = page_gap(profiles, buyer, ref, pages)
+    if gap == 1:
+        return PAGE_LAST, f" It is the last card of {buyer}'s {ref.split('-')[0]} page."
+    if gap == 2:
+        return PAGE_NEAR, f" {buyer} is one card from its {ref.split('-')[0]} page after it."
+    return 0, ""
+
+
+def opportunities(offers, pulls=None, note=None):
+    """Scored items, best first: [(score, key, text)]. Score ~ value that could change hands.
+    note(buyer, ref) -> (boost, text) ranks first the trades that finish a buyer's page."""
+    note = note or (lambda _b, _r: (0, ""))
     by = {}
     for o in offers:
         by.setdefault(o["ref"], {"ask": [], "bid": []})[o["side"]].append(o)
@@ -95,21 +131,23 @@ def opportunities(offers, pulls=None):
             a, b = pair
             gap = a["price"] - b["price"]
             where = "El Rastro" if "rastro" in (a["venue"], b["venue"]) else "other venues"
+            boost, extra = note(b["maker"], ref)
             if gap <= 0:                                  # tiers: a cross is a trade now, then near pairs, then holders
-                items.append((2000 + b["price"], f"cross:{a['id']}:{b['id']}",
+                items.append((2000 + b["price"] + boost, f"cross:{a['id']}:{b['id']}",
                               f"{ref}: {b['maker']} bids {b['price']}, {a['maker']} asks {a['price']} on {where}; "
-                              f"post both on v01 and they cross at {(a['price'] + b['price']) // 2}."))
+                              f"post both on v01 and they cross at {(a['price'] + b['price']) // 2}." + extra))
                 continue
-            if gap <= max(2, round(0.12 * a["price"])):
-                items.append((1000 + b["price"], f"near:{a['id']}:{b['id']}",
+            if gap <= max(2, round(0.12 * a["price"]), 25 if boost else 0):   # a page's last card: a wider gap is worth naming
+                items.append((1000 + b["price"] + boost, f"near:{a['id']}:{b['id']}",
                               f"{ref}: {a['maker']} asks {a['price']}, {b['maker']} bids {b['price']}; "
-                              f"split the {gap} P gap on v01."))
+                              f"split the {gap} P gap on v01." + extra))
                 continue
         if bids and not asks and pulls and ref in pulls:
             b, (team, _t) = bids[0], pulls[ref]
             if team != b["maker"]:
-                items.append((b["price"] * 0.6, f"holder:{ref}:{team}:{b['id']}",
-                              f"{ref}: {b['maker']} bids {b['price']}; {team} just pulled one: list it on v01."))
+                boost, extra = note(b["maker"], ref)
+                items.append((b["price"] * 0.6 + boost, f"holder:{ref}:{team}:{b['id']}",
+                              f"{ref}: {b['maker']} bids {b['price']}; {team} just pulled one: list it on v01." + extra))
     return sorted(items, key=lambda x: -x[0])
 
 
@@ -162,10 +200,20 @@ def step(broker, team, state, tick, log, public=None):
         for o in offers:
             if o["side"] == "ask" and str(o["maker"]).startswith("t"):
                 live.setdefault(o["ref"], []).append((o["maker"], o["price"]))
-        items = opportunities(offers, pulls)
+        if tick - state.get("catalog_tick", -10 ** 9) >= 200:               # Chamberi arrived mid-game: refresh the pages
+            try:
+                state["pages"], state["catalog_tick"] = page_refs(read("/api/catalog")), tick
+            except Exception:
+                pass
+        pages, P = state.get("pages") or {}, state["profiles"]
+        note = lambda buyer, ref: page_note(P, pages, buyer, ref)
+        items = opportunities(offers, pulls, note)
         seen_refs = {t.split(":")[0] for _s, _k, t in items}                 # one item per card: live ones win
-        items += [(s * 0.5, k, t) for s, k, t in team_profiles.match(state["profiles"], me_id, live)   # history-based pairs,
-                  if k.split(":")[3] not in seen_refs]                                               # after live ones
+        for s, k, t in team_profiles.match(P, me_id, live):                 # history-based pairs, after live ones
+            _kind, buyer, _seller, ref = k.split(":")
+            if ref not in seen_refs:
+                boost, extra = note(buyer, ref)
+                items.append((s * 0.5 + boost, k, t + extra))
         items.sort(key=lambda x: -x[0])
         state["last_items"] = len(items)
         text, keys = compose(items, state.setdefault("sent", {}), tick)
@@ -214,6 +262,19 @@ def selftest():
     sent = {k: 100 for k in keys}
     assert compose(items, sent, 110) == (None, []), "nothing new within REPEAT_TICKS"
     assert compose(items, sent, 100 + REPEAT_TICKS)[1] == keys, "repeated after REPEAT_TICKS"
+    # the last card of a buyer's page goes first, even as a near pair against a plain cross
+    cat = {"sets": [{"id": "LAT", "released": True, "cards": [{"id": f"LAT-0{i}", "page": True} for i in range(1, 4)]},
+                    {"id": "RET", "released": False, "cards": [{"id": "RET-01", "page": True}]}]}
+    pages = page_refs(cat)
+    assert set(pages) == {"LAT-01", "LAT-02", "LAT-03"}, "unreleased sets have no pages yet"
+    P = {"teams": {"t16": {"holds": {"1": "LAT-01", "2": "LAT-03"}}, "t13": {"holds": {"3": "LAT-01"}}}}
+    assert page_gap(P, "t16", "LAT-02", pages) == 1 and page_gap(P, "t13", "LAT-02", pages) == 2
+    assert page_gap(P, "t16", "LAT-01", pages) is None and page_gap(P, "t99", "LAT-03", pages) is None
+    offs2 = [{"id": 40, "venue": "rastro", "maker": "t04", "side": "ask", "ref": "LAT-02", "price": 30},
+             {"id": 41, "venue": "rastro", "maker": "t16", "side": "bid", "ref": "LAT-02", "price": 12}] + offs
+    items = opportunities(offs2, pulls, lambda b, r: page_note(P, pages, b, r))
+    assert items[0][1] == "near:40:41" and "last card of t16's LAT page" in items[0][2], items[0]
+    assert opportunities(offs2, pulls)[0][1].startswith("cross"), "without page info: no wide-gap item, cross first"
     print("venue_promoter selftest OK")
 
 
