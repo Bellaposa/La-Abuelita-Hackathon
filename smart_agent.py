@@ -774,6 +774,9 @@ def bids_to_free(need, my_bids, gain):
     return None
 
 
+COUNTER_SKIP = {int(x) for x in os.environ.get("COUNTER_SKIP", "").split(",") if x.strip().isdigit()}   # offers we chose not to answer
+
+
 def counter_plan(offers, me, cash, value_of, mine):
     """(offer, ref, price, value, maker, venue) for a card a team offers ONLY TO US above all the cash we hold but under
     our value: we answer with a directed bid of what we can pay. None if there is none or we already answered."""
@@ -787,7 +790,7 @@ def counter_plan(offers, me, cash, value_of, mine):
                 or len(assets) != 1 or not isinstance(assets[0], dict) or g.get("cash") or not w.get("cash") or card_refs(w):
             continue
         ref, maker = assets[0].get("ref"), o.get("maker")
-        if not ref or (maker, ref) in asked or w["cash"] + fee_of(o.get("_venue") or {}, w["cash"]) <= cash:
+        if not ref or o.get("id") in COUNTER_SKIP or (maker, ref) in asked or w["cash"] + fee_of(o.get("_venue") or {}, w["cash"]) <= cash:
             continue                                   # affordable ones go through market_opportunities
         v = value_of(ref, counts.get(ref, 0))
         if v is None:
@@ -1271,9 +1274,10 @@ def dealer_copies(me):
 
 def sell_floor(lost, room):
     """Least price for a dealer sale. With an empty slot in that dealer's best three this round, any deal over what the
-    copy is worth to us (no loss) lifts the ladder, so the floor is value + soft_add + 1 instead of value x floor_mult."""
+    copy is worth to us (no loss) lifts the ladder, so the floor is value + soft_add instead of value x floor_mult.
+    Sunday 10:54: Pilar reached 19 for LAT-06 (worth 17.5) and we walked at a floor of 20; her slot stayed empty."""
     if room:
-        return math.ceil(lost + dparams.static("soft_add") + 1)
+        return math.ceil(lost + dparams.static("soft_add"))
     return math.ceil(lost * dparams.static("floor_mult") + dparams.static("floor_add"))
 
 
