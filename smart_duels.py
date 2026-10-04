@@ -292,6 +292,9 @@ def endgame_price(side, limit, our_last, rival_price, remaining, next_price):
     return int(max(1, more))
 
 
+RIVAL_DAYS_W = {"seller": 4.46, "buyer": 2.22}   # |day weight| typical of the RIVAL's role (medians of ours in Duels II)
+
+
 def plan_days(duel, limit, frac, rival_days_hist, last_rival_days):
     """Our days offer, using days as currency. Returns (days or None, price_frac_multiplier)."""
     if "days" not in (duel.get("issues") or ["price"]):
@@ -300,6 +303,16 @@ def plan_days(duel, limit, frac, rival_days_hist, last_rival_days):
     ours = 10 if DAYS_SIGN * w > 0 else 0          # the extreme that favours us
     if last_rival_days is None:
         return ours, 1.0
+    if duel.get("role") == "seller":
+        # Who cares more about time, with the rival's typical weight as prior: in Duels II buyers weighed a day ~2x what
+        # sellers did (median 4.46 vs 2.22). If we care more, days stay and only price moves; if the rival already offers
+        # our days they are free; otherwise we give it its days and hold price (organisers: "give up the delivery day
+        # you care little about for a better price"). Simulated +0.6 to +1.1 per 100 of limit as seller; buyer unchanged.
+        if abs(w) >= RIVAL_DAYS_W["seller"]:
+            return ours, 1.0
+        if rival_days_hist[-2:] and all(d == ours for d in rival_days_hist[-2:]):
+            return ours, 1.0
+        return 10 - ours, 0.8
     cheap_for_us = abs(w) * 10 / max(limit, 1) < DAYS_CARE
     seen = rival_days_hist[-2:]
     rival_cares = len(seen) == 2 and seen[0] == seen[1] and seen[1] in (0, 10)   # stubborn at an extreme
@@ -589,6 +602,11 @@ def _test_days_sign():
     # duel 5770: buyer, limit 71, 4.43 a day: 58 at day 9 was -26.9; the bound keeps our whole offer positive
     d = bound_days(-1, 71, -4.43, 58, 9)
     assert utility(-1, 71, -4.43, 58, d, True) >= MIN_MARGIN and d <= 1, d
+    low = dict(seller, your_days_weight=1.0)            # a seller who cares little about time gives the buyer its days
+    assert plan_days(low, 50, 0.3, [0], 0) == (0, 0.8), plan_days(low, 50, 0.3, [0], 0)
+    high = dict(seller, your_days_weight=6.0)           # one who cares more than a typical buyer keeps its days
+    assert plan_days(high, 50, 0.3, [0], 0) == (10, 1.0)
+    assert plan_days(low, 50, 0.3, [10, 10], 10) == (10, 1.0), "the rival already offers our days: they are free"
     s = bound_days(1, 50, 2.0, 52, 0)                     # seller near its cost: days must make up the margin
     assert utility(1, 50, 2.0, 52, s, True) >= max(MIN_MARGIN, round(OFFER_KEEP * 50)), s
 
