@@ -757,6 +757,47 @@ def listing_plan(me, catalog, venue, offers, listed_assets, own_ids=()):
     return plan
 
 
+def bids_to_free(need, my_bids, gain):
+    """Offer ids of our standing bids to cancel so `need` more primas are free for a deal worth `gain`: weakest first,
+    only bids whose own expected gain is below it. None when they cannot free enough. my_bids: [(id, ref, price, gain)].
+    Sunday 10:40: t12 offered us SAL-12 (+45) while ~440 P sat in bids for LAT/MAL cards worth a few primas each."""
+    if need <= 0:
+        return []
+    out = []
+    for oid, _ref, price, g in sorted(my_bids, key=lambda r: r[3]):
+        if g >= gain:
+            break
+        out.append(oid)
+        need -= price
+        if need <= 0:
+            return out
+    return None
+
+
+def counter_plan(offers, me, cash, value_of, mine):
+    """(offer, ref, price, value, maker, venue) for a card a team offers ONLY TO US above all the cash we hold but under
+    our value: we answer with a directed bid of what we can pay. None if there is none or we already answered."""
+    counts, _ = card_counts(me)
+    asked = {(o.get("to"), r) for o in mine if o.get("maker") == me["id"] for r in card_refs(o.get("want") or {})}
+    best = None
+    for o in offers:
+        g, w = o.get("give") or {}, o.get("want") or {}
+        assets = g.get("assets") or []
+        if o.get("to") != me["id"] or o.get("maker") == me["id"] or o.get("status", "open") != "open" or o.get("thread") \
+                or len(assets) != 1 or not isinstance(assets[0], dict) or g.get("cash") or not w.get("cash") or card_refs(w):
+            continue
+        ref, maker = assets[0].get("ref"), o.get("maker")
+        if not ref or (maker, ref) in asked or w["cash"] + fee_of(o.get("_venue") or {}, w["cash"]) <= cash:
+            continue                                   # affordable ones go through market_opportunities
+        v = value_of(ref, counts.get(ref, 0))
+        if v is None:
+            continue
+        price = min(cash, bid_price(v))
+        if price >= 1 and v - price >= max(BUY_MIN_GAIN, 0.1 * price) and (best is None or v - price > best[3] - best[2]):
+            best = (o["id"], ref, price, round(v, 1), maker, o.get("venue"))
+    return best
+
+
 def holders_from(offers, me_id):
     """ref -> team id, from cards someone is offering. Only used to address a bid with to=."""
     found = {}
@@ -942,13 +983,43 @@ def phase_market(b, me, catalog, can_accept):
         return cache[key]
 
     free = max(0, me["cash"] - CASH_RESERVE - committed)
+    total = max(0, me["cash"] - CASH_RESERVE)
+    my_bids = []                                       # [(id, ref, price, expected gain)]: cash we may take back
+    for o in mine:
+        g, refs = o.get("give") or {}, card_refs(o.get("want") or {})
+        if o.get("maker") == me["id"] and o.get("status", "open") == "open" and g.get("cash") and not g.get("assets") \
+                and len(refs) == 1:
+            my_bids.append((o["id"], refs[0], int(g["cash"]),
+                            marginal_value(refs[0], 0, catalog, me["affinity"]) - int(g["cash"])))
+
+    def take_back(need, gain, why):
+        """Cancel weaker bids to free `need` primas; True when done (the freed cash is added to `free`)."""
+        nonlocal free, committed
+        ids = bids_to_free(need, my_bids, gain)
+        if ids is None:
+            return False
+        for oid in ids:
+            try:
+                b.cancel(oid)
+            except BazaarError as e:
+                log(f"cancel bid {oid} refused ({e.code})")
+                return False
+            row = next(r for r in my_bids if r[0] == oid)
+            my_bids.remove(row)
+            free, committed = free + row[2], committed - row[2]
+            log(f"cancelled bid {row[2]} for {row[1]} (gain {row[3]:.1f}) to free cash for {why}")
+        return True
+
     accepted, best = False, None
     me_free = dict(me, assets=[a for a in me["assets"] if a.get("id") not in listed])   # a listed copy is not a free spare
-    opps = market_opportunities(me_free, catalog, rastro, offers, value_of, free_cash=free)
+    opps = market_opportunities(me_free, catalog, rastro, offers, value_of, free_cash=total)   # committed cash can be freed
     if opps:
         log("market opportunities:", json.dumps(sorted(opps, key=lambda o: -o["gain"])[:5]))
     if can_accept:
         best = rank_pick(opps)
+        if best and best["kind"] == "buy" and best["cost"] > free \
+                and not take_back(best["cost"] - free, best["gain"], f"{best['ref']} (gain {best['gain']})"):
+            best = rank_pick([o for o in opps if o["kind"] != "buy" or o["cost"] <= free])
         if best and not try_reserve(me["tick"]):
             log("market accept skipped: another process already used this tick's accept")
             best = None
@@ -965,6 +1036,16 @@ def phase_market(b, me, catalog, can_accept):
     if accepted and best["kind"] == "buy":
         free = max(0, free - best["cost"])
     got = {best["ref"]} if accepted else set()
+    counter = None if accepted else counter_plan(offers, me, total, value_of, mine)
+    if counter:                                        # a team offers us a card above our cash: bid what we hold, to it
+        oid, ref, price, v, maker, vid = counter
+        if take_back(price - free, v - price, f"a counter to {maker}'s {ref}"):
+            try:
+                b.list_offer({"cash": price}, {"cards": [ref]}, venue=vid or FAIR, to=maker, expires_in_ticks=BOARD_TTL)
+                free, got = max(0, free - price), got | {ref}
+                log(f"COUNTER {price} for {ref} to {maker} on {vid} (its offer {oid} is above our cash); worth {v} to us")
+            except BazaarError as e:
+                log("counter refused:", e.code, e.message)
     holders = holders_from(offers, me["id"])
     # One spare becomes a swap when we are missing something; the other spares stay cash asks.
     raw_swaps = swap_plan(me, catalog, listed, open_wants | got, holders, 1)
@@ -2016,6 +2097,25 @@ def _test_epic_loop_on():
     assert not epic_loop_wants_one(me, mem)[0], "Ernesto's level full: the loop stops"
 
 
+def _test_free_cash_for_better_deal():
+    bids = [(1, "LAT-12", 286, 29.0), (2, "MAL-09", 31, 4.0), (3, "LAT-09", 44, 5.0)]
+    assert bids_to_free(0, bids, 45) == []
+    assert bids_to_free(40, bids, 45) == [2, 3], "weakest first, until enough is free"
+    assert bids_to_free(300, bids, 45) == [2, 3, 1]
+    assert bids_to_free(300, bids, 20) is None, "never cancel a bid worth more than the new deal"
+    me = {"id": "t06", "cash": 444, "assets": []}
+    offer = {"id": 22048, "maker": "t12", "to": "t06", "status": "open", "venue": "v21", "_venue": {"fee_bps": 0},
+             "give": {"cash": 0, "assets": [{"id": 9, "ref": "SAL-12"}]}, "want": {"cash": 450}}
+    got = counter_plan([offer], me, 444, lambda ref, n: 495.0, [])
+    assert got and got[1:3] == ("SAL-12", 444) and got[4:] == ("t12", "v21"), got
+    mine = [{"maker": "t06", "to": "t12", "want": {"types": ["card:SAL-12"]}}]
+    assert counter_plan([offer], me, 444, lambda ref, n: 495.0, mine) is None, "answered once"
+    low = counter_plan([offer], me, 444, lambda ref, n: 446.0, [])
+    assert low and low[2] < 444 and 446 - low[2] >= 0.1 * low[2], "worth just over our cash: bid lower, keep the margin"
+    assert counter_plan([offer], me, 444, lambda ref, n: 2.0, []) is None, "no gain: no counter"
+    assert counter_plan([dict(offer, to=None)], me, 444, lambda ref, n: 495.0, []) is None, "only offers made to us"
+
+
 def _test_vault_next():
     assert vault_next(541, [], []) == ("offer", 380, "opening bid")
     h = lambda p, f=False: (p, f, "")
@@ -2031,6 +2131,7 @@ def _test_vault_next():
 
 def selftest():
     _test_vault_next()
+    _test_free_cash_for_better_deal()
     global CASH_RESERVE
     CASH_RESERVE = 0                                     # offline fixtures hold little cash: test the logic without the floor
     _test_ladder_open_cap()
