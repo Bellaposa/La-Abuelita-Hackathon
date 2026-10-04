@@ -801,6 +801,20 @@ def counter_plan(offers, me, cash, value_of, mine):
     return best
 
 
+EPIC_BUY_RESERVE = int(os.environ.get("EPIC_BUY_RESERVE", "170"))   # ~ Los Picaros' epic list (162) + a little
+
+
+def epic_reserve(me, catalog):
+    """Cash standing bids must leave free while the epic of a page we completed is missing: phase_card_buy buys it from
+    a dealer far under our value (LAV-11: 288 to us, sold at 128-147). Sunday 11:05: bids for LAT/MAL (+29 at best)
+    had committed every prima and the LAV-11 buy had a cap of 0."""
+    counts, _ = card_counts(me)
+    complete = {p["set"] for p in (me.get("album") or {}).get("pages", []) if p.get("complete")}
+    missing = any(c.get("rarity") == "epic" and s["id"] in complete and not counts.get(c["id"])
+                  for s in catalog.get("sets", []) for c in s.get("cards", []))
+    return EPIC_BUY_RESERVE if missing else 0
+
+
 def holders_from(offers, me_id):
     """ref -> team id, from cards someone is offering. Only used to address a bid with to=."""
     found = {}
@@ -1057,7 +1071,8 @@ def phase_market(b, me, catalog, can_accept):
                                                                                {o.get("id") for o in mine})
             if asset not in swap_assets]
     bids = [("bid", ref, price, v, holder) for ref, price, v, holder in
-            bid_plan(me, catalog, open_wants | got | {row[2] for row in raw_swaps}, free, holders, LISTINGS_PER_TICK)]
+            bid_plan(me, catalog, open_wants | got | {row[2] for row in raw_swaps}, max(0, free - epic_reserve(me, catalog)),
+                     holders, LISTINGS_PER_TICK)]
     swaps = [("swap", asset, gref, wref, holder) for asset, gref, wref, holder in raw_swaps]
     queues, posted = [asks, bids, swaps], 0
     while posted < LISTINGS_PER_TICK and open_n + posted < 28 and any(queues):
@@ -2150,6 +2165,11 @@ def _test_free_cash_for_better_deal():
     assert low and low[2] < 444 and 446 - low[2] >= 0.1 * low[2], "worth just over our cash: bid lower, keep the margin"
     assert counter_plan([offer], me, 444, lambda ref, n: 2.0, []) is None, "no gain: no counter"
     assert counter_plan([dict(offer, to=None)], me, 444, lambda ref, n: 495.0, []) is None, "only offers made to us"
+    cat = {"sets": [{"id": "LAV", "cards": [{"id": "LAV-01", "rarity": "common"}, {"id": "LAV-11", "rarity": "epic"}]}]}
+    me = {"assets": [{"kind": "card", "ref": "LAV-01"}], "album": {"pages": [{"set": "LAV", "complete": True}]}}
+    assert epic_reserve(me, cat) == EPIC_BUY_RESERVE, "page complete, epic missing: keep cash for the dealer buy"
+    me["assets"].append({"kind": "card", "ref": "LAV-11"})
+    assert epic_reserve(me, cat) == 0
 
 
 def _test_vault_next():
