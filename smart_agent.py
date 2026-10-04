@@ -260,6 +260,29 @@ def read_thread(t, me_id, dealer="abuela", sell=False):
     return ours, hers
 
 
+LADDER_FULL = set()        # dealers whose best three this round are all 1.00: one more deal there scores nothing
+LADDER_FULL_AT = 0.999
+
+
+def update_ladder_full(mem):
+    """Refresh LADDER_FULL from this round's deals; True when it changed. A dealer deal scores only on the ladder (the
+    value gained or lost counts there, a loss in full), so once a dealer's three best shares are 1.00 its talks are spent
+    cash and time: Sunday 11:12, Los Picaros full, and the agent went on to buy CHA-11 from them for nothing."""
+    rnd = ladder_round(mem)
+    full = {d for d in ladder.LEVEL if rnd is not None and ladder.worst_of_best3(mem, rnd, d) >= LADDER_FULL_AT}
+    changed = full != LADDER_FULL
+    LADDER_FULL.clear()
+    LADDER_FULL.update(full)
+    return changed
+
+
+def stray_threads(open_threads, mem):
+    """Dealer threads open on the server that no phase remembers (a restart between opening and saving): close them so
+    the phase can open a fresh one. Sunday 10:58: a Picaros buy of LAV-11 sat orphaned until closed by hand."""
+    known = {v.get("thread") for k, v in mem.items() if k.startswith("active") and isinstance(v, dict)}
+    return [t for t in open_threads if t not in known]
+
+
 def ladder_round(mem):
     return (mem.get("ladder") or {}).get("round")
 
@@ -812,7 +835,8 @@ def epic_reserve(me, catalog):
     complete = {p["set"] for p in (me.get("album") or {}).get("pages", []) if p.get("complete")}
     missing = any(c.get("rarity") == "epic" and s["id"] in complete and not counts.get(c["id"])
                   for s in catalog.get("sets", []) for c in s.get("cards", []))
-    return EPIC_BUY_RESERVE if missing else 0
+    sellers = [d for d, menu in DEALER_SELLS.items() if "epic" in menu]
+    return EPIC_BUY_RESERVE if missing and any(d not in LADDER_FULL for d in sellers) else 0
 
 
 def holders_from(offers, me_id):
@@ -1351,6 +1375,8 @@ def phase_chato(b, me, catalog, mem, can_accept, dealer="chato", candidate_fn=No
             mem[f"{dealer}_block_until"] = me["tick"] + learned_block(mem, dealer)            # any ending but a deal: do not pester him, he remembers
             mem.setdefault(f"{dealer}_tried", {})[act["ref"]] = me["tick"]
         mem[f"active_{dealer}"], act = None, None
+    if tid is None and dealer in LADDER_FULL:
+        return False                                              # its three best are 1.00: another deal scores nothing
     if tid is None:
         on_tables = {aid for d in ("chato", "pilar", "picaros", "banco") if d != dealer        # a card is on ONE dealer's table at a time
                      for aid in ((mem.get(f"active_{d}") or {}).get("topic") or {}).get("sell", {}).get("assets", [])}
@@ -1831,7 +1857,7 @@ def phase_card_buy(b, me, catalog, mem, can_accept, dealer):
     if tid is not None and act is None:
         return False, True                                                # a sell thread (or someone else's) is open
     if tid is None:
-        if mem.get(f"{dealer}_buy_block_until", -1) > me["tick"]:
+        if mem.get(f"{dealer}_buy_block_until", -1) > me["tick"] or dealer in LADDER_FULL:
             return False, False
         sells = {**DEALER_SELLS.get(dealer, {}), **menu_rarity_prices(mem, dealer)}      # published menu wins over the old table
         pick = None
@@ -1955,6 +1981,14 @@ def run_agent():
     b = Bazaar(URL, os.environ["BAZAAR_KEY"], wait_on_tick=False)
     mem = load_memory()
     log("smart_agent started (deterministic, no LLM)")
+    try:
+        for t in stray_threads(b.me().get("open_threads", []), mem):
+            if b.thread(t).get("kind") != "persona":
+                continue                                  # only dealer talks: never a thread with another team
+            b.close_thread(t)
+            log(f"closed stray dealer thread {t} (no phase remembers it)")
+    except BazaarError as e:
+        log("stray threads:", e.code, e.message)
     while True:
         try:
             clock = b.clock()
@@ -1969,6 +2003,8 @@ def run_agent():
                     lad["round_start"] = round_start_tick(clock, seen_change=lad.get("round") is not None)
                     lad["round"] = clock["round"]
                 ladder.learn_slope(mem, me.get("score"))
+                if update_ladder_full(mem):
+                    log(f"ladder: full this round (no more talks there): {sorted(LADDER_FULL) or 'none'}")
                 ladder_backfill(b, mem, me["id"], {c["id"]: c["rarity"] for st in catalog["sets"] for c in st["cards"]}.get,
                                 lad.get("round_start") or 0)
             except Exception as e:
@@ -2172,6 +2208,19 @@ def _test_free_cash_for_better_deal():
     assert epic_reserve(me, cat) == 0
 
 
+def _test_ladder_automation():
+    import ladder as _l
+    mem = {"ladder": {"round": 3, "deals": [{"round": 3, "dealer": "picaros", "share": 1.0}] * 3
+                      + [{"round": 3, "dealer": "chato", "share": 0.58}]}}
+    if _l.worst_of_best3(mem, 3, "picaros") >= 1.0:
+        assert update_ladder_full(mem) and LADDER_FULL == {"picaros"}, LADDER_FULL
+        cat = {"sets": [{"id": "CHA", "cards": [{"id": "CHA-01", "rarity": "common"}, {"id": "CHA-11", "rarity": "epic"}]}]}
+        me = {"assets": [{"kind": "card", "ref": "CHA-01"}], "album": {"pages": [{"set": "CHA", "complete": True}]}}
+        assert epic_reserve(me, cat) == 0, "the only epic seller is full: no cash held back for it"
+    LADDER_FULL.clear()
+    assert stray_threads([5, 6], {"active_pilar": {"thread": 5}, "active_buy_picaros": None}) == [6]
+
+
 def _test_vault_next():
     assert vault_next(541, [], []) == ("offer", 380, "opening bid")
     h = lambda p, f=False: (p, f, "")
@@ -2188,6 +2237,7 @@ def _test_vault_next():
 def selftest():
     _test_vault_next()
     _test_free_cash_for_better_deal()
+    _test_ladder_automation()
     global CASH_RESERVE
     CASH_RESERVE = 0                                     # offline fixtures hold little cash: test the logic without the floor
     _test_ladder_open_cap()
